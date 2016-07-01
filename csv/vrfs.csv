@@ -1,0 +1,5 @@
+default,100,Default Routing Table
+guest,10,Guest Network
+outside,1,External Networks
+perim,25,Perimeter DMZ Network
+utility,150,Utility Network

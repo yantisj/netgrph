@@ -1,0 +1,16 @@
+Device,FQDN,MgmtGroup,Type
+core1,core1.testnetwork.com,Core,Primary
+core2,core2.testnetwork.com,Core,Standby
+abc2e1sw1,abc2e1sw1.testnetwork.com,ABC,Switch
+abc2sw1,abc2sw1.testnetwork.com,ABC,Switch
+abc437sw1,abc437sw1.testnetwork.com,ABC,Switch
+abc437sw2,abc437sw2.testnetwork.com,ABC,Switch
+abc4mdf,abc4mdf.testnetwork.com,ABC,Primary
+abc4sw1,abc4sw1.testnetwork.com,ABC,Switch
+xyz2mdf,xyz2mdf.testnetwork.com,XYZ,Primary
+xyz1sw1,xyz1sw1.testnetwork.com,XYZ,Switch
+xyz1sw2,xyz1sw2.testnetwork.com,XYZ,Switch
+xyz2sw1,xyz2sw1.testnetwork.com,XYZ,Switch
+xyz3sw1,xyz3sw1.testnetwork.com,XYZ,Switch
+xyz4sw1,xyz4sw1.testnetwork.com,XYZ,Switch
+xyz4sw2,xyz4sw2.testnetwork.com,XYZ,Switch

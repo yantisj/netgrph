@@ -1,0 +1,3 @@
+cidr,role,description,secure
+10.9.0.0/16,nac,NAC Registration,50
+10.14.0.0/16,pci,Secure Utility Network,150

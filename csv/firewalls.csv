@@ -1,0 +1,3 @@
+Name,Interface,Description,Security-Level,IP,Hostname,Log-Index
+PerimeterFW,Vlan630,VRF Perim side of FW,0,None,fsm,firewalls
+PerimeterFW,Vlan631,Internal Network side of FW,100,None,fsm,firewalls

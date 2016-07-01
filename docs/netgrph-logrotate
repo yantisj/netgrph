@@ -1,0 +1,7 @@
+/var/log/nglib.log   {
+        daily
+        missingok
+        rotate 7
+        notifempty
+        create 666 netdb www-data
+}

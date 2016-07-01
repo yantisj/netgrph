@@ -1,0 +1,53 @@
+Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby
+10.3.108.10/31,2323,guest,core1,10.3.108.10,Core,abc4mdf-core1 vrf guest,True,False
+10.3.108.10/31,2360,perim,core1,10.3.108.10,Core,core1-abc4mdf vrf perim,True,False
+10.3.108.10/31,2460,utility,core1,10.3.108.10,Core,core1-abc4mdf vrf utility,True,False
+10.3.108.20/31,3108,default,core2,10.3.108.20,Core,abc4mdf,True,True
+10.3.108.20/31,3323,guest,core2,10.3.108.20,Core,abc4mdf-core2 vrf guest,True,True
+10.3.108.20/31,3360,perim,core2,10.3.108.20,Core,core2-abc4mdf vrf perim,True,True
+10.3.108.20/31,3460,utility,core2,10.3.108.20,Core,core2-abc4mdf vrf utility,True,True
+10.4.108.0/24,1,default,abc4mdf,10.4.108.1,ABC,None,False,False
+10.1.108.0/23,108,default,abc4mdf,10.1.108.50,ABC,None,False,False
+10.1.120.0/23,120,default,abc4mdf,10.1.120.50,ABC,None,False,False
+10.6.64.0/22,260,default,abc4mdf,10.6.64.50,ABC,ABC-Utility,False,False
+10.9.8.0/23,270,guest,abc4mdf,10.9.8.1,ABC,guest,False,False
+10.9.136.0/23,271,perim,abc4mdf,10.9.136.1,ABC,reg,False,False
+10.9.200.0/23,272,perim,abc4mdf,10.9.200.1,ABC,deadend,False,False
+10.8.64.0/22,280,default,abc4mdf,10.8.64.50,ABC,None,False,False
+10.14.64.0/22,340,utility,abc4mdf,10.14.64.50,ABC,ABC-SECURE-UTILITY,False,False
+10.7.108.0/23,408,default,abc4mdf,10.7.108.50,ABC,None,False,False
+10.7.120.0/23,420,default,abc4mdf,10.7.120.50,ABC,None,False,False
+10.3.108.10/31,2108,default,abc4mdf,10.3.108.11,ABC,None,True,False
+10.3.108.10/31,2323,guest,abc4mdf,10.3.108.11,ABC,abc4mdf-core1 vrf guest,True,False
+10.3.108.10/31,2360,perim,abc4mdf,10.3.108.11,ABC,abc4mdf-core1 vrf perim,True,False
+10.3.108.10/31,2460,utility,abc4mdf,10.3.108.11,ABC,abc4mdf-core1 vrf utility,True,False
+10.3.108.20/31,3108,default,abc4mdf,10.3.108.21,ABC,None,True,False
+10.3.108.20/31,3323,guest,abc4mdf,10.3.108.21,ABC,abc4mdf-core1 vrf guest,True,False
+10.3.108.20/31,3360,perim,abc4mdf,10.3.108.21,ABC,abc4mdf-core2 vrf perim,True,False
+10.3.108.20/31,3460,utility,abc4mdf,10.3.108.21,ABC,abc4mdf-core2 vrf utlility,True,False
+10.3.20.10/31,2020,default,core1,10.3.20.10,Core,XYZ2mdf EALERT,True,False
+10.3.20.10/31,2474,utility,core1,10.3.20.10,Core,core1-xyz vrf utility,True,False
+10.3.20.20/31,3474,utility,core2,10.3.20.20,Core,core2-xyz vrf utility,True,True
+10.4.20.0/24,1,default,xyz2mdf,10.4.20.1,XYZ,None,False,False
+10.1.20.0/23,20,default,xyz2mdf,10.1.20.50,XYZ,None,False,False
+10.1.206.0/23,206,default,xyz2mdf,10.1.206.50,XYZ,None,False,False
+10.6.188.0/22,260,default,xyz2mdf,10.6.188.1,XYZ,None,False,False
+10.9.46.0/23,270,guest,xyz2mdf,10.9.46.1,XYZ,guest,False,False
+10.8.96.0/22,280,default,xyz2mdf,10.8.96.1,XYZ,None,False,False
+10.14.188.0/22,340,utility,xyz2mdf,10.14.188.50,XYZ,None,False,False
+10.7.206.0/23,406,default,xyz2mdf,10.7.206.50,XYZ,None,False,False
+10.7.20.0/23,420,default,xyz2mdf,10.7.20.50,XYZ,None,False,False
+10.3.20.10/31,2020,default,xyz2mdf,10.3.20.11,XYZ,None,True,False
+10.3.20.10/31,2372,guest,xyz2mdf,10.3.20.11,XYZ,XYZ2mdf-core1 vrf guest,True,False
+10.3.20.10/31,2373,perim,xyz2mdf,10.3.20.11,XYZ,XYZ2mdf-core1 vrf perim,True,False
+10.3.20.10/31,2474,utility,xyz2mdf,10.3.20.11,XYZ,XYZ-core1 vrf utility,True,False
+10.3.20.20/31,3020,default,xyz2mdf,10.3.20.21,XYZ,None,True,False
+10.3.20.20/31,3372,guest,xyz2mdf,10.3.20.21,XYZ,XYZ2mdf-core1 vrf guest,True,False
+10.3.20.20/31,3373,perim,xyz2mdf,10.3.20.21,XYZ,None,True,False
+10.3.20.20/31,3474,utility,xyz2mdf,10.3.20.21,XYZ,XYZ-core2 vrf utility,True,False
+10.5.20.0/24,630,perim,core1,10.5.20.50,Core,FW,False,False
+10.5.10.0/24,631,default,core1,10.5.10.50,Core,None,False,False
+10.5.20.0/24,630,perim,core2,10.5.20.50,Core,FW,False,True
+10.5.10.0/24,631,default,core2,10.5.10.50,Core,None,False,True
+10.1.0.224/29,1095,perim,core1,10.1.0.225,Core,External-FW,False,False
+10.1.0.224/29,1099,outside,core1,10.1.0.226,Core,None,False,False
