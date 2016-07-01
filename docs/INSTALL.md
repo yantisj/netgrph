@@ -52,6 +52,7 @@ sudo pip3 install -r requirements.txt
 - Try out some sample commands
 
 ## Sample netgrph for use with test data
+```
 ./netgrph.py abc4mdf
 ./netgrph.py abc4mdf -o csv
 ./netgrph.py abc4mdf -o json
@@ -64,6 +65,7 @@ sudo pip3 install -r requirements.txt
 ./netgrph.py -nlist test_group
 ./netgrph.py -nlist test_group -o tree
 ./netgrph.py -group ABC
+```
 
 ## Sample Reporting (to be expanded)
 ./ngreport.py -vlans
