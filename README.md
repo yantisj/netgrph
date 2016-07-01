@@ -395,9 +395,11 @@ months.
 
 See the [Install Instructions](docs/INSTALL.md)
 
-## Tests
+## Support
 
-Import the test database and run the ./test/test_full.sh test suite
+I will be monitoring the #netgrph channel the [networktocode slack
+group](https://networktocode.herokuapp.com/) for now. Please try and contact me
+there for any serious support questions.
 
 ## Contributors
 * Jonathan Yantis ([yantisj](https://github.com/tcabanski))
