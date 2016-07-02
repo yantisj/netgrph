@@ -429,7 +429,8 @@ def get_vlans_on_group(group, vrange):
                 swl = swl + " " + sw
             swlt = (swl[:36] + '..') if len(swl) > 36 else swl
 
-            counts = "{:3>}/{:4>}/{:<4}".format(str(en['scount']), str(en['mcount']), str(en['pcount']))
+            counts = "{:3>}/{:4>}/{:<4}".format(
+                str(en['scount']), str(en['mcount']), str(en['pcount']))
 
             print("{:>4} : {:<25}  {:<12} {:<9} {:}".format(
                 en['vid'], en['desc'], counts,

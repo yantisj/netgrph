@@ -31,13 +31,6 @@
 """
 NetGrph NetDB IP Interface
 """
-
-import datetime
-import locale
-import csv
-import re
-import os
-import sys
 import logging
 import pymysql
 import nglib.netdb
@@ -45,7 +38,6 @@ import nglib.ngtree
 
 
 verbose = 0
-hours = 168 # 7 day default
 logger = logging.getLogger(__name__)
 
 netdb_ses = None
@@ -74,11 +66,12 @@ def get_netdb_ip(ip, hours=720):
     if not len(pc):
         return None
 
+    # Multiple entries nest under one parent
     if len(pc) > 1:
         multi_entry = True
 
+    # Gather details from DB in ngtree structure
     for en in pc:
-
         ngtree = nglib.ngtree.get_ngtree("IP", tree_type="NetDB")
 
         ngtree['firstSeen'] = str(en['firstseen'])
@@ -90,9 +83,11 @@ def get_netdb_ip(ip, hours=720):
         ngtree['SwitchPort'] = en['lastport']
         ngtree['UserID'] = en['userID']
 
-        nglib.ngtree.add_child_ngtree(pngtree,ngtree)
+        nglib.ngtree.add_child_ngtree(pngtree, ngtree)
 
+        # Return as parent if single entry
         if not multi_entry:
             return ngtree
 
+    # Return nested IP results
     return pngtree

@@ -30,11 +30,7 @@
 #
 """
 NetGrph Firewall Import Routines
-
-- Need to remove ASA Parsing from file
 """
-import re
-import os
 import logging
 import nglib
 
@@ -65,7 +61,7 @@ def import_fw_ints(fwdb):
         # DB Values
         name = fwint['Name']
         hostname = fwint['Hostname']
-        IP = fwint['IP']
+        #IP = fwint['IP']
         vlanInt = fwint['Interface']
         desc = fwint['Description']
         seclevel = fwint['Security-Level']

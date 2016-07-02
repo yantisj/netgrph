@@ -192,7 +192,7 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
 
 
     # Close out section with empty tree (confusing even more to me)
-    if (len(clist) > 0 or parent):
+    if len(clist) > 0 or parent:
         #print("IN LOOP")
         spaces = spaces + "│"
     print(spaces)

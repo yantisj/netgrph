@@ -59,7 +59,7 @@ def get_net(ip, rtype="TREE", days=7):
             hours = days * 24
             netdbtree = nglib.netdb.ip.get_netdb_ip(ip, hours=hours)
             if netdbtree:
-                nglib.ngtree.add_child_ngtree(ngtree,netdbtree)
+                nglib.ngtree.add_child_ngtree(ngtree, netdbtree)
         # Export NGTree
         ngtree = nglib.query.exp_ngtree(ngtree, rtype)
         return ngtree
