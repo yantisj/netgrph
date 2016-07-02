@@ -20,15 +20,14 @@ vis.js via both the native Neo4j API as well as NetGrph's tree data structure.
 
 ## Data Model
 ### Discovering the Routed SVI Paths from Vlan 110 to 200
-![vlan110](docs/images/svipath2.svg?raw=true)
-![vlan110](https://cdn.rawgit.com/yantisj/netgrph/blob/dev/docs/images/network-graph.svgsvipath2.svg)
+![vlan110](https://dl.dropboxusercontent.com/u/73454/svipath2.svg)
+
 
 [L3 SVIs: Yellow] [L2 VLANs: Green] [Switches/Routers: Blue]
 <br>
 <br>
 ### Discovering the Security Path from Vlan 696 --> 641 across multiple L2/L3 Firewalls
-![fwpath](docs/images/security-path2.svg?raw=true)
-![fwpath](https://cdn.rawgit.com/yantisj/netgrph/blob/dev/docs/images/security-path2.svg)
+![fwpath](https://dl.dropboxusercontent.com/u/73454/security-path2.svg)
 
 
 [Networks: Yellow] [VRFs: Green] [Firewalls: Blue]
@@ -36,8 +35,8 @@ vis.js via both the native Neo4j API as well as NetGrph's tree data structure.
 <br>
 ### Neighbor Tree from the Core out to a distance of 3
 
-<img src="docs/images/network-graph.svg" alt="NEI Tree" width="800" height="800">
-<img src="https://cdn.rawgit.com/yantisj/netgrph/blob/dev/docs/images/network-graph.svg" alt="NEI Tree" width="800" height="800">
+<img src="https://dl.dropboxusercontent.com/u/73454/network-graph.svg" alt="NEI Tree" width="800" height="800">
+
 
 
 <br>
@@ -349,9 +348,11 @@ results, and if you run in to trouble with the data model, please let me know.
 
 I will not be expanding the application to be a full-blown NMS, nor do I plan to
 replicate the features of NetDB in to this codebase. You are free to fork this
-code and turn it into anything you like, but if you expand the core modelling
+code and turn it into anything you like, but if you expand the core modeling
 functionality and think it should be included in the main codebase, I'd like to
 check it out.
+
+See the [CONTRIBUTING](CONTRIBUTING.md) document for more information.
 
 ## Performance
 
@@ -373,28 +374,21 @@ fairly easily. It relies on both the py2neo and neo4j bolt driver (install via
 pip3). The plan is to eventually convert all driver code to the bolt driver as
 it matures.
 
-NetGrph requires CSV files with all of your Switches/Routers, Networks, VLANs,
-and CDP/LLDP Neighbors in order to be multi-vendor compatible. I provide IOS and
-NXOS configuration parsers, as well as a sample network topology to play with.
-For Cisco-based networks, a generic CDP/LLDP mapper is all that's missing.
-NetGrph is compatible with NetDB Neighbor Data though:
+NetGrph requires [CSV files](csv/) with all of your Switches/Routers, Networks,
+VLANs, and CDP/LLDP Neighbors in order to be multi-vendor compatible. I provide
+IOS and NXOS configuration parsers, as well as a sample network topology to play
+with. For Cisco-based networks, a generic CDP/LLDP mapper is all that's missing.
+NetGrph is compatible with NetDB Neighbor Data:
 (https://sourceforge.net/projects/netdbtracking/). Once stable, I'll package a
 bundled NetDB OVA with NetGrph included.
 
 If anyone has a dependable LLDP/CDP walker they recommend (I'm sure there are
-many), please email me. This only needs src_switch,src_port,dst_switch,dst_port.
+many), please contact me. This only needs src_switch,src_port,dst_switch,dst_port.
 
-As far as expanding the datasources beyond Cisco, I am considering using
-[Napalm](https://github.com/napalm-automation/napalm) for this, but do not
-currently have the resources for this effort. If you have intermediate scripting
-skills, you should be able to generate your own data fairly easily, either from
-your configs or a project like Napalm. See the csv/ sample files in the GitHub
-repo for example data sources.
-
-NetGrph was developed on Ubuntu 14.04 LTS, but should be compatible with other
-versions of linux. I highly recommend using Ubuntu at this early stage for
-better support. I also plan to create an ansible build script in the next few
-months.
+NetGrph was developed on Ubuntu 14.04 LTS, testing on 16.04, and should be
+compatible with other versions of linux. I highly recommend using Ubuntu at this
+early stage for better support. I also plan to create an ansible build script in
+the next few months.
 
 ## Installation
 
@@ -405,6 +399,11 @@ See the [Install Instructions](docs/INSTALL.md)
 I will be monitoring the #netgrph channel the [networktocode slack
 group](https://networktocode.herokuapp.com/) for now. Please try and contact me
 there for any serious support questions.
+
+## Contributions
+
+Please see the [Contributions](CONTRIBUTING.md) document in docs for
+information about how you can contribute back to NetGrph.
 
 ## Contributors
 * Jonathan Yantis ([yantisj](https://github.com/tcabanski))
