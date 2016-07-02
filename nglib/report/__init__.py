@@ -82,6 +82,7 @@ def get_vlan_report(vrange, report="all", rtype="TREE"):
                 if '_ccount' in etree.keys():
                     etree['Empty VLAN Count'] = etree['_ccount']
                     nglib.query.exp_ngtree(etree, rtype)
+                    return etree
                 else:
                     print("No Empty Vlans in Range", vrange)
 
@@ -133,8 +134,46 @@ def get_vlan_data(vrange, rtype):
     for v in vlans:
         vtree = nglib.query.vlan.search_vlan_id(v['vid'], allSwitches=allSwitches)
         nglib.ngtree.add_child_ngtree(pngtree, vtree)
-
     return pngtree
+
+
+def get_dev_report(dev, rtype="NGTREE"):
+    """
+    Get all devices on a regex
+    
+    Note: Only returns devices in a mgmt group
+    """    
+
+    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
+
+    if rtype in rtypes:
+        logger.info("Query: Generating Device Report (%s) for %s", dev, nglib.user)
+
+        devices = nglib.bolt_ses.run(
+            'MATCH(s:Switch) WHERE s.name =~ {dev} '
+            + 'RETURN s.name AS name, s.mgmt AS mgmt ORDER BY name',
+            {"dev": dev})
+
+        ngtree = nglib.ngtree.get_ngtree("Report", tree_type="DEVs")
+        ngtree['Device Regex'] = dev
+
+        for d in devices:
+            if d["mgmt"]:
+                cngtree = nglib.query.dev.get_device(d["name"])
+                if cngtree:
+                    nglib.ngtree.add_child_ngtree(ngtree, cngtree)
+
+        # Found Devices, count and print
+        if '_ccount' in ngtree.keys():
+            ngtree['Device Count'] = ngtree['_ccount']
+            nglib.query.exp_ngtree(ngtree, rtype)
+            return ngtree
+        else:
+            print("No Devices found on regex:", dev)
+
+    else:
+        raise Exception("RType Not Supported, use:" + str(rtypes))
+
 
 def get_children(ngtree):
     """Return list of children and count in ngtree"""

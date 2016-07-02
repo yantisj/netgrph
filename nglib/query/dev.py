@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 verbose = 0
 
-def get_device(dev, rtype="TREE", vrange=None):
+def get_device(dev, rtype="NGTREE", vrange=None):
     """Get Switch perspective (neighbors, vlans, routed networks)"""
 
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
@@ -52,7 +52,8 @@ def get_device(dev, rtype="TREE", vrange=None):
 
     ngtree = nglib.ngtree.get_ngtree(dev, tree_type="Device")
 
-    logger.info("Query: Device %s for %s", dev, nglib.user)
+    if rtype != "NGTREE":
+        logger.info("Query: Device %s for %s", dev, nglib.user)
 
 
     switch = nglib.bolt_ses.run(

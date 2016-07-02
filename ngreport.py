@@ -69,7 +69,7 @@ parser.add_argument("-empty",
                     action="store_true")
 parser.add_argument("--conf", metavar='file', help="Alternate Config File", type=str)
 parser.add_argument("--debug", help="Set debugging level", type=int)
-parser.add_argument("--verbose", help="Verbose Output", action="store_true")
+parser.add_argument("-v", help="Verbose Output", action="store_true")
 
 args = parser.parse_args()
 
@@ -78,7 +78,7 @@ if args.conf:
     config_file = args.conf
 
 verbose = 0
-if args.verbose:
+if args.v:
     verbose = 1
 if args.debug:
     verbose = args.debug
@@ -108,6 +108,12 @@ if args.vlans:
 
     nglib.report.get_vlan_report(args.vrange, report=report, rtype=rtype)
 
+elif args.dev:
+    rtype = "TREE"
+    if args.output:
+        rtype = args.output
+
+    nglib.report.get_dev_report(args.dev, rtype=rtype)
 
 else:
     parser.print_help()
