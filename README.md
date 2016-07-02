@@ -20,20 +20,20 @@ vis.js via both the native Neo4j API as well as NetGrph's tree data structure.
 
 ## Data Model
 ### Discovering the Routed SVI Paths from Vlan 110 to 200
-![vlan110](docs/images/svipath2.svg)
+![vlan110](docs/images/svipath2.svg?raw=true)
 
 [L3 SVIs: Yellow] [L2 VLANs: Green] [Switches/Routers: Blue]
 <br>
 <br>
 ### Discovering the Security Path from Vlan 696 --> 641 across multiple L2/L3 Firewalls
-![fwpath](docs/images/security-path2.svg)
+![fwpath](docs/images/security-path2.svg?raw=true)
 
 [Networks: Yellow] [VRFs: Green] [Firewalls: Blue]
 
 <br>
 ### Neighbor Tree from the Core out to a distance of 3
 
-<img src="docs/images/network-graph.svg" alt="NEI Tree" width="800" height="800">
+<img src="docs/images/network-graph.svg?raw=true" alt="NEI Tree" width="800" height="800">
 
 <br>
 ## Program Example
