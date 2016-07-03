@@ -54,7 +54,6 @@ def get_net(ip, rtype="TREE", days=7):
     if rtype in rtypes:
         net = nglib.query.net.find_cidr(ip)
         ngtree = get_net_extended_tree(net, ip=ip, ngname="IP Object")
-        print(ngtree)
 
         if nglib.use_netdb:
             hours = days * 24
