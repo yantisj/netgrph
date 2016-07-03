@@ -137,6 +137,13 @@ def get_vlan_data(vrange, rtype):
     return pngtree
 
 
+def get_vrf_report(vrf, rtype="NGTREE"):
+    """
+    Get a report on vrfs that match regex
+    """
+    return vrf
+
+
 def get_dev_report(dev, rtype="NGTREE"):
     """
     Get all devices on a regex

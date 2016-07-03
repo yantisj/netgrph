@@ -51,10 +51,9 @@ parser = argparse.ArgumentParser()
 parser = argparse.ArgumentParser(prog='ngreport',
                                  description='Generate Reports from NetGrph')
 
-parser.add_argument("-vrf", metavar='name', help="Generate a Report on a VRF",
+parser.add_argument("-vrf", metavar='name',
+                    help="Generate a Report on a VRF (.* for all)",
                     type=str)
-parser.add_argument("-vrfs", help="VRF Report on all VRFs",
-                    action="store_true")
 parser.add_argument("-vlans", help="VLAN ID Report (combine with -vra and -e)",
                     action="store_true")
 
@@ -107,6 +106,13 @@ if args.vlans:
         rtype = args.output
 
     nglib.report.get_vlan_report(args.vrange, report=report, rtype=rtype)
+
+elif args.vrf:
+    rtype = "TREE"
+    if args.output:
+        rtype = args.output
+
+    nglib.report.get_vrf_report(args.vrf, rtype=rtype)
 
 elif args.dev:
     rtype = "TREE"
