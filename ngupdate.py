@@ -50,9 +50,9 @@ alt_config = './docs/netgrph.ini'
 # Test/Dev Config File
 dirname = os.path.dirname(os.path.realpath(__file__))
 if re.search(r'\/dev$', dirname):
-    config_file = 'netgrph.ini'
+    config_file = 'netgrphdev.ini'
 elif re.search(r'\/test$', dirname):
-    config_file = "netgrph.ini"
+    config_file = "netgrphdev.ini"
 
 #print("Config:",config_file,dirname)
 
@@ -106,7 +106,6 @@ args = parser.parse_args()
 # Alternate Config File
 if args.conf:
     config_file = args.conf
-
 
 # Test configuration exists
 if not os.path.exists(config_file):

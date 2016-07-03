@@ -47,9 +47,9 @@ alt_config = './docs/netgrph.ini'
 # Test/Dev Config
 dirname = os.path.dirname(os.path.realpath(__file__))
 if re.search(r'\/dev$', dirname):
-    config_file = 'netgrph.ini'
+    config_file = 'netgrphdev.ini'
 elif re.search(r'\/test$', dirname):
-    config_file = "netgrph.ini"
+    config_file = "netgrphdev.ini"
 
 parser = argparse.ArgumentParser()
 
