@@ -71,6 +71,8 @@ parser.add_argument("-net", help="All networks within a CIDR (eg. 10.0.0.0/8)",
                     action="store_true")
 parser.add_argument("-nlist", help="Get all networks in an alert group",
                     action="store_true")
+parser.add_argument("-nfilter", help="Get all networks on a filter (see netgrph.ini)",
+                    action="store_true")
 parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
                     action="store_true")
 parser.add_argument("-fpath", metavar="src",
@@ -172,6 +174,12 @@ elif args.nlist:
     if args.output:
         rtype = args.output
     nglib.query.net.get_networks_on_filter(args.search, rtype=rtype)
+
+elif args.nfilter:
+    rtype = "CSV"
+    if args.output:
+        rtype = args.output
+    nglib.query.net.get_networks_on_filter(nFilter=args.search, rtype=rtype)
 
 elif args.group:
     nglib.query.vlan.get_vlans_on_group(args.search, args.vrange)
