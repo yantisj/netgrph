@@ -6,3 +6,4 @@ netgrphdev.ini
 netgrphtest.ini
 neo4j-queries.txt
 build-commands
+.vscode/

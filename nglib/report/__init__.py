@@ -141,7 +141,21 @@ def get_vrf_report(vrf, rtype="NGTREE"):
     """
     Get a report on vrfs that match regex
     """
-    return vrf
+    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
+
+    if rtype in rtypes:
+        logger.info("Query: Generating VRF Report (%s) for %s", vrf, nglib.user)
+    
+        vrfs = nglib.bolt_ses.run(
+            'MATCH(v:VRF) WHERE v.name =~ {vrf} '
+            + 'RETURN v.name AS name ORDER BY name',
+            {"vrf": vrf})
+        
+        ngtree = nglib.ngtree.get_ngtree("Report", tree_type="VRFs")
+        ngtree['VRF Regex'] = vrf
+
+        for v in vrfs:
+            print(v["name"])
 
 
 def get_dev_report(dev, rtype="NGTREE"):
