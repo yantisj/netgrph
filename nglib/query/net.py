@@ -30,7 +30,7 @@
 """
  NetGrph Query Network data
 """
-
+import sys
 import ipaddress
 import logging
 import nglib
@@ -65,7 +65,7 @@ def get_net(ip, rtype="TREE", days=7):
         return ngtree
 
     else:
-        print("Unsupport RType, try", str(rtypes))
+        print("Unsupport RType, try", str(rtypes), file=sys.stderr)
 
 
 def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
@@ -205,7 +205,7 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
                 ngtree = nglib.query.exp_ngtree(ngtree, rtype)
                 return ngtree
         else:
-            print("No results found for filter:", ngtree['Filter'])
+            print("No results found for filter:", ngtree['Filter'], file=sys.stderr)
 
     else:
         raise Exception("RType Not Allowed, try: ", str(rtypes))
@@ -271,7 +271,7 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
             print("No Results for", cidr)
 
     else:
-        raise Exception("RType Not Allowed, try: ", str(rtypes))
+        raise Exception("RType Not Allowed, try: ", str(rtypes), file=sys.stderr)
 
 
 

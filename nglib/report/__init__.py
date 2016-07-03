@@ -159,11 +159,13 @@ def get_vrf_report(vrf, rtype="NGTREE"):
         for v in vrfs:
             tree_count += 1
             cngtree = nglib.query.net.get_networks_on_filter(nFilter=v["name"], rtype="NGTREE")
-            nglib.ngtree.add_child_ngtree(ngtree, cngtree)
+            if cngtree:
+                tree_count += 1
+                nglib.ngtree.add_child_ngtree(ngtree, cngtree)
         
         # Return output
         if not tree_count:
-            print("No VRFs found on regex:", vrf)
+            print("No VRFs found on regex:", vrf, file=sys.stderr)
         elif tree_count == 1:
             nglib.query.exp_ngtree(cngtree, rtype)
             return ngtree
