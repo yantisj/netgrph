@@ -38,13 +38,14 @@ import nglib
 
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
+alt_config = './docs/netgrph.ini'
 
 # Test/Dev Config
 dirname = os.path.dirname(os.path.realpath(__file__))
 if re.search(r'\/dev$', dirname):
-    config_file = 'netgrphdev.ini'
+    config_file = 'netgrph.ini'
 elif re.search(r'\/test$', dirname):
-    config_file = "netgrphtest.ini"
+    config_file = "netgrph.ini"
 
 parser = argparse.ArgumentParser()
 
@@ -75,6 +76,13 @@ args = parser.parse_args()
 # Alternate Config File
 if args.conf:
     config_file = args.conf
+
+# Test configuration exists
+if not os.path.exists(config_file):
+    if not os.path.exists(alt_config):
+        raise Exception("Configuration File not found", config_file)
+    else:
+        config_file = alt_config
 
 verbose = 0
 if args.v:

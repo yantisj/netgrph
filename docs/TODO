@@ -1,12 +1,10 @@
 
 
 NetDB:
-- Add CIDR usage for scope usage reporting
+- Add CIDR scope usage reporting
 - Add more extensive device reporting
 
 Reporting:
-  - VRF Report
-  - Switch Report
   - No name, no root, no router report
 
 Other:
