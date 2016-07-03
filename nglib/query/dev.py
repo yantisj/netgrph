@@ -34,6 +34,7 @@ Device Query Routines
 """
 import logging
 import re
+import sys
 import nglib
 import nglib.ngtree
 import nglib.ngtree.export
@@ -63,7 +64,12 @@ def get_device(dev, rtype="NGTREE", vrange=None):
 
     for sw in switch:
 
-        ngtree['Distance'] = int(sw['distance'])
+        try:
+            ngtree['Distance'] = int(sw['distance'])
+        except TypeError:
+            print("Error, device not part of the topology:", dev, file=sys.stderr)
+            return
+        
         ngtree['MGMT Group'] = sw['mgmt']
         if vrange:
             ngtree['VLAN Range'] = vrange
@@ -132,7 +138,7 @@ def get_device(dev, rtype="NGTREE", vrange=None):
         nglib.query.exp_ngtree(ngtree, rtype)
         return ngtree
 
-    print("No results found for device:", dev)
+    print("No results found for device:", dev, file=sys.stderr)
 
 def get_neighbors(dev):
     """

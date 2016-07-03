@@ -54,15 +54,20 @@ def get_net(ip, rtype="TREE", days=7):
     if rtype in rtypes:
         net = nglib.query.net.find_cidr(ip)
         ngtree = get_net_extended_tree(net, ip=ip, ngname="IP Object")
+        print(ngtree)
 
         if nglib.use_netdb:
             hours = days * 24
             netdbtree = nglib.netdb.ip.get_netdb_ip(ip, hours=hours)
             if netdbtree:
                 nglib.ngtree.add_child_ngtree(ngtree, netdbtree)
+
         # Export NGTree
-        ngtree = nglib.query.exp_ngtree(ngtree, rtype)
-        return ngtree
+        if ngtree:
+            ngtree = nglib.query.exp_ngtree(ngtree, rtype)
+            return ngtree
+        else:
+            print("No CIDR results for IP search:", ip, file=sys.stderr)
 
     else:
         print("Unsupport RType, try", str(rtypes), file=sys.stderr)
@@ -93,7 +98,7 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
             if n.sr:
                 standby = getJSONProperties(n.sr)['name']
 
-            # Not already found
+            # Cache: Not already found
             if nProp['vrfcidr'] not in matches.keys():
                 matches[nProp['vrfcidr']] = 1
                 cngt = nglib.ngtree.get_ngtree(nProp['cidr'], tree_type="CIDR")
@@ -125,6 +130,8 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
 
             elif verbose > 3:
                 print("Existing Matches", nProp['vrfcidr'])
+    else:
+        return
 
     return ngtree
 
@@ -290,6 +297,7 @@ def find_cidr(ip):
                 if verbose:
                     print(ip + " in " + r.cidr)
                 mostSpecific = compare_cidr(mostSpecific, r.cidr)
+
 
     return mostSpecific
 
