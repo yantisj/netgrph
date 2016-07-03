@@ -129,32 +129,40 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
     return ngtree
 
 
-def get_networks_on_group(group, rtype="CSV"):
+def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
     """
     Get list of networks as CSV for a group in netgraph.ini
     """
 
-    rtypes = ('CSV', 'TREE', 'JSON', 'YAML')
+    rtypes = ('CSV', 'TREE', 'JSON', 'YAML', 'NGTREE')
 
     if rtype in rtypes:
 
-        logger.info("Query: Network List %s for %s", group, nglib.user)
+        if rtype != "NGTREE":
+            logger.info("Query: Network List %s for %s", group, nglib.user)
 
         netList = []
         ngtree = nglib.ngtree.get_ngtree("Networks", tree_type="NET")
-        ngtree['Group'] = group
 
-        try:
-            ngtree['Filter'] = nglib.query.get_net_filter(group)
-        except KeyError:
-            print("Error: No Group Found in Config", group)
-            return
-        except:
-            raise
+        if group:
+            ngtree['Group'] = group
+
+            try:
+                ngtree['Filter'] = nglib.query.get_net_filter(group)
+            except KeyError:
+                print("Error: No Group Found in Config", group)
+                return
+            except:
+                raise
+
+        # Custom Filter
+        elif nFilter:
+            ngtree['Filter'] = nFilter
+        else:
+            raise Exception("Must pass in group or nFilter")
+
 
         # Get all networks
-        #networks = nglib.bolt_ses.run('MATCH (n:Network) RETURN n.vrfcidr as vrfcidr')
-
         networks = nglib.bolt_ses.run(
             'MATCH(n:Network), (n)--(v:VRF), (n)-[:ROUTED_BY]->(r:Switch:Router) '
             + 'OPTIONAL MATCH (n)--(s:Supernet) OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(rs:Switch:Router) '
@@ -172,7 +180,7 @@ def get_networks_on_group(group, rtype="CSV"):
                 netDict[key] = net[key]
 
             # Matches Filter
-            if len(netDict) and nglib.query.check_net_filter(netDict, group):
+            if len(netDict) and nglib.query.check_net_filter(netDict, group=group, nFilter=nFilter):
 
                 netList.append(netDict)
                 netDict['_type'] = "CIDR"

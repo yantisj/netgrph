@@ -154,8 +154,24 @@ def get_vrf_report(vrf, rtype="NGTREE"):
         ngtree = nglib.ngtree.get_ngtree("Report", tree_type="VRFs")
         ngtree['VRF Regex'] = vrf
 
+        # Process VRFs
+        tree_count = 0
         for v in vrfs:
-            print(v["name"])
+            tree_count += 1
+            cngtree = nglib.query.net.get_networks_on_filter(nFilter=v["name"], rtype="NGTREE")
+            nglib.ngtree.add_child_ngtree(ngtree, cngtree)
+        
+        # Return output
+        if not tree_count:
+            print("No VRFs found on regex:", vrf)
+        elif tree_count == 1:
+            nglib.query.exp_ngtree(cngtree, rtype)
+            return ngtree
+        else:
+            nglib.query.exp_ngtree(ngtree, rtype)
+            return ngtree
+    else:
+        raise Exception("RType Not Supported, use:" + str(rtypes))
 
 
 def get_dev_report(dev, rtype="NGTREE"):

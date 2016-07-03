@@ -114,11 +114,11 @@ def get_net_filter(group):
         raise Exception("No Group Filter Found", group)
 
 
-def check_net_filter(netDict, group):
+def check_net_filter(netDict, group=None, nFilter=None):
     """
     Filters Networks based on vrf:role (from supernets)
 
-    Needs optimization
+    Pass in a group filter to read from config, or a custom nFilter
 
     Examples:
     nst = all (all networks)
@@ -136,7 +136,10 @@ def check_net_filter(netDict, group):
     com = default:printer
     """
 
-    vDict = get_filter_dict(group)
+    if group:
+        vDict = get_filter_dict(group=group)
+    elif nFilter:
+        vDict = get_filter_dict(nFilter=nFilter)
 
     # Check filter against vDict
     for vrf in vDict.keys():
@@ -164,13 +167,19 @@ def check_net_filter(netDict, group):
 
 
 @functools.lru_cache(maxsize=1)
-def get_filter_dict(group):
-    """Process config for group and cache it for each call"""
+def get_filter_dict(group=None, nFilter=None):
+    """Process config for group or custom filter and cache it for each call"""
 
     vDict = dict()
+    gFilter = None
 
-    gFilter = config['NetAlertFilter'][group]
-
+    if group:
+        gFilter = config['NetAlertFilter'][group]
+    elif nFilter:
+        gFilter = nFilter
+    else:
+        raise Exception("Must pass in group or filter")
+    
     # Split all VRFs by spaces
     vrfFilters = gFilter.rsplit()
 
@@ -213,7 +222,7 @@ def universal_text_search(text, vrange, rtype="TREE"):
     #Look for group filter first
     try:
         get_net_filter(text)
-        nglib.query.net.get_networks_on_group(text, rtype=rtype)
+        nglib.query.net.get_networks_on_filter(text, rtype=rtype)
         found = True
     except:
         pass

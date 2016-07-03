@@ -39,6 +39,7 @@ import re
 import argparse
 import nglib
 
+
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
 alt_config = './docs/netgrph.ini'
@@ -134,16 +135,19 @@ nglib.init_nglib(config_file)
 
 if args.fpath:
     nglib.query.path.get_fw_path(args.fpath, args.search)
+
 elif args.spath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
     nglib.query.path.get_switch_path(args.spath, args.search, rtype=rtype)
+
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
     nglib.query.path.get_routed_path(args.rpath, args.search, rtype=rtype)
+
 elif args.dev:
     rtype = "TREE"
     if args.output:
@@ -167,7 +171,7 @@ elif args.nlist:
     rtype = "CSV"
     if args.output:
         rtype = args.output
-    nglib.query.net.get_networks_on_group(args.search, rtype=rtype)
+    nglib.query.net.get_networks_on_filter(args.search, rtype=rtype)
 
 elif args.group:
     nglib.query.vlan.get_vlans_on_group(args.search, args.vrange)
