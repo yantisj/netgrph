@@ -160,6 +160,8 @@ def get_vrf_report(vrf, rtype="NGTREE"):
             tree_count += 1
             cngtree = nglib.query.net.get_networks_on_filter(nFilter=v["name"], rtype="NGTREE")
             if cngtree:
+                devlist = nglib.query.dev.get_devlist_vrf(v["name"])
+                cngtree["Routers"] = devlist
                 tree_count += 1
                 nglib.ngtree.add_child_ngtree(ngtree, cngtree)
         

@@ -259,4 +259,21 @@ def get_vlans(dev, vrange=None):
             if vlan['mcount']:
                 vt['MAC Count'] = vlan['mcount']
     return vtree
+
+
+def get_devlist_vrf(vrf):
+    """Returns a list of devices that route a VRF"""
+
+    devices = nglib.bolt_ses.run(
+            'MATCH(v:VRF)-[e:VRF_ON]-(r:Router) WHERE v.name = {vrf} '
+            + 'RETURN r.name AS name ORDER BY name',
+            {"vrf": vrf})
+
+    devlist = []
+    
+    for r in devices:
+        devlist.append(r["name"])
+    
+    return devlist
+
 #END
