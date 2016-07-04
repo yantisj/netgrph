@@ -56,17 +56,21 @@ sudo pip3 install -r requirements.txt
 ./netgrph.py -nf all
 ./netgrph.py -nf all -o tree
 ./ngreport.py -dev ".*"
+./ngreport.py -vrf "perim|default"
 ./netgrph.py abc4mdf
 ./netgrph.py abc4mdf -o json
 ./netgrph.py abc4mdf -o yaml
 ./netgrph.py -sp abc2sw1 xyz2sw1
 ./netgrph.py -sp abc.* xyz.* -o csv
+./netgrph.py -rp 10.1.120.50 10.7.206.0/23
 ./netgrph.py 120
 ./netgrph.py 1246
 ./netgrph.py -fp 10.1.120.50 8.8.8.8
 ./netgrph.py -nlist test_group
 ./netgrph.py -nlist test_group -o tree
 ./netgrph.py -group ABC
+./ngreport.py -vrf "perim|default"
+./ngreport.py -vlans
 ```
 
 ## Sample Reporting (to be expanded)

@@ -156,10 +156,12 @@ def get_vrf_report(vrf, rtype="NGTREE"):
 
         # Process VRFs
         tree_count = 0
+        vrflist = []
         for v in vrfs:
             tree_count += 1
             cngtree = nglib.query.net.get_networks_on_filter(nFilter=v["name"], rtype="NGTREE")
             if cngtree:
+                vrflist.append(v["name"])
                 devlist = nglib.query.dev.get_devlist_vrf(v["name"])
                 cngtree["Routers"] = devlist
                 tree_count += 1
@@ -172,6 +174,7 @@ def get_vrf_report(vrf, rtype="NGTREE"):
             nglib.query.exp_ngtree(cngtree, rtype)
             return ngtree
         else:
+            ngtree["VRFs"] = vrflist
             nglib.query.exp_ngtree(ngtree, rtype)
             return ngtree
     else:
