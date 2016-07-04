@@ -32,6 +32,7 @@ NetGrph VLAN Query Routines
 
 """
 import sys
+import os
 import logging
 import nglib
 from nglib.query.nNode import getJSONProperties
@@ -421,13 +422,23 @@ def get_vlans_on_group(group, vrange):
         print("Total: " + str(vtotal))
         print()
         print(" VID             Name           Sw/Macs/Ports  Root       Switches")
-        print("------------------------------------------------------------------------------------------------")
+
+        # Header Size
+        try:
+            tsize = os.get_terminal_size()
+            tsize = tsize.columns
+        except OSError:
+            tsize = 80
+        print("-" * tsize)
+
         for en in sortedList:
+
+            slen = tsize - 65
 
             swl = ''
             for sw in en['switches']:
                 swl = swl + " " + sw
-            swlt = (swl[:36] + '..') if len(swl) > 36 else swl
+            swlt = (swl[:slen] + '..') if len(swl) > slen else swl
 
             counts = "{:3>}/{:4>}/{:<4}".format(
                 str(en['scount']), str(en['mcount']), str(en['pcount']))

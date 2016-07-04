@@ -39,6 +39,7 @@ import re
 import argparse
 import nglib
 
+
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
 alt_config = './docs/netgrph.ini'
@@ -48,7 +49,7 @@ dirname = os.path.dirname(os.path.realpath(__file__))
 if re.search(r'\/dev$', dirname):
     config_file = 'netgrphdev.ini'
 elif re.search(r'\/test$', dirname):
-    config_file = "netgrphtest.ini"
+    config_file = "netgrphdev.ini"
 
 parser = argparse.ArgumentParser()
 
@@ -69,6 +70,8 @@ parser.add_argument("-ip", help="Network Details for an IP",
 parser.add_argument("-net", help="All networks within a CIDR (eg. 10.0.0.0/8)",
                     action="store_true")
 parser.add_argument("-nlist", help="Get all networks in an alert group",
+                    action="store_true")
+parser.add_argument("-nfilter", help="Get all networks on a filter (see netgrph.ini)",
                     action="store_true")
 parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
                     action="store_true")
@@ -134,16 +137,19 @@ nglib.init_nglib(config_file)
 
 if args.fpath:
     nglib.query.path.get_fw_path(args.fpath, args.search)
+
 elif args.spath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
     nglib.query.path.get_switch_path(args.spath, args.search, rtype=rtype)
+
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
     nglib.query.path.get_routed_path(args.rpath, args.search, rtype=rtype)
+
 elif args.dev:
     rtype = "TREE"
     if args.output:
@@ -167,7 +173,13 @@ elif args.nlist:
     rtype = "CSV"
     if args.output:
         rtype = args.output
-    nglib.query.net.get_networks_on_group(args.search, rtype=rtype)
+    nglib.query.net.get_networks_on_filter(args.search, rtype=rtype)
+
+elif args.nfilter:
+    rtype = "CSV"
+    if args.output:
+        rtype = args.output
+    nglib.query.net.get_networks_on_filter(nFilter=args.search, rtype=rtype)
 
 elif args.group:
     nglib.query.vlan.get_vlans_on_group(args.search, args.vrange)

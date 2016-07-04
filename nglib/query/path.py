@@ -32,6 +32,7 @@ Network Path Algorithms Between Switches and Routers
 
 """
 import re
+import sys
 import logging
 import subprocess
 import nglib
@@ -64,7 +65,9 @@ def get_switch_path(switch1, switch2, rtype="NGTREE"):
                     switch1, switch2, nglib.user)
 
         pathList = []
-        ngtree = nglib.ngtree.get_ngtree("Switched Paths", tree_type="SPATHS")
+        ngtree = nglib.ngtree.get_ngtree("Switched Paths", tree_type="SPATHs")
+        ngtree["Path"] = switch1 + " -> " + switch2
+
         dist = dict()
 
         swp = nglib.py2neo_ses.cypher.execute(
@@ -117,7 +120,7 @@ def get_switch_path(switch1, switch2, rtype="NGTREE"):
 def get_routed_path(net1, net2, rtype="NGTREE"):
     """
     Find the routed path between two CIDRs and return all interfaces and
-    devices between the two. This query is currently highly unoptimized.
+    devices between the two. This query need optimization.
 
     - net1 and net2 can be IPs, and it will find the CIDR
     - Uses Neo4j All Shortest Paths on ROUTED Relationships
@@ -140,14 +143,18 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
 
         if re.search(r'^\d+\.\d+\.\d+\.\d+$', net2):
             n2tree = nglib.query.net.get_net(net2, rtype="NGTREE")
-            net2 = n2tree['_child001']['Name']
+            if n2tree:
+                net2 = n2tree['_child001']['Name']
+
+        
+        ngtree = nglib.ngtree.get_ngtree("Routed Paths", tree_type="RPATHs")
+        ngtree["Path"] = net1 + " -> " + net2
 
 
         pathList = []
         pathRec = []
-        ngtree = nglib.ngtree.get_ngtree("Routed Paths", tree_type="RPATHS")
 
-
+        # Finds all paths, then finds the relationships
         rtrp = nglib.py2neo_ses.cypher.execute(
             'MATCH (sn:Network), (dn:Network), rp = allShortestPaths '
             + '((sn)-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]-(dn)) '
@@ -221,7 +228,7 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
                 ngtree = nglib.query.exp_ngtree(ngtree, rtype)
                 return ngtree
         else:
-            print("No results found for path between {:} and {:}".format(net1, net2))
+            print("No results found for path between {:} and {:}".format(net1, net2), file=sys.stderr)
 
     return
 
@@ -231,7 +238,7 @@ def get_fw_path(src, dst):
     srcnet = nglib.query.net.find_cidr(src)
     dstnet = nglib.query.net.find_cidr(dst)
 
-    logger.info("Query: Tracing %s --> %s for %s", src, dst, nglib.user)
+    logger.info("Query: Tracing %s -> %s for %s", src, dst, nglib.user)
 
     if verbose:
         print("\nFinding security path from {:} -> {:}:\n".format(srcnet, dstnet))
@@ -253,7 +260,7 @@ def get_fw_path(src, dst):
             dn = r.d
             dnp = nglib.query.nNode.getJSONProperties(dn)
 
-            path = snp['cidr'] + " --> "
+            path = snp['cidr'] + " -> "
 
             # Path
             nodes = r.p.nodes
@@ -261,10 +268,10 @@ def get_fw_path(src, dst):
                 nProp = nglib.query.nNode.getJSONProperties(node)
                 label = nglib.query.nNode.getLabel(node)
                 if re.search('VRF', label):
-                    path = path + "VRF:" + nProp['name'] + " --> "
+                    path = path + "VRF:" + nProp['name'] + " -> "
 
                 if re.search('FW', label):
-                    path = path + nProp['name'] + " --> "
+                    path = path + nProp['name'] + " -> "
                     fwsearch[nProp['name']] = nProp['hostname'] + "," + nProp['logIndex']
 
             path = path + dnp['cidr']

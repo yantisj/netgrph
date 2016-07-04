@@ -1,21 +1,21 @@
 
 
 NetDB:
-- Add CIDR usage for scope usage reporting
+- Add CIDR scope usage reporting
 - Add more extensive device reporting
 
 Reporting:
-  - VRF Report
-  - Switch Report
   - No name, no root, no router report
 
 Other:
 - Add VRF to -rpath
 - Add master -path to netgrph
+- Add tabular output option
+- built-in paging support
+- Group report takes up entire console
 
 Maintenance:
 - Add switch skip on certain neighbors
 - Rewrite nglib.net_update using Bolt as Pythonic
 - Emulate dict with ngtree
-- built-in paging support
-- Group report takes up entire console
+

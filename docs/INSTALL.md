@@ -51,14 +51,16 @@ sudo pip3 install -r requirements.txt
 - Browse to the database web interface and run `MATCH (s:Switch) RETURN s`
 - Try out some sample commands
 
-## Sample netgrph for use with test data
+## Sample commands for use with test data
 ```
+./netgrph.py -nf all
+./netgrph.py -nf all -o tree
+./ngreport.py -dev ".*"
 ./netgrph.py abc4mdf
-./netgrph.py abc4mdf -o csv
 ./netgrph.py abc4mdf -o json
 ./netgrph.py abc4mdf -o yaml
 ./netgrph.py -sp abc2sw1 xyz2sw1
-./netgrph.py -sp abc.* xyz.*
+./netgrph.py -sp abc.* xyz.* -o csv
 ./netgrph.py 120
 ./netgrph.py 1246
 ./netgrph.py -fp 10.1.120.50 8.8.8.8

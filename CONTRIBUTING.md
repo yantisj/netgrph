@@ -4,7 +4,7 @@ These are the early days of NetGrph, but I fully plan to support this program
 going forward and am looking for contributors. I am also the primary maintainer
 of the [Network Tracking Database
 (NetDB)](http://netdbtracking.sourceforge.net/), which is in production on some
-extremely large network. NetGrph is currently serving as our internal model for
+extremely large networks. NetGrph is currently serving as our internal model for
 network automation tasks, and we hope others find it useful as well. It's
 primary purpose is to do work at this time, from automation to troubleshooting
 tasks.

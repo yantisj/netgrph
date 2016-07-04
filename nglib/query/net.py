@@ -30,7 +30,7 @@
 """
  NetGrph Query Network data
 """
-
+import sys
 import ipaddress
 import logging
 import nglib
@@ -60,12 +60,16 @@ def get_net(ip, rtype="TREE", days=7):
             netdbtree = nglib.netdb.ip.get_netdb_ip(ip, hours=hours)
             if netdbtree:
                 nglib.ngtree.add_child_ngtree(ngtree, netdbtree)
+
         # Export NGTree
-        ngtree = nglib.query.exp_ngtree(ngtree, rtype)
-        return ngtree
+        if ngtree:
+            ngtree = nglib.query.exp_ngtree(ngtree, rtype)
+            return ngtree
+        else:
+            print("No CIDR results for IP search:", ip, file=sys.stderr)
 
     else:
-        print("Unsupport RType, try", str(rtypes))
+        print("Unsupport RType, try", str(rtypes), file=sys.stderr)
 
 
 def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
@@ -93,7 +97,7 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
             if n.sr:
                 standby = getJSONProperties(n.sr)['name']
 
-            # Not already found
+            # Cache: Not already found
             if nProp['vrfcidr'] not in matches.keys():
                 matches[nProp['vrfcidr']] = 1
                 cngt = nglib.ngtree.get_ngtree(nProp['cidr'], tree_type="CIDR")
@@ -125,36 +129,46 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
 
             elif verbose > 3:
                 print("Existing Matches", nProp['vrfcidr'])
+    else:
+        return
 
     return ngtree
 
 
-def get_networks_on_group(group, rtype="CSV"):
+def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
     """
     Get list of networks as CSV for a group in netgraph.ini
     """
 
-    rtypes = ('CSV', 'TREE', 'JSON', 'YAML')
+    rtypes = ('CSV', 'TREE', 'JSON', 'YAML', 'NGTREE')
 
     if rtype in rtypes:
 
-        logger.info("Query: Network List %s for %s", group, nglib.user)
+        if rtype != "NGTREE":
+            logger.info("Query: Network List %s for %s", group, nglib.user)
 
         netList = []
         ngtree = nglib.ngtree.get_ngtree("Networks", tree_type="NET")
-        ngtree['Group'] = group
 
-        try:
-            ngtree['Filter'] = nglib.query.get_net_filter(group)
-        except KeyError:
-            print("Error: No Group Found in Config", group)
-            return
-        except:
-            raise
+        if group:
+            ngtree['Group'] = group
+
+            try:
+                ngtree['Filter'] = nglib.query.get_net_filter(group)
+            except KeyError:
+                print("Error: No Group Found in Config", group)
+                return
+            except:
+                raise
+
+        # Custom Filter
+        elif nFilter:
+            ngtree['Filter'] = nFilter
+        else:
+            raise Exception("Must pass in group or nFilter")
+
 
         # Get all networks
-        #networks = nglib.bolt_ses.run('MATCH (n:Network) RETURN n.vrfcidr as vrfcidr')
-
         networks = nglib.bolt_ses.run(
             'MATCH(n:Network), (n)--(v:VRF), (n)-[:ROUTED_BY]->(r:Switch:Router) '
             + 'OPTIONAL MATCH (n)--(s:Supernet) OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(rs:Switch:Router) '
@@ -172,7 +186,7 @@ def get_networks_on_group(group, rtype="CSV"):
                 netDict[key] = net[key]
 
             # Matches Filter
-            if len(netDict) and nglib.query.check_net_filter(netDict, group):
+            if len(netDict) and nglib.query.check_net_filter(netDict, group=group, nFilter=nFilter):
 
                 netList.append(netDict)
                 netDict['_type'] = "CIDR"
@@ -197,7 +211,7 @@ def get_networks_on_group(group, rtype="CSV"):
                 ngtree = nglib.query.exp_ngtree(ngtree, rtype)
                 return ngtree
         else:
-            print("No results found for filter:", ngtree['Filter'])
+            print("No results found for filter:", ngtree['Filter'], file=sys.stderr)
 
     else:
         raise Exception("RType Not Allowed, try: ", str(rtypes))
@@ -263,7 +277,7 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
             print("No Results for", cidr)
 
     else:
-        raise Exception("RType Not Allowed, try: ", str(rtypes))
+        raise Exception("RType Not Allowed, try: ", str(rtypes), file=sys.stderr)
 
 
 
@@ -282,6 +296,7 @@ def find_cidr(ip):
                 if verbose:
                     print(ip + " in " + r.cidr)
                 mostSpecific = compare_cidr(mostSpecific, r.cidr)
+
 
     return mostSpecific
 

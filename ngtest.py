@@ -73,7 +73,8 @@ qtest['-rp 10.1.108.50 10.1.20.50'] = 'core1'
 # qtest['-rp 10.33.1.100 10.26.76.1'] = 'core1'
 rtest = dict()
 #rtest['-vlans -empty -vra 200'] = 'v6test'
-
+rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
+rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
 
 # Update Tests (check for errors)
 utest = ('-ivrf', '-id', '-ind', '-inet', '-isnet', '-iasa', '-ivlan', '-uvlan')

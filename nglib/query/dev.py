@@ -34,6 +34,7 @@ Device Query Routines
 """
 import logging
 import re
+import sys
 import nglib
 import nglib.ngtree
 import nglib.ngtree.export
@@ -42,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 verbose = 0
 
-def get_device(dev, rtype="TREE", vrange=None):
+def get_device(dev, rtype="NGTREE", vrange=None):
     """Get Switch perspective (neighbors, vlans, routed networks)"""
 
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
@@ -52,7 +53,8 @@ def get_device(dev, rtype="TREE", vrange=None):
 
     ngtree = nglib.ngtree.get_ngtree(dev, tree_type="Device")
 
-    logger.info("Query: Device %s for %s", dev, nglib.user)
+    if rtype != "NGTREE":
+        logger.info("Query: Device %s for %s", dev, nglib.user)
 
 
     switch = nglib.bolt_ses.run(
@@ -62,7 +64,12 @@ def get_device(dev, rtype="TREE", vrange=None):
 
     for sw in switch:
 
-        ngtree['Distance'] = int(sw['distance'])
+        try:
+            ngtree['Distance'] = int(sw['distance'])
+        except TypeError:
+            print("Error, device not part of the topology:", dev, file=sys.stderr)
+            return
+        
         ngtree['MGMT Group'] = sw['mgmt']
         if vrange:
             ngtree['VLAN Range'] = vrange
@@ -131,7 +138,7 @@ def get_device(dev, rtype="TREE", vrange=None):
         nglib.query.exp_ngtree(ngtree, rtype)
         return ngtree
 
-    print("No results found for device:", dev)
+    print("No results found for device:", dev, file=sys.stderr)
 
 def get_neighbors(dev):
     """
@@ -252,4 +259,21 @@ def get_vlans(dev, vrange=None):
             if vlan['mcount']:
                 vt['MAC Count'] = vlan['mcount']
     return vtree
+
+
+def get_devlist_vrf(vrf):
+    """Returns a list of devices that route a VRF"""
+
+    devices = nglib.bolt_ses.run(
+            'MATCH(v:VRF)-[e:VRF_ON]-(r:Router) WHERE v.name = {vrf} '
+            + 'RETURN r.name AS name ORDER BY name',
+            {"vrf": vrf})
+
+    devlist = []
+    
+    for r in devices:
+        devlist.append(r["name"])
+    
+    return devlist
+
 #END
