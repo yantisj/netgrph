@@ -18,4 +18,7 @@ Maintenance:
 - Add switch skip on certain neighbors
 - Rewrite nglib.net_update using Bolt as Pythonic
 - Emulate dict with ngtree
+- Rewrite py2neo cypher queries with py2neo v3.0
+- Change py2neo to use bolt driver by default
+
 
