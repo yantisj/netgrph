@@ -1,11 +1,17 @@
 ## Install Notes
 
 Netgrph was built on Ubuntu 14.04 LTS but should be portable to any other Python
-3.4+ system. I have done limited testing at this point on other systems (MacOS),
-so I highly recommend this OS right now. In the near future, I plan to ship a
-set of ansible scripts for easy install, but at first this is what I have.
+3.4+ system. I have done testing on Ubuntu 16.04 and MacOS, and I highly
+recommend Ubuntu trusty or xenial for support purposes. I provide ansible
+scripts for an easy install on a base Ubuntu system, and will be creating a
+Docker file before long.
 
-### Test Install Instructions
+### Ansible Install
+- See the README.md in docs/playbooks/
+- Install ansible on your machine, and point the playbook towards localhost as
+  documented, or a remote host if you are familiar with Ansible.
+
+### Manual Install Instructions
 
 - For testing, you can install everything but the database under your user on any system
 - If you do not have root access to your system, use virtualenv to satisfy the pip requirements
