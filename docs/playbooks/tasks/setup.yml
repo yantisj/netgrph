@@ -1,0 +1,7 @@
+---
+
+  - name: NetGrph | Symlinking executables
+    file: src=/home/{{ nguser }}/netgrph/netgrph.py dest=/usr/local/bin/netgrph state=link
+  - file: src=/home/{{ nguser }}/netgrph/ngupdate.py dest=/usr/local/bin/ngupdate state=link
+  - file: src=/home/{{ nguser }}/netgrph/ngreport.py dest=/usr/local/bin/ngreport state=link
+

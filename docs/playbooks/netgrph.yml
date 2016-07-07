@@ -1,0 +1,42 @@
+# Configure your nguser account under vars: below
+# Add your server to [netgrph] in Ansible Hosts
+# Add your sudo user to [netgrp:vars]
+#   ansible_ssh_user = yantisj
+
+- hosts: netgrph
+  become: yes
+  become_user: root
+  vars:
+    nguser: netgrph
+    option_install_java: false
+    option_allow_remote_connections: true
+    neo4j_edition: neo4j
+
+    neo4j_properties:
+      - {regexp: "^allow_store_upgrade.*", line: "allow_store_upgrade=true"}
+
+  tasks:
+  - name: Update Apt Packages
+    include: tasks/apt-update.yml
+    
+  - name: Apt Dependencies
+    include: tasks/apt-packages.yml
+
+  - name: Install Java8
+    include: tasks/java8.yml
+
+  - name: Install Neo4j
+    include: tasks/neo4j.yml
+
+  - name: Add netgrph user
+    include: tasks/netgrph-user.yml
+
+  - name: Clone NetGrph Repo
+    include: tasks/clonerepo.yml
+
+  - name: Install PIP Requirements
+    include: tasks/ngpip.yml
+
+  - name: NetGrph Setup
+    include: tasks/setup.yml
+

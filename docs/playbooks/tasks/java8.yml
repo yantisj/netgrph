@@ -1,0 +1,12 @@
+---
+    - name: JAVA | Add repo for java 8
+      apt_repository: repo='ppa:webupd8team/java' mode=664 state=present
+
+    - name: JAVA | Set licence selected
+      shell: /bin/echo debconf shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+
+    - name: JAVA | Set licence seen
+      shell: /bin/echo debconf shared/accepted-oracle-license-v1-1 seen true | /usr/bin/debconf-set-selections
+
+    - name: JAVA | Install java 8
+      apt: name=oracle-java8-installer state=latest update-cache=yes force=yes

@@ -1,0 +1,4 @@
+---
+    - name: Install PIP Requirements via PIP3
+      pip: requirements=/home/{{nguser}}/netgrph/requirements.txt executable=pip3
+

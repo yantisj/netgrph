@@ -1,0 +1,5 @@
+---
+    - name: Clone NetGrph Repo
+      git: repo=https://github.com/yantisj/netgrph dest=/home/{{nguser}}/netgrph
+
+

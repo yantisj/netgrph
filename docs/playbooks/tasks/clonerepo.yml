@@ -1,0 +1,6 @@
+---
+    - name: GIT | Clone NetGrph Repo
+      git: repo=https://github.com/yantisj/netgrph dest=/home/{{nguser}}/netgrph
+      become: yes
+      become_user: "{{nguser}}"
+
