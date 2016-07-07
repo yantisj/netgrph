@@ -1,11 +1,17 @@
 ## Install Notes
 
 Netgrph was built on Ubuntu 14.04 LTS but should be portable to any other Python
-3.4+ system. I have done limited testing at this point on other systems (MacOS),
-so I highly recommend this OS right now. In the near future, I plan to ship a
-set of ansible scripts for easy install, but at first this is what I have.
+3.4+ system. I have done testing on Ubuntu 16.04 and MacOS, and I highly
+recommend Ubuntu trusty or xenial for support purposes. I provide ansible
+scripts for an easy install on a base Ubuntu system, and will be creating a
+Docker file before long.
 
-### Test Install Instructions
+### Ansible Install
+- See the README.md in docs/playbooks/
+- Install ansible on your machine, and point the playbook towards localhost as
+  documented, or a remote host if you are familiar with Ansible.
+
+### Manual Install Instructions
 
 - For testing, you can install everything but the database under your user on any system
 - If you do not have root access to your system, use virtualenv to satisfy the pip requirements
@@ -56,17 +62,21 @@ sudo pip3 install -r requirements.txt
 ./netgrph.py -nf all
 ./netgrph.py -nf all -o tree
 ./ngreport.py -dev ".*"
+./ngreport.py -vrf "perim|default"
 ./netgrph.py abc4mdf
 ./netgrph.py abc4mdf -o json
 ./netgrph.py abc4mdf -o yaml
 ./netgrph.py -sp abc2sw1 xyz2sw1
 ./netgrph.py -sp abc.* xyz.* -o csv
+./netgrph.py -rp 10.1.120.50 10.7.206.0/23
 ./netgrph.py 120
 ./netgrph.py 1246
 ./netgrph.py -fp 10.1.120.50 8.8.8.8
 ./netgrph.py -nlist test_group
 ./netgrph.py -nlist test_group -o tree
 ./netgrph.py -group ABC
+./ngreport.py -vrf "perim|default"
+./ngreport.py -vlans
 ```
 
 ## Sample Reporting (to be expanded)
@@ -98,6 +108,6 @@ ngupdate --clearNodes --hours 12
 ```
 
 ## Adding firewalls and third-party devices
-- Examine the csv files in csv/ to understand the required datasources for importing third-party data
+- Examine the csv files in test/csv/ to understand the required datasources for importing third-party data
 - Examine the cyp/buildfw.cyp for understanding how to insert a L2 firewall between VRFs
 - Examine the cyp/sample-queries.cyp to start querying the Neo4j database directly for data

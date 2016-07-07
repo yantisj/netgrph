@@ -94,24 +94,26 @@ def add_parent_ngtree(ngtree, pngtree):
 
 def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
     """
-    Print NGTrees as an ASCII Art Tree
+    Recrusively print NGTrees using UTF-8 line drawing characters. If this
+    causes terminal problems for you and you would prefer an ASCII only mode,
+    contact me.
 
-    Notes: This code is rather confusing, even to me. I need to rewrite it, but
-    basically, it nests multiple levels of ngtrees and their children in a pretty
-    output format for use on the CLI.
+    Notes: This code is complicated, even to me. It should probably be rewritten,
+    but basically, it nests multiple levels of ngtrees and their children in a
+    pretty output format for use on the CLI.
 
-    get_space_indent() gets data to prepend to lines to form the tree structure
-    during output
+    get_space_indent() gets output to prepend to lines to form the tree
+    structure during output. It keeps track of where output is relative to the
+    rest of the tree structure.
 
-    The dtree dict keeps track of positions on tree to print pipes
+    The dtree dict keeps track of positions on tree to print continuations.
 
-    The close out section needs to be better understood, but when closing out
-    a child tree, you need to do some tricks to keep pipes from connecting sections
-    below.
+    The close out section needs to be better understood, but when closing out a
+    child tree, you need to keep pipes from connecting sections below.
 
-
-    Bugs: Currently, when starting a new child section, there is a gap in the tree.
-
+    There is a concept of Parent nodes, such as when you are doing a VID search,
+    and want to build the tree from the current location, but also add in the
+    Parent VID for context. Normally, Parent trees are not used.
     """
 
     hasParent = False
@@ -122,7 +124,7 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
     spaces, indent = get_space_indent(depth, dtree)
 
 
-    # Find Parent node
+    # Find Parent node if exists
     if '_parent' in ngtree.keys():
         dtree[0] = 1
         print_ngtree(ngtree['_parent'], dtree, parent=True)
@@ -131,7 +133,7 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
     # Get indentation spaces variable based on depth
     spaces, indent = get_space_indent(depth, dtree)
 
-    # Parent Nodes Print Above but at same level
+    # Parent Nodes Print up top at the same level (see VID output)
     if parent:
         print("[Parent {:} {:}]".format(ngtree['_type'], ngtree['Name']))
 
@@ -140,10 +142,11 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
         if depth == 0 and not hasParent:
             indent = ""
 
+        # Last tree terminates with └
         if lasttree:
             indent = indent.replace('├', '└')
 
-        # Abbreviate certain types
+        # Abbreviate certain types for shorter headers
         ngtype = ngtree['_type']
         if ngtype == "VLAN":
             ngtype = ""
@@ -154,7 +157,7 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
         header = " "
         header = header.join([ngtype, ngtree['Name']])
 
-        # Print section header
+        # Print section header -[header]
         if depth == 0:
             print("{:}┌─[{:} ]".format(indent, header))
             print("│")
@@ -162,8 +165,7 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
             print("{:}┬─[{:} ]".format(indent, header))
 
 
-
-    # Get Children as list to be able to locate final child for indentation
+    # Store Children as a list to be able to locate final child for indentation
     clist = []
     for key in sorted(ngtree.keys()):
         if re.search(r'^_child\d+', key):
@@ -173,55 +175,58 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
     if len(clist) == 0:
         dtree.pop(depth, None)
 
-    # Get indentation spaces variable based on depth
+    # Get indentation spaces variable based on current depth
     spaces, indent = get_space_indent(depth, dtree)
 
-    # Filter tree of structural data
+    # Filter tree of structural data (_ccount etc)
     ftree = filter_tree(ngtree)
 
-    # Print Keys as standard depth
-    # Last one prints special
+    # Print all keys at current depth
+    # Last one prints special if terminating section
     lastcount = len(ftree.keys())
     for key in sorted(ftree.keys()):
         lastcount = lastcount - 1
+
+        # No structural data
         if not re.search('(^_)|(^Name$)', key):
-            if lastcount or depth == 0:
+
+            # If there are children of current tree, then continue tree.
+            # Otherwise terminate tree with └
+            if lastcount or len(clist) > 0:
                 print("{:}├── {:} : {:}".format(spaces, key, ftree[key]))
             else:
                 print("{:}└── {:} : {:}".format(spaces, key, ftree[key]))
 
 
-    # Close out section with empty tree (confusing even more to me)
+    # Close out a section with empty line for visual separation
     if len(clist) > 0 or parent:
-        #print("IN LOOP")
         spaces = spaces + "│"
     print(spaces)
 
-    # Print child trees recursively
+    # Print child trees with recursive call to this function
     while len(clist) > 0:
 
         key = clist.pop(0)
 
-        # Still printing
+        # Continue printing with depth
         if len(clist) != 0:
             dtree[depth] = 1
 
-
         lasttree = False
-        # End of indentation
+        # End of indentation, un-indent
         if len(clist) == 0:
             dtree.pop(depth, None)
             lasttree = True
 
-
         spaces, indent = get_space_indent(depth, dtree)
 
+        # Indent and print child tree recursively
         if re.search(r'^_child\d+', key):
             cdepth = depth + 4
             print_ngtree(ngtree[key], dtree, depth=cdepth, lasttree=lasttree)
 
+        # Ending section, un-indent
         if len(clist) == 0:
-            #print("End of Children: " + str(depth))
             dtree.pop(depth, None)
 
 

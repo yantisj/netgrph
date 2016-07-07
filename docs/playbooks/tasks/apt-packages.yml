@@ -1,0 +1,8 @@
+# file: update.yml
+  - name: APT | Install Apt Packages
+    apt: name={{item}} state=present
+    with_items:
+    - python3-pip
+    - python3-pytest 
+    - python3-logilab-common
+    - emacs24-nox

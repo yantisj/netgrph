@@ -1,0 +1,59 @@
+# According to http://debian.neo4j.org/
+---
+  - name: NEO4J | Add key for Neo4j repo
+    apt_key: url=http://debian.neo4j.org/neotechnology.gpg.key state=present
+    become: yes
+
+  - name: NEO4J | Add Neo4j repo to sources list
+    apt_repository: repo='deb http://debian.neo4j.org/repo stable/' mode=664 state=present
+    become: yes
+
+  - name: NEO4J | Install Neo4j packages
+    apt: pkg={{ item }} state=installed update_cache=yes force=yes
+    become: yes
+    with_items:
+      - "{{neo4j_edition}}"
+
+# http://www.delimited.io/blog/2014/1/15/getting-started-with-neo4j-on-ubuntu-server
+
+  - name: NEO4J | Update /etc/security/limits.conf file (1/2)
+    lineinfile: dest=/etc/security/limits.conf
+              insertbefore='# End of file'
+              line='neo4j             soft    nofile          40000'
+              state=present
+    become: yes
+
+  - name: NEO4J | Update /etc/security/limits.conf file (2/2)
+    lineinfile: dest=/etc/security/limits.conf
+              insertbefore='# End of file'
+              line='neo4j             hard    nofile          40000'
+              state=present
+    become: yes
+
+  - name: NEO4J | Update /etc/pam.d/su file
+    lineinfile: dest=/etc/pam.d/su
+              regexp="^session    required   pam_limits.so"
+              insertafter='^# session    required   pam_limits.so'
+              line="session    required   pam_limits.so"
+              state=present
+    become: yes
+
+#  - name: NEO4J | Update /etc/neo4j/neo4j-server.properties to enable remote users to login to neo4j
+#    lineinfile: dest=/etc/neo4j/neo4j-server.properties
+#              regexp="^org.neo4j.server.webserver.address=0.0.0.0"
+#              insertafter='^#org.neo4j.server.webserver.address=0.0.0.0'
+#              line="org.neo4j.server.webserver.address=0.0.0.0"
+#              state=present
+
+  - name: NEO4J | Update /etc/neo4j/neo4j.conf to enable remote users to login to neo4j
+    lineinfile: dest=/etc/neo4j/neo4j.conf
+              regexp="^dbms.connector.http.address=0.0.0.0:7474"
+              insertafter='^#dbms.connector.http.address=0.0.0.0:7474'
+              line="dbms.connector.http.address=0.0.0.0:7474"
+              state=present
+    when: option_allow_remote_connections
+    become: yes
+
+  - name: NEO4J | Restart Neo4j
+    service: name=neo4j state=restarted
+    become: yes
