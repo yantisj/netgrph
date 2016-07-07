@@ -374,7 +374,7 @@ fairly easily. It relies on both the py2neo and neo4j bolt driver (install via
 pip3). The plan is to eventually convert all driver code to the bolt driver as
 it matures.
 
-NetGrph requires [CSV files](csv/) with all of your Switches/Routers, Networks,
+NetGrph requires [CSV files](test/csv/) with all of your Switches/Routers, Networks,
 VLANs, and CDP/LLDP Neighbors in order to be multi-vendor compatible. I provide
 IOS and NXOS configuration parsers, as well as a sample network topology to play
 with. For Cisco-based networks, a generic CDP/LLDP mapper is all that's missing.

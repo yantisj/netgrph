@@ -102,6 +102,6 @@ ngupdate --clearNodes --hours 12
 ```
 
 ## Adding firewalls and third-party devices
-- Examine the csv files in csv/ to understand the required datasources for importing third-party data
+- Examine the csv files in test/csv/ to understand the required datasources for importing third-party data
 - Examine the cyp/buildfw.cyp for understanding how to insert a L2 firewall between VRFs
 - Examine the cyp/sample-queries.cyp to start querying the Neo4j database directly for data
