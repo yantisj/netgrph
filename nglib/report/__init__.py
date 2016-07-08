@@ -145,12 +145,12 @@ def get_vrf_report(vrf, rtype="NGTREE"):
 
     if rtype in rtypes:
         logger.info("Query: Generating VRF Report (%s) for %s", vrf, nglib.user)
-    
+
         vrfs = nglib.bolt_ses.run(
             'MATCH(v:VRF) WHERE v.name =~ {vrf} '
             + 'RETURN v.name AS name ORDER BY name',
             {"vrf": vrf})
-        
+
         ngtree = nglib.ngtree.get_ngtree("Report", tree_type="VRFs")
         ngtree['VRF Regex'] = vrf
 
@@ -166,7 +166,7 @@ def get_vrf_report(vrf, rtype="NGTREE"):
                 cngtree["Routers"] = devlist
                 tree_count += 1
                 nglib.ngtree.add_child_ngtree(ngtree, cngtree)
-        
+
         # Return output
         if not tree_count:
             print("No VRFs found on regex:", vrf, file=sys.stderr)
@@ -184,9 +184,9 @@ def get_vrf_report(vrf, rtype="NGTREE"):
 def get_dev_report(dev, rtype="NGTREE"):
     """
     Get all devices on a regex
-    
+
     Note: Only returns devices in a mgmt group
-    """    
+    """
 
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
 

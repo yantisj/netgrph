@@ -69,7 +69,7 @@ def get_device(dev, rtype="NGTREE", vrange=None):
         except TypeError:
             print("Error, device not part of the topology:", dev, file=sys.stderr)
             return
-        
+
         ngtree['MGMT Group'] = sw['mgmt']
         if vrange:
             ngtree['VLAN Range'] = vrange
@@ -265,15 +265,15 @@ def get_devlist_vrf(vrf):
     """Returns a list of devices that route a VRF"""
 
     devices = nglib.bolt_ses.run(
-            'MATCH(v:VRF)-[e:VRF_ON]-(r:Router) WHERE v.name = {vrf} '
-            + 'RETURN r.name AS name ORDER BY name',
-            {"vrf": vrf})
+        'MATCH(v:VRF)-[e:VRF_ON]-(r:Router) WHERE v.name = {vrf} '
+        + 'RETURN r.name AS name ORDER BY name',
+        {"vrf": vrf})
 
     devlist = []
-    
+
     for r in devices:
         devlist.append(r["name"])
-    
+
     return devlist
 
 #END

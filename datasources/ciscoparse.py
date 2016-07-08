@@ -85,7 +85,7 @@ def process_vlans(vlanRange):
 
 def get_vlan_range(vlan_range):
     vlans = vlan_range.rsplit("-")
-    v_low  = int(vlans[0])
+    v_low = int(vlans[0])
 
     if len(vlans) > 1:
         if int(vlans[1]) <= 4096:
@@ -183,7 +183,7 @@ def parse_l3_interfaces(parse, device):
 
     interfaces = parse.find_objects_w_child(
        r'^interface.*(Ethernet)(\d+)(\/\d+)*(\.\d+)?$',
-       'ip\saddress\s(\d+.\d+.\d+.\d+)')
+       r'ip\saddress\s(\d+.\d+.\d+.\d+)')
     # interfaces = parse.find_objects_w_child(
     #     r'^interface.*',
     #     'ip\saddress\s(\d+.\d+.\d+.\d+)')
@@ -483,7 +483,8 @@ def save_vlan_file(data, out_file):
 def saveVLAN(vlan,vid,vname,switch,stp):
     global vlan_list
 
-    if DEBUG: print("Saving data: " + str(vlan) + "," + str(vid) + "," + str(vname) + "," + str(switch) + "," + str(stp))
+    if DEBUG:
+        print("Saving data: " + str(vlan) + "," + str(vid) + "," + str(vname) + "," + str(switch) + "," + str(stp))
     vlan_list.append(str(vlan) + "," + str(vid) + "," + str(vname) + "," + str(switch) + "," + str(stp))
 
 # Write results to file

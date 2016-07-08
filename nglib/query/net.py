@@ -171,10 +171,12 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
         # Get all networks
         networks = nglib.bolt_ses.run(
             'MATCH(n:Network), (n)--(v:VRF), (n)-[:ROUTED_BY]->(r:Switch:Router) '
-            + 'OPTIONAL MATCH (n)--(s:Supernet) OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(rs:Switch:Router) '
+            + 'OPTIONAL MATCH (n)--(s:Supernet) OPTIONAL MATCH '
+            + '(n)-[:ROUTED_STANDBY]->(rs:Switch:Router) '
             + 'RETURN n.cidr AS CIDR, n.vid AS VLAN, '
             + 'n.gateway as Gateway, n.location as Location, n.desc AS Description, '
-            + 'r.name AS Router, rs.name AS StandbyRouter, s.role AS NetRole, v.name as VRF, n.vrfcidr AS vrfcidr, '
+            + 'r.name AS Router, rs.name AS StandbyRouter, s.role AS NetRole, '
+            + 'v.name as VRF, n.vrfcidr AS vrfcidr, '
             + 'v.seczone AS SecurityLevel ORDER BY CIDR')
 
         # Check to see if networks match group
