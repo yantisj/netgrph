@@ -130,7 +130,7 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
             elif verbose > 3:
                 print("Existing Matches", nProp['vrfcidr'])
     else:
-        return
+        return ngtree
 
     return ngtree
 
