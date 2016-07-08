@@ -134,7 +134,10 @@ def parse_snmp(parse, device):
     for s in snmp:
 
         location = s.text.replace('snmp-server location ', '')
+
+        # Strip out commas and single quotes
         location = location.replace(',', '')
+        location = location.replace("'", "")
         dentry['Location'] = location
 
     return dentry
