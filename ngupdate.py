@@ -158,7 +158,7 @@ def run_cmd(func, fileName=None, devFile=None):
     l_stop = timer()
     l_runtime = "%.3f" % (l_stop - l_start)
     if verbose:
-        logger.info("|--> Time: " + l_runtime + "sec")
+        logger.info("|---> Time: " + l_runtime + "sec")
 
 
 # Full Import Requested
