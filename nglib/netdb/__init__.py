@@ -44,8 +44,6 @@ import pymysql
 
 logger = logging.getLogger(__name__)
 
-config = nglib.config
-
 netdb_ses = None
 
 def connect_netdb():
@@ -55,11 +53,11 @@ def connect_netdb():
     netdbhost = None
     netdbuser = None
     netdbpasswd = None
-    
+
     try:
-        netdbhost = config['netdb']['host']
-        netdbuser = config['netdb']['user']
-        netdbpasswd = config['netdb']['pass']
+        netdbhost = nglib.config['netdb']['host']
+        netdbuser = nglib.config['netdb']['user']
+        netdbpasswd = nglib.config['netdb']['pass']
 
     except KeyError:
         print("Error: NetDB Database Credentials no Configured", file=sys.stderr)
