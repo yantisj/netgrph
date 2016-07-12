@@ -39,6 +39,7 @@ import functools
 import configparser
 import ipaddress
 import nglib
+import nglib.query
 
 verbose = 0
 logger = logging.getLogger(__name__)

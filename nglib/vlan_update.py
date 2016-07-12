@@ -35,7 +35,6 @@
 import logging
 import nglib
 
-verbose = 0
 logger = logging.getLogger(__name__)
 
 
@@ -240,7 +239,7 @@ def update_bidge_domains():
 def update_bridge(pmgmt, cmgmt, vlan, pswitch, cswitch):
     """Insert or Update a VLAN BRIDGE"""
 
-    if verbose > 2:
+    if nglib.verbose > 2:
         print("Bridge: ", pmgmt, cmgmt, vlan, pswitch, cswitch)
 
     pvlan = pmgmt + "-" + vlan
@@ -299,7 +298,7 @@ def find_local_root():
                 if stp < stpmin and stp != 0:
                     stpmin = stp
                     switch = s.switch
-                    if verbose > 3:
+                    if nglib.verbose > 3:
                         print("Local Root: ", vname, stp, switch)
 
             # Update VLAN with lowest value
@@ -352,7 +351,7 @@ def find_bridged_root():
 
                     # Link Bridge domain to root
                     if stp < 32768:
-                        if verbose > 3:
+                        if nglib.verbose > 3:
                             print("Low STP: ", vname, stp, rootSwitch)
                         link_vlan_to_root(vname, stp, rootSwitch)
 
@@ -397,7 +396,7 @@ def netdb_vlan_import():
 
         (pcount, mcount) = nglib.netdb.get_mac_and_port_counts(en['switch'], en['vid'])
 
-        updatevlans = nglib.bolt_ses.run(
+        nglib.bolt_ses.run(
             'MATCH (v:VLAN {name:{vname}})-[e:Switched]->(s:Switch {name:{switch}}) '
             + 'SET e += {pcount:{pcount}, mcount:{mcount}} RETURN e',
             {"vname": en['vname'], "switch": en['switch'], "pcount": pcount, "mcount": mcount})

@@ -37,7 +37,6 @@ import nglib.netdb
 import nglib.ngtree
 
 
-verbose = 0
 logger = logging.getLogger(__name__)
 
 netdb_ses = None

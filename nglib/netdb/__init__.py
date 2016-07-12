@@ -39,21 +39,31 @@ import re
 import os
 import sys
 import logging
-#import mysql.connector
+import nglib
 import pymysql
 
-verbose = 0
 logger = logging.getLogger(__name__)
 
-netdbhost = None
-netdbuser = None
-netdbpasswd = None
+config = nglib.config
+
 netdb_ses = None
 
 def connect_netdb():
     """Update the netdb_ses handle"""
 
     global netdb_ses
+    netdbhost = None
+    netdbuser = None
+    netdbpasswd = None
+    
+    try:
+        netdbhost = config['netdb']['host']
+        netdbuser = config['netdb']['user']
+        netdbpasswd = config['netdb']['pass']
+
+    except KeyError:
+        print("Error: NetDB Database Credentials no Configured", file=sys.stderr)
+        raise
 
     if not netdbuser:
         raise Exception("NetDB Credentials not Configured")

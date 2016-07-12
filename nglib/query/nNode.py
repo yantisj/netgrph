@@ -35,8 +35,8 @@ Py2Neo Node Properties
 """
 import logging
 import json
+import nglib
 
-verbose = 0
 logger = logging.getLogger(__name__)
 
 
@@ -44,7 +44,7 @@ def getJSONProperties(node):
     """Returns Properties for a node from JSON as a nested dictionary"""
 
     json_string = swapQuotes(str(node.properties))
-    if verbose > 1:
+    if nglib.verbose > 1:
         print("JSON:", json_string)
     parsed_json = json.loads(json_string)
     return parsed_json

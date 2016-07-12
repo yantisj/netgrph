@@ -34,10 +34,7 @@ NetGrph Firewall Import Routines
 import logging
 import nglib
 
-verbose = 0
 logger = logging.getLogger(__name__)
-
-fwdir = None
 
 def import_fw(fileName):
     """Import FW CSV File"""

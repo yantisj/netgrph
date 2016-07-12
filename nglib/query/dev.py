@@ -41,8 +41,6 @@ import nglib.ngtree.export
 
 logger = logging.getLogger(__name__)
 
-verbose = 0
-
 def get_device(dev, rtype="NGTREE", vrange=None):
     """Get Switch perspective (neighbors, vlans, routed networks)"""
 
