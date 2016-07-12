@@ -41,8 +41,6 @@ import nglib.query.nNode
 logger = logging.getLogger(__name__)
 
 verbose = 0
-logcmd = None
-logurl = None
 
 def get_switch_path(switch1, switch2, rtype="NGTREE"):
     """
@@ -146,7 +144,7 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
             if n2tree:
                 net2 = n2tree['_child001']['Name']
 
-        
+
         ngtree = nglib.ngtree.get_ngtree("Routed Paths", tree_type="RPATHs")
         ngtree["Path"] = net1 + " -> " + net2
 
@@ -234,6 +232,9 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
 
 def get_fw_path(src, dst):
     """Discover the Firewall Path between two IP addresses"""
+
+    logcmd = nglib.config['nglib']['logcmd']
+    logurl = nglib.config['nglib']['logurl']
 
     srcnet = nglib.query.net.find_cidr(src)
     dstnet = nglib.query.net.find_cidr(dst)

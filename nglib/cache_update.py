@@ -34,7 +34,6 @@ import logging
 from nglib.query.nNode import getRelationship, getLabel, getJSONProperties
 import nglib
 
-verbose = 0
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +41,7 @@ def clear_edges(hours):
     """
     Clear Expired Edges
 
-    Notes: verbose returns edges to delete but does not delete
+    Notes: nglib.verbose returns edges to delete but does not delete
     """
 
     logger.info("Clearing Edges older than " + str(hours) + " hours")
@@ -63,7 +62,7 @@ def clear_edges(hours):
             'MATCH ()-[e]->() WHERE e.time < {age} RETURN count(e) as count',
             age=age)
 
-        if verbose:
+        if nglib.verbose:
             logger.info("Expired Edges: " + str(count[0].count))
         else:
             logger.info("Deleting Edges: " + str(count[0].count))
@@ -101,7 +100,7 @@ def clear_nodes(hours):
 
         logger.info("Expired Nodes: " + str(count[0].count))
 
-        if not verbose:
+        if not nglib.verbose:
             logger.info("Deleting Nodes: " + str(count[0].count))
 
             nglib.py2neo_ses.cypher.execute(

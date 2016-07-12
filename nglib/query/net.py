@@ -34,13 +34,10 @@ import sys
 import ipaddress
 import logging
 import nglib
-import nglib.query
 import nglib.netdb.ip
 
 from nglib.query.nNode import getJSONProperties
 
-
-verbose = 0
 logger = logging.getLogger(__name__)
 
 
@@ -127,10 +124,10 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
                 if nProp['vid']:
                     cngt['VLAN'] = nProp['vid']
 
-            elif verbose > 3:
+            elif nglib.verbose > 3:
                 print("Existing Matches", nProp['vrfcidr'])
     else:
-        return
+        return ngtree
 
     return ngtree
 
@@ -171,10 +168,12 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
         # Get all networks
         networks = nglib.bolt_ses.run(
             'MATCH(n:Network), (n)--(v:VRF), (n)-[:ROUTED_BY]->(r:Switch:Router) '
-            + 'OPTIONAL MATCH (n)--(s:Supernet) OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(rs:Switch:Router) '
+            + 'OPTIONAL MATCH (n)--(s:Supernet) OPTIONAL MATCH '
+            + '(n)-[:ROUTED_STANDBY]->(rs:Switch:Router) '
             + 'RETURN n.cidr AS CIDR, n.vid AS VLAN, '
             + 'n.gateway as Gateway, n.location as Location, n.desc AS Description, '
-            + 'r.name AS Router, rs.name AS StandbyRouter, s.role AS NetRole, v.name as VRF, n.vrfcidr AS vrfcidr, '
+            + 'r.name AS Router, rs.name AS StandbyRouter, s.role AS NetRole, '
+            + 'v.name as VRF, n.vrfcidr AS vrfcidr, '
             + 'v.seczone AS SecurityLevel ORDER BY CIDR')
 
         # Check to see if networks match group
@@ -293,7 +292,7 @@ def find_cidr(ip):
     if len(networks) > 1:
         for r in networks.records:
             if ipaddress.ip_address(ip) in ipaddress.ip_network(r.cidr):
-                if verbose:
+                if nglib.verbose:
                     print(ip + " in " + r.cidr)
                 mostSpecific = compare_cidr(mostSpecific, r.cidr)
 

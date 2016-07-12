@@ -37,15 +37,13 @@ import nglib.netdb
 import nglib.ngtree
 
 
-verbose = 0
 logger = logging.getLogger(__name__)
 
-netdb_ses = None
 
 def get_netdb_ip(ip, hours=720):
     """Get All Details for an IP"""
 
-    global netdb_ses
+    netdb_ses = nglib.netdb.netdb_ses
 
     if not netdb_ses:
         netdb_ses = nglib.netdb.connect_netdb()

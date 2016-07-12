@@ -35,9 +35,7 @@ import ipaddress
 import logging
 import nglib
 
-verbose = 0
 logger = logging.getLogger(__name__)
-config = None
 
 # Keep a global vrf cache for performance when matching routers to VRFs
 vrf_cache = dict()
@@ -54,9 +52,9 @@ def import_networks(fileName, ignore_new=False):
     # Remap default VRFs for devices in config
     vrfmap = dict()
     try:
-        for key in config['default_vrf']:
+        for key in nglib.config['default_vrf']:
             #print(key, config['default_vrf'][key])
-            vrfmap[key] = config['default_vrf'][key]
+            vrfmap[key] = nglib.config['default_vrf'][key]
     except KeyError:
         pass
 
@@ -308,7 +306,7 @@ def check_vrf_cache(router, vrf):
     rtov = router + "__" + vrf
     if rtov not in vrf_cache:
         vrf_cache[rtov] = 1
-        if verbose > 2:
+        if nglib.verbose > 2:
             print("Added Router to VRF Cache", rtov)
         nglib.dev_update.link_router_to_vrf(router, vrf)
 

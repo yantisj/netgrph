@@ -41,6 +41,12 @@ import configparser
 import logging
 from timeit import default_timer as timer
 import nglib
+import nglib.dev_update
+import nglib.net_update
+import nglib.fw_update
+import nglib.cache_update
+import nglib.vlan_update
+
 
 
 # Default Config File Location
@@ -122,12 +128,6 @@ if args.debug:
 
 # Setup Globals Debugging
 nglib.verbose = verbose
-nglib.dev_update.verbose = verbose
-nglib.fw_update.verbose = verbose
-nglib.net_update.verbose = verbose
-nglib.vlan_update.verbose = verbose
-nglib.alerts.verbose = verbose
-nglib.cache_update.verbose = verbose
 
 # Initialize Library
 nglib.init_nglib(config_file)

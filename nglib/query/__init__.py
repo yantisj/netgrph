@@ -39,19 +39,15 @@ import functools
 import configparser
 import ipaddress
 import nglib
-# import nglib.ngtree
-# import nglib.query.vlan
-# import nglib.query.dev
-# import nglib.query.net
-# import nglib.query.nNode
+import nglib.ngtree
+import nglib.query.vlan
+import nglib.query.dev
+import nglib.query.net
+import nglib.query.nNode
+import nglib.query.path
 
 
-verbose = 0
 logger = logging.getLogger(__name__)
-
-# Import Variables from NST Config File
-config = dict()
-
 
 def exp_ngtree(ngtree, rtype):
     """Prints or Returns NGTree in Requested format"""
@@ -108,7 +104,7 @@ def get_net_filter(group):
     """Try to get a filter from the config"""
 
     try:
-        gFilter = config['NetAlertFilter'][group]
+        gFilter = nglib.config['NetAlertFilter'][group]
         return gFilter
     except:
         raise Exception("No Group Filter Found", group)
@@ -174,7 +170,7 @@ def get_filter_dict(group=None, nFilter=None):
     gFilter = None
 
     if group:
-        gFilter = config['NetAlertFilter'][group]
+        gFilter = nglib.config['NetAlertFilter'][group]
     elif nFilter:
         gFilter = nFilter
     else:
@@ -202,7 +198,7 @@ def get_filter_dict(group=None, nFilter=None):
             vDict[f] = []
             vDict[f].append("all")
 
-    if verbose > 1:
+    if nglib.verbose > 1:
         print("vDict Contents", str(vDict))
 
     return vDict
@@ -214,7 +210,7 @@ def universal_text_search(text, vrange, rtype="TREE"):
     debugging here.
     """
 
-    if verbose:
+    if nglib.verbose:
         print("Universal Search for", text)
 
     found = False

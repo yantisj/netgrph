@@ -32,8 +32,9 @@
 #
 """
  NGDB Main Library
+ - Main Library functions and variables used by modules
  - Call module.init_nglib(config) to initialize
- - Main Library functions used by other modules
+ - Sets logging levels, loads config file
 """
 import csv
 import re
@@ -47,49 +48,27 @@ from neo4j.v1 import TRUST_ON_FIRST_USE, TRUST_SIGNED_CERTIFICATES, SSL_AVAILABL
 from neo4j.v1.exceptions import CypherError, ProtocolError
 from neo4j.v1 import GraphDatabase, basic_auth
 from py2neo import Node, Relationship, Graph
-import nglib.cache_update
-import nglib.dev_update
-import nglib.fw_update
-import nglib.net_update
-import nglib.vlan_update
-import nglib.alerts
-import nglib.query
-import nglib.ngtree
-import nglib.ngtree.export
-import nglib.report
-import nglib.netdb
-import nglib.query.vlan
-import nglib.query.dev
-import nglib.query.net
-import nglib.query.path
-import nglib.query.nNode
-
 
 
 logger = logging.getLogger(__name__)
 
-# Global variables
+# Global variables (all library global variables go here)
 verbose = 0
 config = None
 
 # Save user for library
-user = None
+user = pwd.getpwuid(os.getuid())[0]
 
 # DB Sessions accessed globally
 bolt_ses = None
 py2neo_ses = None
 
 # Topology Variables
-max_distance = 1000
+max_distance = 100
 dev_seeds = None
 
 # NetDB Enabled
 use_netdb = False
-
-try:
-    user = pwd.getpwuid(os.getuid())[0]
-except:
-    user = 'Daemon'
 
 
 def get_db_client(dbhost, dbuser, dbpass, bolt=False):
@@ -194,19 +173,13 @@ def init_nglib(configFile):
     config = configparser.ConfigParser()
     config.read(configFile)
 
-    # Pass config to other modules
-    nglib.query.config = config
-    nglib.net_update.config = config
-
     # Tries to Loads NetDB Variables
     try:
-        nglib.netdb.netdbhost = config['netdb']['host']
-        nglib.netdb.netdbuser = config['netdb']['user']
-        nglib.netdb.netdbpasswd = config['netdb']['pass']
-
-        use_netdb = True
+        use_netdb = config['netdb']['host']
     except KeyError:
         pass
+    if use_netdb:
+        use_netdb = True
 
 
     # DB Credentials
@@ -221,22 +194,11 @@ def init_nglib(configFile):
     # Topology
     max_distance = int(config['topology']['max_distance'])
     dev_seeds = config['topology']['seeds']
-    try:
-        nglib.dev_update.dist_exclude = config['topology']['dist_exclude']
-    except KeyError:
-        pass
-
-    # Logindex configuration
-    nglib.query.path.logcmd = config['nglib']['logcmd']
-    nglib.query.path.logurl = config['nglib']['logurl']
-
-    # FW Init
-    fwdir = config['ngfw']['fwdir']
-    nglib.fw_update.fwdir = fwdir
 
     # Initialize Logging
     init_logging()
     logger.debug("Initialized Configuration Successfully")
+
 
 def init_logging():
     '''Initialize Logging'''

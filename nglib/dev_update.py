@@ -39,9 +39,6 @@ import nglib
 
 logger = logging.getLogger(__name__)
 
-verbose = 0
-dist_exclude = "NOEXCLUDEDEFINED"
-
 
 def import_devicelist(fileName, infoFile):
     """Import Devices from Devices.csv"""
@@ -83,16 +80,16 @@ def import_devicelist(fileName, infoFile):
 
 
         if rType == "Primary":
-            if verbose > 3:
+            if nglib.verbose > 3:
                 print("R: " + device)
             import_router(device, group, time, seed, rType, location)
 
         elif rType == "Standby":
-            if verbose > 3:
+            if nglib.verbose > 3:
                 print("Rs: " + device)
             import_router(device, group, time, seed, rType, location)
         else:
-            if verbose > 3:
+            if nglib.verbose > 3:
                 print("S: " + device)
             import_switch(device, group, time, seed, location)
 
@@ -260,7 +257,7 @@ def import_neighbors(fileName):
         if re.search(exPorts, localPort) or re.search(exPorts, remotePort):
             logger.debug("Skipping NEI: " + remoteName)
         else:
-            if verbose > 2:
+            if nglib.verbose > 2:
                 print("Debug importNeighbors", localName, localPort, remoteName,
                       remotePort)
 
@@ -385,7 +382,14 @@ def update_distance(switch):
 
     # Exclude these switches in distance calculation
     # From config[topology][dist_exclude]
+
+    try:
+        dist_exclude = nglib.config['topology']['dist_exclude']
+    except KeyError:
+        pass
+
     exclude = re.search(dist_exclude, switch)
+    dist_exclude = "NOEXCLUDEDEFINED"
 
     # Excluded switches stay with default value
     if not exclude:
@@ -435,7 +439,6 @@ def update_distance(switch):
                         switch=switch, newdist=newdist)
 
 
-# FIXME (as dictionary)
 def import_vrfs(fileName):
     """Import VRFs from CSV"""
 

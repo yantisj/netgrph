@@ -35,6 +35,7 @@ import os
 import re
 import argparse
 import nglib
+import nglib.report
 
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
@@ -96,10 +97,8 @@ if not args.vrange:
 if args.output:
     args.output = args.output.upper()
 
-# Setup Globals in hwinvmod
+# Setup Globals
 nglib.verbose = verbose
-nglib.query.verbose = verbose
-nglib.query.vlan.verbose = verbose
 
 # Initialize Library
 nglib.init_nglib(config_file)
