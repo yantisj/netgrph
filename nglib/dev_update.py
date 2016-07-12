@@ -439,7 +439,6 @@ def update_distance(switch):
                         switch=switch, newdist=newdist)
 
 
-# FIXME (as dictionary)
 def import_vrfs(fileName):
     """Import VRFs from CSV"""
 

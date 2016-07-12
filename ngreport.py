@@ -97,7 +97,7 @@ if not args.vrange:
 if args.output:
     args.output = args.output.upper()
 
-# Setup Globals in hwinvmod
+# Setup Globals
 nglib.verbose = verbose
 
 # Initialize Library

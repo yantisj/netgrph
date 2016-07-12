@@ -129,7 +129,6 @@ if args.debug:
 # Setup Globals Debugging
 nglib.verbose = verbose
 
-
 # Initialize Library
 nglib.init_nglib(config_file)
 logger = logging.getLogger("updatengdb")

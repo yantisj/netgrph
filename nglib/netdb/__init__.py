@@ -44,6 +44,7 @@ import pymysql
 
 logger = logging.getLogger(__name__)
 
+# DB connection is global
 netdb_ses = None
 
 def connect_netdb():
@@ -69,10 +70,6 @@ def connect_netdb():
     netdb_ses = pymysql.connect(user=netdbuser, password=netdbpasswd,
                                 host=netdbhost,
                                 database="netdb")
-
-    # netdb_ses = mysql.connector.connect(user=netdbuser, password=netdbpasswd,
-    #                                     host=netdbhost,
-    #                                     database="netdb")
 
     return netdb_ses
 
