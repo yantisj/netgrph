@@ -406,7 +406,7 @@ Please see the [Contributions](CONTRIBUTING.md) document in docs for
 information about how you can contribute back to NetGrph.
 
 ## Contributors
-* Jonathan Yantis ([yantisj](https://github.com/tcabanski))
+* Jonathan Yantis ([yantisj](https://github.com/yantisj))
 
 ## License
 NetGrph is licensed under the GNU AGPLv3 License.
