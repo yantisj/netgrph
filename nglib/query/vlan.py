@@ -39,7 +39,6 @@ from nglib.query.nNode import getJSONProperties
 
 logger = logging.getLogger(__name__)
 
-verbose = 0
 
 def get_vlan_range(vlanRange):
     """Return the Low and High Values for a range"""
@@ -54,7 +53,7 @@ def get_vlan_range(vlanRange):
     else:
         vhigh = vlow
 
-    if verbose > 2:
+    if nglib.verbose > 2:
         print("VLAN Range Low: " + str(vlow) + " High: " + str(vhigh), file=sys.stderr)
 
     return vlow, vhigh
@@ -133,6 +132,7 @@ def load_bridge_tree(vname, root=True, getSW=False):
     Recursively Build Trees for child vnames
 
     Notes: getSW returns all switches instead of truncated (JSON/YAML)
+    Bugs: Currently does not work for odd topologies
     """
 
     sMax = 7
@@ -306,7 +306,7 @@ def get_vlan_bridges(vid):
     # Found VID
     if len(vnames) > 0:
         for vn in vnames.records:
-            if verbose:
+            if nglib.verbose:
                 print("Found", vn.name, vn.vid)
 
             if vn.name not in vfound.keys():
@@ -320,7 +320,7 @@ def get_vlan_bridges(vid):
 
                 # Standalone VLAN
                 if len(vbridges) == 0:
-                    if verbose:
+                    if nglib.verbose:
                         print(vid, "not bridged on", vn.name)
                     vname[vn.name] = vid
 
@@ -328,7 +328,7 @@ def get_vlan_bridges(vid):
                 else:
                     rFound = False
                     for rvn in vbridges:
-                        if verbose:
+                        if nglib.verbose:
                             print("Found RV", rvn.rname)
 
                         # Mark all members of bridge as found
@@ -341,14 +341,14 @@ def get_vlan_bridges(vid):
 
                         # Root node has no outgoing BRIDGE relationships
                         if len(findroot) == 0:
-                            if verbose:
+                            if nglib.verbose:
                                 print("Found root", rvn.rname)
                             vname[rvn.rname] = vid
                             rFound = True
 
                     # I must be the root node since others have bridge relationships
                     if not rFound:
-                        if verbose:
+                        if nglib.verbose:
                             print("I'm the root of", vn.name)
                         vname[vn.name] = vid
 
