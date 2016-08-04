@@ -8,3 +8,5 @@ neo4j-queries.txt
 build-commands
 .vscode/
 ngtest.py.bak
+.cache/
+.DS_Store

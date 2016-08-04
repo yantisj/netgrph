@@ -40,12 +40,6 @@ import nglib
 verbose = 0
 logger = logging.getLogger(__name__)
 
-
-# Import Variables from NST Config File
-config = configparser.ConfigParser()
-config.read('/etc/netgraph.ini')
-
-
 # Generate Alerts on new networks
 def gen_new_network_alerts():
     """Generate New Network Alerts"""
@@ -88,11 +82,46 @@ def gen_new_network_alerts():
         results = nglib.py2neo_ses.cypher.execute(
             'MATCH(n:NewNetwork) delete n')
 
+def gen_new_vlan_alerts():
+    """ Send new VLAN Alerts to all groups that receive 'all' alerts """
+
+    newVlans = []
+    groups = []
+
+    # Find any new networks
+    results = nglib.py2neo_ses.cypher.execute(
+        'MATCH(v:NewVLAN) return v.name AS name')
+
+    ncount = len(results)
+
+    if ncount > 0:
+        logger.info("Found %s New Vlans to Alert On", ncount)
+
+        #
+        for group in nglib.config['NetAlertGroups']:
+            if nglib.config['NetAlertFilter'][group] == 'all':
+                groups.append(group)
+
+        # Append all vlans to a list
+        for vlan in results:
+            newVlans.append(vlan.name)
+
+            if nglib.verbose:
+                print(groups)
+                print(newVlans)
+
+        for group in groups:
+            sendEmailAlert(group, newVlans, vlan=True)
+        
+        # Deleting NewVLAN Objects
+        if not verbose:
+            results = nglib.py2neo_ses.cypher.execute(
+                'MATCH(n:NewVLAN) delete n')
 
 def loadGroups(gAlert):
     """Load all groups from config file into a dictionary of lists"""
 
-    for group in config['NetAlertGroups']:
+    for group in nglib.config['NetAlertGroups']:
         gAlert[group] = []
 
 
@@ -110,16 +139,19 @@ def loadNetAlerts(gAlert, newNets):
                     gAlert[group].append(netDict)
 
 
-def sendEmailAlert(group, nList):
+def sendEmailAlert(group, nList, vlan=False):
     """Send group Network Alert from matched list"""
 
+    if nglib.verbose:
+        print("Emailing {0} New Network List Alert:\n {1}".format(group, str(nList)))
 
-    print("Emailing {0} New Network List Alert:\n {1}".format(group, str(nList)))
+    emailAddress = nglib.config['NetAlertGroups'][group]
+    fromAddress = nglib.config['NetAlert']['from']    
+    mailServer = nglib.config['NetAlert']['mailServer']
+    subject = nglib.config['NetAlert']['subject']
 
-    emailAddress = config['NetAlertGroups'][group]
-    fromAddress = config['NetAlert']['from']
-    subject = config['NetAlert']['subject']
-    mailServer = config['NetAlert']['mailServer']
+    if vlan:
+        subject = nglib.config['NetAlert']['vlansubject']
 
     nTable = ""
 
@@ -139,6 +171,7 @@ def sendEmailAlert(group, nList):
     s.sendmail(fromAddress, [emailAddress], msg.as_string())
     s.quit()
 
-    print(emailAddress, fromAddress, subject, contents)
+    if nglib.verbose:
+        print(emailAddress, fromAddress, subject, contents)
 
 # END

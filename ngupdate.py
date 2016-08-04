@@ -46,7 +46,7 @@ import nglib.net_update
 import nglib.fw_update
 import nglib.cache_update
 import nglib.vlan_update
-
+import nglib.alerts
 
 
 # Default Config File Location
@@ -158,7 +158,7 @@ def run_cmd(func, fileName=None, devFile=None):
     l_stop = timer()
     l_runtime = "%.3f" % (l_stop - l_start)
     if verbose:
-        logger.info("|--> Time: " + l_runtime + "sec")
+        logger.info("|---> Time: " + l_runtime + "sec")
 
 
 # Full Import Requested
@@ -192,6 +192,8 @@ elif args.dropDatabase:
 # Alerts
 elif args.alerts:
     nglib.alerts.gen_new_network_alerts()
+    nglib.alerts.gen_new_vlan_alerts()
+
 
 # NetDB
 elif args.unetdb:
