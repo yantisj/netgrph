@@ -192,6 +192,8 @@ elif args.dropDatabase:
 # Alerts
 elif args.alerts:
     nglib.alerts.gen_new_network_alerts()
+    nglib.alerts.gen_new_vlan_alerts()
+
 
 # NetDB
 elif args.unetdb:
