@@ -159,11 +159,11 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
             + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = "default") '
             + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
             + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
-            + 'MATCH (r1)<-[l1:ROUTED]-(:Network)-[l2:ROUTED]->(r2), '
-            + 'plen = shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1)) '
+            + 'MATCH (r1)<-[l1:ROUTED]-(:Network)-[l2:ROUTED]->(r2) '
             + 'RETURN DISTINCT r1.name AS r1name, l1.gateway AS r1ip, '
-            + 'r2.name AS r2name, l2.gateway as r2ip, LENGTH(plen) as distance '
-            + 'ORDER BY distance',
+            + 'r2.name AS r2name, l2.gateway as r2ip, '
+            + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
+            + 'AS distance ORDER BY distance',
             {"net1": net1, "net2": net2})
 
 
