@@ -206,7 +206,7 @@ elif args.id:
 elif args.ind:
     nglib.dev_update.import_neighbors(ngfiles['neighbors'])
 elif args.ild:
-    nglib.dev_update.import_links(ngfile['links'])
+    nglib.dev_update.import_links(ngfiles['links'])
 elif args.ivrf:
     nglib.dev_update.import_vrfs(ngfiles['vrfs'])
 elif args.inet:

@@ -169,7 +169,7 @@ def parse_l2_interfaces(parse, device):
 
     for i in interfaces:
         ientry = dict()
-        ientry['vlans'] = ""
+        ientry['vlans'] = "1-4096"
         ientry['desc'] = ""
         ientry['channel'] = 0
         ientry['native'] = 1
