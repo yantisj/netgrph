@@ -177,6 +177,8 @@ if args.full:
     run_cmd(nglib.fw_update.import_fw, fileName=ngfiles['firewalls'])
 
     run_cmd(nglib.vlan_update.import_vlans, fileName=ngfiles['vlans'])
+    run_cmd(nglib.vlan_update.import_links, fileName=ngfiles['links'])
+
 
     run_cmd(nglib.vlan_update.update_vlans)
     stop = timer()
@@ -206,7 +208,7 @@ elif args.id:
 elif args.ind:
     nglib.dev_update.import_neighbors(ngfiles['neighbors'])
 elif args.ild:
-    nglib.dev_update.import_links(ngfiles['links'])
+    nglib.vlan_update.import_links(ngfiles['links'])
 elif args.ivrf:
     nglib.dev_update.import_vrfs(ngfiles['vrfs'])
 elif args.inet:

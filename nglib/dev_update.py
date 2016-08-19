@@ -34,7 +34,6 @@ Also contains NEI import routines
 """
 import csv
 import re
-from collections import defaultdict
 import logging
 import nglib
 
@@ -375,121 +374,8 @@ def import_adjacent_neighbors(en, localD, remoteD, time):
                 local=localName, time=time, remote=remoteName,
                 localPort=localPort, remotePort=remotePort)
 
-def import_links(fileName):
-    """Read in all trunk links from fileName
-       Load all vlans for all switches into cache
-       Find the intersecting vlans between trunk interfaces
-       Find the intersecting vlans between switches
-       Find the intersection between vlans that can exist on trunk
-       Add vlans to interface relationship
-    """
-
-    f = open(fileName)
-    lcsv = csv.DictReader(f)
-    ldb = dict()
-    vcache = cache_vlans()
-
-    # Load CSV entries into ldb dict
-    for en in lcsv:
-        ldb[(en['Switch'],en['Port'])] = en
-
-    # Get all links on network
-    links = nglib.bolt_ses.run('MATCH(ps)-[e:NEI|NEI_EQ]->(cs) ' +
-        'RETURN ps.name, e.pPort, cs.name, e.cPort')
-    
-    for en in links:
-
-        pname = en['ps.name']
-        pport = en['e.pPort']
-        cname = en['cs.name']
-        cport = en['e.cPort']
-
-        # Both sides of the link are in the LDB
-        if (pname, pport) in ldb and (cname, cport) in ldb:
-
-            # Set of intersected VLANs between two trunks
-            iset = reduce_vlans(ldb[(pname, pport)]['vlans'], \
-            ldb[(cname, cport)]['vlans'])
-
-            rset = set()
-
-            # If VLAN exists on both switches and is in trunk, then it traverses link
-            for v in iset:
-                if int(v) in vcache[pname] and int(v) in vcache[cname]:
-                    rset.add(v)
-            
-            if nglib.verbose>2:
-                print("ps", ldb[(pname, pport)]['vlans'])
-                print("cs", ldb[(cname, cport)]['vlans'])
-                #print(iset)
-                print("pvc", vcache[pname])
-                print("cvc", vcache[cname])
-            if nglib.verbose>1:
-                print("ON LINK", sorted(rset), "on", pname, pport, cname, cport)
-            
-            # Convert set to sorted vstring
-            rlist = []
-            for en in sorted(rset):
-                rlist.append(str(en))
-            vstring = ','.join(rlist)
-
-            if not vstring:
-                print("No VLANS", pname, pport, cname, cport)
-                print("ps", ldb[(pname, pport)]['vlans'])
-                print("cs", ldb[(cname, cport)]['vlans'])
-                #print(iset)
-                print("pvc", vcache[pname])
-                print("cvc", vcache[cname])
-
-            
-        else:
-            if nglib.verbose>1:
-                print("Link not found in ldb", (pname, pport), (cname, cport))
 
 
-def cache_vlans():
-    """Build a VLAN Cache from each switch"""
-
-    vcache = defaultdict(set)
-
-    vlans = nglib.bolt_ses.run(
-        'MATCH(s:Switch)<-[e:Switched]-(v) ' +
-        'RETURN s.name, v.vid')
-    
-    for v in vlans:
-        #print(v['s.name'], v['v.vid'])
-        vcache[v['s.name']].add(int(v['v.vid']))
-    
-    return vcache
-
-def reduce_vlans(set1, set2):
-    """Reduce VLANS to common range, returns set"""
-
-    set1 = expand_vlans(set1)
-    set2 = expand_vlans(set2)
-    
-    iset = set(set1).intersection(set2)
-    return iset
-
-
-def expand_vlans(oset):
-    """Expand a VLAN range to a set"""
-
-    lset = oset.split(',')
-    #print(lset)
-
-    nset = set()
-
-    # Process vlan ranges eg. 1,2,3-20,4,5 into set
-    for en in lset:
-        sset = en.split('-')
-        if len(sset) > 1:
-            for x in range(int(sset[0]), int(sset[1])+1):
-                nset.add(x)
-        elif en:
-            nset.add(int(en))
-    
-    return nset
 
 def update_distance(switch):
     """ Update the distance Value of a Switch node from seed node"""

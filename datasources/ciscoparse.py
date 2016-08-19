@@ -169,7 +169,7 @@ def parse_l2_interfaces(parse, device):
 
     for i in interfaces:
         ientry = dict()
-        ientry['vlans'] = "1-4096"
+        ientry['vlans'] = ""
         ientry['desc'] = ""
         ientry['channel'] = 0
         ientry['native'] = 1
@@ -180,6 +180,9 @@ def parse_l2_interfaces(parse, device):
         full = i.all_children
         for line in full:
             ientry = parse_link(line.text, ientry)
+        
+        if not ientry['vlans']:
+            ientry['vlans'] = "1-4096"
 
         links.append(ientry)
 
