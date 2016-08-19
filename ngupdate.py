@@ -69,7 +69,9 @@ parser.add_argument("-full", help="Full Update on the Database",
                     action="store_true")
 parser.add_argument("-id", help="Import Devicelist into DB",
                     action="store_true")
-parser.add_argument("-ind", help="Import Neighbor Data in to DB",
+parser.add_argument("-ind", help="Import Neighbor into DB",
+                    action="store_true")
+parser.add_argument("-ild", help="Import Links Data into DB",
                     action="store_true")
 parser.add_argument("-ivrf", help="Import VRF,Seczone Data",
                     action="store_true")
@@ -203,6 +205,8 @@ elif args.id:
                                        ngfiles['device_info'])
 elif args.ind:
     nglib.dev_update.import_neighbors(ngfiles['neighbors'])
+elif args.ild:
+    nglib.dev_update.import_links(ngfile['links'])
 elif args.ivrf:
     nglib.dev_update.import_vrfs(ngfiles['vrfs'])
 elif args.inet:
