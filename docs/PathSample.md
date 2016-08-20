@@ -53,7 +53,7 @@ $ ./netgrph.py -p 10.26.72.142 10.26.73.17
         └── vendor : Aruba Networks
 ```
 
-### Example 1 L2 -> L3 -> L2: Path between two devices on the same Switch, different VLAN
+### Example 2: L2 -> L3 -> L2: Path between two devices on the same Switch, different VLAN
 ```
 $ ./netgrph.py -p 10.26.72.142 10.28.7.137
 ┌─[ PATHs L2-L4 ]
