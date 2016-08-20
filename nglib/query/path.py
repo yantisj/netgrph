@@ -99,7 +99,7 @@ def get_full_path(src, dst, rtype="NGTREE"):
                 switching = False
 
         ## Create Parent Data Structure
-        ngtree = nglib.ngtree.get_ngtree("Complete", tree_type="PATHs")
+        ngtree = nglib.ngtree.get_ngtree("L2-L4", tree_type="PATHs")
 
         if n1tree['_child001']['Name'] != n2tree['_child001']['Name']:
             ngtree["L3 Path"] = src + " -> " + dst
@@ -112,6 +112,11 @@ def get_full_path(src, dst, rtype="NGTREE"):
         n1tree['_type'] = "SRC"
         n1tree['Name'] = src
         nglib.ngtree.add_child_ngtree(ngtree, n1tree)
+
+        if not switching and '_child002' in n2tree:
+            nglib.ngtree.add_child_ngtree(n1tree, n2tree['_child002'])
+            n1tree['_type'] = "L2PATH"
+            n1tree['Name'] = src + ' -> ' + dst
 
         # If there's src switched data add it
         if switching and srcswp:
@@ -130,9 +135,10 @@ def get_full_path(src, dst, rtype="NGTREE"):
             nglib.ngtree.add_child_ngtree(ngtree, dstswp)
 
         # Add the DST Data
-        n2tree['_type'] = "DST"
-        n2tree['Name'] = dst
-        nglib.ngtree.add_child_ngtree(ngtree, n2tree)
+        if switching:
+            n2tree['_type'] = "DST"
+            n2tree['Name'] = dst
+            nglib.ngtree.add_child_ngtree(ngtree, n2tree)
 
         # Export NGTree
         ngtree = nglib.query.exp_ngtree(ngtree, rtype)

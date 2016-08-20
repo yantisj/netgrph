@@ -71,7 +71,7 @@ def get_netdb_ip(ip, hours=720):
     # Gather details from DB in ngtree structure
     for en in pc:
         ngtree = nglib.ngtree.get_ngtree("IP", tree_type="NetDB")
-
+        ngtree['Name'] = ip
 
         ngtree['firstSeen'] = str(en['firstseen'])
         ngtree['lastSeen'] = str(en['lastseen'])
