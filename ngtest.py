@@ -45,7 +45,6 @@ ngrepcmd = './ngreport.py' + ' '
 
 # Query Tests (cmd, result)
 qtest = dict()
-qtest = dict()
 qtest['-dev core1'] = 'Child Neighbors'
 qtest['-ip 10.9.46.1'] = 'Gateway'
 qtest['-fp 10.1.120.50 8.8.8.8'] = 'ExternalFW'
@@ -60,21 +59,28 @@ qtest['-sp xyz2mdf abc4mdf'] = 'core1'
 qtest['-rp 10.1.108.50 10.1.20.50'] = 'core1'
 
 # Production tests
-# qtest['-dev core1'] = 'Child Neighbors'
-# qtest['-ip 10.32.1.1'] = 'Gateway'
-# qtest['-fp 10.33.1.1 8.8.8.8'] = 'ExternalFW'
-# qtest['-net 10.32.0.0/17'] = 'wireless-GUEST'
-# qtest['-nlist security'] = '10.32.0.0/17'
-# qtest['-group Core'] = 'core1'
-# qtest['-vid 641'] = '10.32.0.0/17'
-# qtest['-vtree Core-641'] = '10.32.0.0/17'
-# qtest['-ip 10.32.1.1 -o JSON'] = '"IP": "10.32.1.1"'
-# qtest['-sp mdcmdf hvt404mdf'] = 'core1'
-# qtest['-rp 10.33.1.100 10.26.76.1'] = 'core1'
+ptest = dict()
+ptest['-dev core1'] = 'Child Neighbors'
+ptest['-ip 10.32.1.1'] = 'Gateway'
+ptest['-fp 10.33.1.1 8.8.8.8'] = 'ExternalFW'
+ptest['-net 10.32.0.0/17'] = 'wireless-GUEST'
+ptest['-nlist security'] = '10.32.0.0/17'
+ptest['-group Core'] = 'core1'
+ptest['-vid 641'] = '10.32.0.0/17'
+ptest['-vtree Core-641'] = '10.32.0.0/17'
+ptest['-ip 10.32.1.1 -o JSON'] = '"IP": "10.32.1.1"'
+ptest['-sp mdcmdf hvt404mdf'] = 'core1'
+ptest['-rp 10.33.1.100 10.26.76.1'] = 'core1'
+ptest['-p 10.26.72.142 10.26.72.17'] = 'Router : artmdf1'
+ptest['-p 10.26.72.142 10.28.6.27'] = 'Link rVLANs'
+ptest['-p 10.26.72.142 10.34.72.24'] = 'L4-PATH 10.26.72.0/22'
+
+qtest = ptest
+
 rtest = dict()
-#rtest['-vlans -empty -vra 200'] = 'v6test'
-rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
-rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
+rtest['-vlans -empty -vrange 200'] = 'v6test'
+#rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
+#rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
 
 # Update Tests (check for errors)
 utest = ('-ivrf', '-id', '-ind', '-inet', '-isnet', '-iasa', '-ivlan', '-uvlan')

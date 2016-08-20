@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 verbose = 0
 
 
-def get_full_path(net1, net2, rtype="NGTREE"):
+def get_full_path(src, dst, rtype="NGTREE"):
     """ Gets the full path (switch->rt->VRF->rt->switch)
 
         Required NetDB for switchpath
@@ -55,9 +55,9 @@ def get_full_path(net1, net2, rtype="NGTREE"):
     if rtype in rtypes:
 
         logger.info("Query: Finding Full Path (%s --> %s) for %s",
-                    net1, net2, nglib.user)
+                    src, dst, nglib.user)
 
-        src, dst = net1, net2
+        net1, net2 = src, dst
         n1tree, n2tree = None, None
 
         # Translate IPs to CIDRs
@@ -91,38 +91,43 @@ def get_full_path(net1, net2, rtype="NGTREE"):
                 router = router + '|' + n2tree['_child001']['StandbyRouter']
             dstswp = get_switch_path(router, dsttree['Switch'])
 
-        switching = True
         # Same switch/vlan check
+        switching = True
         if srctree and dsttree:
             if srctree['Switch'] == dsttree['Switch'] and \
-                srctree['VLAN'] ==dsttree['VLAN']:
+                srctree['VLAN'] == dsttree['VLAN']:
                 switching = False
 
-        # Parent Data Structure
+        ## Create Parent Data Structure
         ngtree = nglib.ngtree.get_ngtree("Complete", tree_type="PATHs")
-        ngtree["Path"] = src + " -> " + dst
+
+        if n1tree['_child001']['Name'] != n2tree['_child001']['Name']:
+            ngtree["L3 Path"] = src + " -> " + dst
+        if srctree and dsttree:
+            ngtree["L2 Path"] = srctree['Switch'] + " (" + srctree['SwitchPort'] \
+            + ") -> " + dsttree['Switch'] + " (" + dsttree['SwitchPort'] + ")"
+
 
         # Add the SRC Data
         n1tree['_type'] = "SRC"
         n1tree['Name'] = src
         nglib.ngtree.add_child_ngtree(ngtree, n1tree)
 
-        # If there's src switch data
-        if srctree and switching:
-            if srcswp:
-                srcswp['Name'] = "SRC Switched Path"
-                nglib.ngtree.add_child_ngtree(ngtree, srcswp)
+        # If there's src switched data add it
+        if switching and srcswp:
+            #srcswp['Name'] = "SRC Switched Path"
+            nglib.ngtree.add_child_ngtree(ngtree, srcswp)
 
-        # Add the routed path if exists
-        rtree = get_routed_path(net1, net2)
-        if rtree and switching:
+        # Check for routed paths (inter/intra VRF)
+        rtree = get_full_routed_path(src, dst, rtype="NGTREE")
+        if rtree and rtree['_type'] == 'L4-PATH':
+            ngtree['L4 Path'] = rtree['Name']
             nglib.ngtree.add_child_ngtree(ngtree, rtree)
 
         # Destination Switch Data
-        if dsttree and switching:
-            if dstswp:
-                dstswp['Name'] = "DST Switched Path"
-                nglib.ngtree.add_child_ngtree(ngtree, dstswp)
+        if switching and dstswp:
+            #dstswp['Name'] = "DST Switched Path"
+            nglib.ngtree.add_child_ngtree(ngtree, dstswp)
 
         # Add the DST Data
         n2tree['_type'] = "DST"
@@ -131,6 +136,57 @@ def get_full_path(net1, net2, rtype="NGTREE"):
 
         # Export NGTree
         ngtree = nglib.query.exp_ngtree(ngtree, rtype)
+        return ngtree
+
+def get_full_routed_path(src, dst, rtype="NGTREE"):
+    """ Gets the full L3 Path between src -> dst IPs including inter-vrf routing
+    """
+
+    rtypes = ('CSV', 'TREE', 'JSON', 'YAML', 'NGTREE')
+
+    if rtype in rtypes:
+
+        srct, dstt, ngtree = None, None, None
+
+        # Translate IPs to CIDRs
+        if re.search(r'^\d+\.\d+\.\d+\.\d+$', src):
+            srct = nglib.query.net.get_net(src, rtype="NGTREE")
+
+        if re.search(r'^\d+\.\d+\.\d+\.\d+$', dst):
+            dstt = nglib.query.net.get_net(dst, rtype="NGTREE")
+        
+        # Intra VRF
+        if srct['_child001']['VRF'] == dstt['_child001']['VRF']:
+            ngtree = get_routed_path(src, dst, verbose=False)                 
+        
+        # Inter VRF
+        else:
+            secpath = get_fw_path(src, dst, rtype="NGTREE")
+            ngtree = nglib.ngtree.get_ngtree(secpath['Name'], tree_type="L4-PATH")
+
+            # Filter security path for relavent nodes
+            first = True
+            last = None
+            for key in sorted(secpath.keys()):
+                if '_child' in key:
+                    if re.search(r'(Network|FW)', secpath[key]['Name']):
+
+                        # First Entry gets a route check
+                        if first:
+                            rtree = get_routed_path(src, secpath[key]['gateway'], \
+                                vrf=srct['_child001']['VRF'])
+                            if rtree:
+                                nglib.ngtree.add_child_ngtree(ngtree, rtree)
+                            first = False
+                        nglib.ngtree.add_child_ngtree(ngtree, secpath[key])
+                        last = key
+
+            # Last entry gets a route check
+            if last:
+                rtree = get_routed_path(secpath[last]['gateway'], dst,  vrf=dstt['_child001']['VRF'])
+                if rtree:
+                    nglib.ngtree.add_child_ngtree(ngtree, rtree)
+        
         return ngtree
 
 def get_switch_path(switch1, switch2, rtype="NGTREE"):
@@ -154,8 +210,8 @@ def get_switch_path(switch1, switch2, rtype="NGTREE"):
                     switch1, switch2, nglib.user)
 
         pathList = []
-        ngtree = nglib.ngtree.get_ngtree("Switched Paths", tree_type="SPATHs")
-        ngtree["Path"] = switch1 + " -> " + switch2
+        ngtree = nglib.ngtree.get_ngtree("Switched Paths", tree_type="L2-PATH")
+        ngtree["Name"] = switch1 + " -> " + switch2
 
         dist = dict()
 
@@ -177,7 +233,9 @@ def get_switch_path(switch1, switch2, rtype="NGTREE"):
             dist[rec.distance] = 1
 
         for rec in swp:
-            swptree = nglib.ngtree.get_ngtree("Link", tree_type="SPATH")
+            swptree = nglib.ngtree.get_ngtree("Link", tree_type="L2-PATH")
+            swptree['Name'] = rec.psw + '(' + rec.pport +  ') <-> ' \
+            + rec.csw + '(' + rec.cport + ')'
             nglib.ngtree.add_child_ngtree(ngtree, swptree)
 
             swptree['Child Switch'] = rec.csw
@@ -218,7 +276,7 @@ def get_switch_path(switch1, switch2, rtype="NGTREE"):
     return
 
 
-def get_routed_path(net1, net2, rtype="NGTREE"):
+def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True):
     """
     Find the routed path between two CIDRs and return all interfaces and
     devices between the two. This query need optimization.
@@ -248,9 +306,10 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
                 net2 = n2tree['_child001']['Name']
 
 
-        ngtree = nglib.ngtree.get_ngtree("Routed Paths", tree_type="RPATHs")
+        
+        ngtree = nglib.ngtree.get_ngtree("Path", tree_type="L3-PATH")
         ngtree["Path"] = net1 + " -> " + net2
-
+        ngtree['Name'] = ngtree['Path']
 
         pathList = []
         pathRec = []
@@ -259,7 +318,7 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
         rtrp = nglib.py2neo_ses.cypher.execute(
             'MATCH (sn:Network), (dn:Network), rp = allShortestPaths '
             + '((sn)-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]-(dn)) '
-            + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = "default") '
+            + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = {vrf}) '
             + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
             + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
             + 'MATCH (r1)<-[l1:ROUTED]-(:Network)-[l2:ROUTED]->(r2) '
@@ -267,7 +326,7 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
             + 'r2.name AS r2name, l2.gateway as r2ip, '
             + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
             + 'AS distance ORDER BY distance',
-            {"net1": net1, "net2": net2})
+            {"net1": net1, "net2": net2, "vrf": vrf})
 
 
         allpaths = dict()
@@ -293,7 +352,7 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
             for rec in rtrp:
                 if path[0] == rec['r1name'] and path[1] == rec['r2name']:
                     #print(path[0], rec['r1ip'], '-->', path[1], rec['r2ip'])
-                    rtree = nglib.ngtree.get_ngtree("Hop", tree_type="RPATH")
+                    rtree = nglib.ngtree.get_ngtree("Hop", tree_type="L3-HOP")
                     rtree['From Router'] = rec['r1name']
                     rtree['From IP'] = rec['r1ip']
                     rtree['To Router'] = rec['r2name']
@@ -317,6 +376,7 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
 
             ngtree['Hops'] = len(pathList)
             ngtree['Max Hops'] = max([s['distance'] for s in pathList])
+            ngtree['VRF'] = vrf
 
 
             # CSV Prints locally for now
@@ -328,7 +388,7 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
                 # Export NGTree
                 ngtree = nglib.query.exp_ngtree(ngtree, rtype)
                 return ngtree
-        else:
+        elif verbose:
             print("No results found for path between {:} and {:}".format(net1, net2), file=sys.stderr)
 
     return
@@ -346,7 +406,7 @@ def get_fw_path(src, dst, rtype="TEXT"):
         srcnet = nglib.query.net.find_cidr(src)
         dstnet = nglib.query.net.find_cidr(dst)
 
-        logger.info("Query: Security Tracing %s -> %s for %s", src, dst, nglib.user)
+        logger.info("Query: Security Path %s -> %s for %s", src, dst, nglib.user)
 
         if verbose:
             print("\nFinding security path from {:} -> {:}:\n".format(srcnet, dstnet))
@@ -359,6 +419,8 @@ def get_fw_path(src, dst, rtype="TEXT"):
             src=srcnet, dst=dstnet)
 
         fwsearch = dict()
+
+        ngtree = nglib.ngtree.get_ngtree("Security Path", tree_type="L4-PATH")
 
         # Go through all nodes in the path
         if len(path) > 0:
@@ -375,44 +437,61 @@ def get_fw_path(src, dst, rtype="TEXT"):
                 for node in nodes:
                     nProp = nglib.query.nNode.getJSONProperties(node)
                     label = nglib.query.nNode.getLabel(node)
+                    tlabel = re.search(r'(\w+)', label)
+                    hop = nglib.ngtree.get_ngtree(tlabel.group(1), tree_type="L4-HOP")
                     if re.search('VRF', label):
                         path = path + "VRF:" + nProp['name'] + " -> "
 
                     if re.search('FW', label):
                         path = path + nProp['name'] + " -> "
                         fwsearch[nProp['name']] = nProp['hostname'] + "," + nProp['logIndex']
+                        hop['Name'] = "FW"
+                                        
+                    for prop in nProp:
+                        hop[prop] = nProp[prop]
+                    nglib.ngtree.add_child_ngtree(ngtree, hop)
 
+                # Save the Path
                 path = path + dnp['cidr']
-                print("\nSecurity Path: " + path)
+                ngtree['Name'] = path
 
-                for fw in fwsearch.keys():
-                    (hostname, logIndex) = fwsearch[fw].split(',')
+                # Text output for standalone query
+                if rtype == "TEXT":
+                    print("\nSecurity Path: " + path)
 
-                    # Splunk Specific Log Search, may need site specific adjustment
-                    cmd = "{:} 'index={:} host::{:} {:} {:}'".format(
-                        logcmd, logIndex, hostname, src, dst)
-                    query = 'index={:} host::{:} {:} {:}'.format(
-                        logIndex, hostname, src, dst)
+                    for fw in fwsearch.keys():
+                        (hostname, logIndex) = fwsearch[fw].split(',')
 
-                    query = query.replace(" ", "%20")
+                        # Splunk Specific Log Search, may need site specific adjustment
+                        cmd = "{:} 'index={:} host::{:} {:} {:}'".format(
+                            logcmd, logIndex, hostname, src, dst)
+                        query = 'index={:} host::{:} {:} {:}'.format(
+                            logIndex, hostname, src, dst)
 
-                    print("\n{:} (15min): {:}{:}".format(fw, logurl, query))
+                        query = query.replace(" ", "%20")
 
-                    if verbose:
-                        print(cmd)
+                        print("\n{:} (15min): {:}{:}".format(fw, logurl, query))
 
-                    proc = subprocess.Popen(
-                        [cmd + " 2> /dev/null"],
-                        stdout=subprocess.PIPE,
-                        shell=True,
-                        universal_newlines=True)
+                        if verbose:
+                            print(cmd)
 
-                    (out, err) = proc.communicate()
+                        proc = subprocess.Popen(
+                            [cmd + " 2> /dev/null"],
+                            stdout=subprocess.PIPE,
+                            shell=True,
+                            universal_newlines=True)
 
-                    if err:
-                        print(err)
-                    elif out:
-                        print(out)
+                        (out, err) = proc.communicate()
 
-            # Space out
-            print()
+                        if err:
+                            print(err)
+                        elif out:
+                            print(out)
+
+                # Space out
+                print()
+
+            # Export NGTree
+            ngtree = nglib.query.exp_ngtree(ngtree, rtype)
+            return ngtree
+

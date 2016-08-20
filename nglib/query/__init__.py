@@ -60,7 +60,7 @@ def exp_ngtree(ngtree, rtype):
         nglib.ngtree.export.exp_JSON(ngtree)
     elif rtype == "YAML":
         nglib.ngtree.export.exp_YAML(ngtree)
-    elif rtype == "NGTREE":
+    else:
         return ngtree
 
 def display_mgmt_groups():
