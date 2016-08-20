@@ -179,7 +179,6 @@ if args.full:
     run_cmd(nglib.vlan_update.import_vlans, fileName=ngfiles['vlans'])
     run_cmd(nglib.vlan_update.import_links, fileName=ngfiles['links'])
 
-
     run_cmd(nglib.vlan_update.update_vlans)
     stop = timer()
     runtime = "%.3f" % (stop - start)

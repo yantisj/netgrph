@@ -75,7 +75,9 @@ def get_switch_path(switch1, switch2, rtype="NGTREE"):
             + 'UNWIND nodes(sp) as s1 UNWIND nodes(sp) as s2 '
             + 'MATCH (s1)<-[nei:NEI]-(s2), plen = shortestPath((ss)-[:NEI*0..9]-(s1)) '
             + 'RETURN DISTINCT s1.name AS csw, s2.name AS psw, '
-            + 'nei.pPort AS pport, nei.cPort as cport, '
+            + 'nei.pPort AS pport, nei.cPort as cport, nei.native AS native, '
+            + 'nei.cPc as cPc, nei.pPc AS pPc, nei.vlans AS vlans, nei.rvlans as rvlans, '
+            + 'nei._rvlans AS p_rvlans, '
             + 'LENGTH(plen) as distance ORDER BY distance, s1.name, s2.name',
             {"switch1": switch1, "switch2": switch2})
 
@@ -87,11 +89,21 @@ def get_switch_path(switch1, switch2, rtype="NGTREE"):
             swptree = nglib.ngtree.get_ngtree("Link", tree_type="SPATH")
             nglib.ngtree.add_child_ngtree(ngtree, swptree)
 
-            swptree['ChildSwitch'] = rec.csw
-            swptree['ChildPort'] = rec.cport
-            swptree['ParentSwitch'] = rec.psw
-            swptree['ParentPort'] = rec.pport
+            swptree['Child Switch'] = rec.csw
+            swptree['Child Port'] = rec.cport
+            swptree['Parent Switch'] = rec.psw
+            swptree['Parent Port'] = rec.pport
             swptree['distance'] = rec.distance
+
+            if rec.cPc:
+                swptree['Child Channel'] = rec.cPc
+                swptree['Parent Channel'] = rec.pPc
+            if rec.rvlans:
+                swptree['Link VLANs'] = rec.vlans
+                swptree['Link rVLANs'] = rec.rvlans
+                swptree['_rvlans'] = rec.p_rvlans
+                swptree['Native VLAN'] = rec.native
+
 
             pathList.append(swptree)
 
