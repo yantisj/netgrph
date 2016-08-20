@@ -41,8 +41,6 @@ import nglib.netdb.ip
 
 logger = logging.getLogger(__name__)
 
-verbose = 0
-
 
 def get_full_path(src, dst, rtype="NGTREE"):
     """ Gets the full path (switch->rt->VRF->rt->switch)
@@ -82,14 +80,14 @@ def get_full_path(src, dst, rtype="NGTREE"):
             router = n1tree['_child001']['Router']
             if 'StandbyRouter' in n1tree['_child001']:
                 router = router + '|' + n1tree['_child001']['StandbyRouter']
-            srcswp = get_switch_path(srctree['Switch'], router)
+            srcswp = get_switch_path(srctree['Switch'], router, verbose=False)
         
         # Find Switched Path from Router to Destination
         if dsttree:
             router = n2tree['_child001']['Router']
             if 'StandbyRouter' in n2tree['_child001']:
                 router = router + '|' + n2tree['_child001']['StandbyRouter']
-            dstswp = get_switch_path(router, dsttree['Switch'])
+            dstswp = get_switch_path(router, dsttree['Switch'], verbose=False)
 
         # Same switch/vlan check
         switching = True
@@ -125,7 +123,7 @@ def get_full_path(src, dst, rtype="NGTREE"):
 
         # Check for routed paths (inter/intra VRF)
         rtree = get_full_routed_path(src, dst, rtype="NGTREE")
-        if rtree and rtree['_type'] == 'L4-PATH':
+        if rtree and rtree['_type'] == ('L3-PATH' or 'L4-PATH'):
             ngtree['L4 Path'] = rtree['Name']
             nglib.ngtree.add_child_ngtree(ngtree, rtree)
 
@@ -144,7 +142,7 @@ def get_full_path(src, dst, rtype="NGTREE"):
         ngtree = nglib.query.exp_ngtree(ngtree, rtype)
         return ngtree
 
-def get_full_routed_path(src, dst, rtype="NGTREE"):
+def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False):
     """ Gets the full L3 Path between src -> dst IPs including inter-vrf routing
     """
 
@@ -180,7 +178,7 @@ def get_full_routed_path(src, dst, rtype="NGTREE"):
                         # First Entry gets a route check
                         if first:
                             rtree = get_routed_path(src, secpath[key]['gateway'], \
-                                vrf=srct['_child001']['VRF'])
+                                vrf=srct['_child001']['VRF'], l2path=l2path)
                             if rtree:
                                 nglib.ngtree.add_child_ngtree(ngtree, rtree)
                             first = False
@@ -195,7 +193,7 @@ def get_full_routed_path(src, dst, rtype="NGTREE"):
         
         return ngtree
 
-def get_switch_path(switch1, switch2, rtype="NGTREE"):
+def get_switch_path(switch1, switch2, rtype="NGTREE", verbose=True):
     """
     Find the path between two switches and return all interfaces and
     devices between the two.
@@ -276,13 +274,13 @@ def get_switch_path(switch1, switch2, rtype="NGTREE"):
                 # Export NGTree
                 ngtree = nglib.query.exp_ngtree(ngtree, rtype)
                 return ngtree
-        else:
+        elif verbose:
             print("No results found for path between {:} and {:}".format(switch1, switch2))
 
     return
 
 
-def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True):
+def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2path=True):
     """
     Find the routed path between two CIDRs and return all interfaces and
     devices between the two. This query need optimization.
@@ -327,9 +325,10 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True):
             + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = {vrf}) '
             + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
             + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
-            + 'MATCH (r1)<-[l1:ROUTED]-(:Network)-[l2:ROUTED]->(r2) '
+            + 'MATCH (r1)<-[l1:ROUTED]-(n:Network {vrf:{vrf}})-[l2:ROUTED]->(r2) '
+            + 'OPTIONAL MATCH (n)-[:L3toL2]->(v:VLAN) '
             + 'RETURN DISTINCT r1.name AS r1name, l1.gateway AS r1ip, '
-            + 'r2.name AS r2name, l2.gateway as r2ip, '
+            + 'r2.name AS r2name, l2.gateway as r2ip, v.vid AS vid, '
             + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
             + 'AS distance ORDER BY distance',
             {"net1": net1, "net2": net2, "vrf": vrf})
@@ -359,10 +358,13 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True):
                 if path[0] == rec['r1name'] and path[1] == rec['r2name']:
                     #print(path[0], rec['r1ip'], '-->', path[1], rec['r2ip'])
                     rtree = nglib.ngtree.get_ngtree("Hop", tree_type="L3-HOP")
+                    rtree['Name'] = "{:}({:}) -> {:}({:})".format( \
+                    rec['r1name'], rec['r1ip'], rec['r2name'], rec['r2ip'])
                     rtree['From Router'] = rec['r1name']
                     rtree['From IP'] = rec['r1ip']
                     rtree['To Router'] = rec['r2name']
                     rtree['To IP'] = rec['r2ip']
+                    rtree['VLAN'] = rec['vid']
 
                     # Calculate hop distance
                     # Distance of 1 is correct, other distances should be:
@@ -373,6 +375,18 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True):
 
                     # Save distance
                     rtree['distance'] = distance
+
+                    # Add Switchpath if requested
+                    if l2path:
+                        spath = get_switch_path(rec['r1name'], rec['r2name'], verbose=False)
+                        for sp in spath:
+                            if '_child' in sp and '_rvlans' in spath[sp]:
+                                vrgx = r'[^0-9]*' + rec['vid'] + '[^0-9]*'
+                                if re.search(vrgx, spath[sp]['_rvlans']):
+                                    nglib.ngtree.add_child_ngtree(rtree, spath[sp])
+                                # else:
+                                #     print(spath[sp]['_rvlans'])
+                                # nglib.ngtree.add_child_ngtree(rtree, spath[sp])
 
                     nglib.ngtree.add_child_ngtree(ngtree, rtree)
                     pathList.append(rtree)
@@ -399,7 +413,7 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True):
 
     return
 
-def get_fw_path(src, dst, rtype="TEXT"):
+def get_fw_path(src, dst, rtype="TEXT", verbose=True):
     """Discover the Firewall Path between two IP addresses"""
 
     rtypes = ('TEXT', 'TREE', 'JSON', 'YAML', 'NGTREE')
