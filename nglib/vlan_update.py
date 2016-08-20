@@ -204,7 +204,7 @@ def import_links(fileName):
             pldb['rvlans'] = compact_vlans(rset)
             pldb['cvlans'] = compact_vlans(iset)
             cldb = ldb[(cname, cport)]
-            print("Update Info", pname, pport, cname, cport, pldb, cldb )
+            #print("Update Info", pname, pport, cname, cport, pldb, cldb )
             add_vlans_int(pldb, cldb)
             
         else:
@@ -222,7 +222,6 @@ def cache_vlans():
         'RETURN s.name, v.vid')
     
     for v in vlans:
-        #print(v['s.name'], v['v.vid'])
         vcache[v['s.name']].add(int(v['v.vid']))
     
     return vcache
@@ -242,8 +241,6 @@ def expand_vlans(oset):
     """Expand a VLAN range to a set"""
 
     lset = oset.split(',')
-    #print(lset)
-
     nset = set()
 
     # Process vlan ranges eg. 1,2,3-20,4,5 into set

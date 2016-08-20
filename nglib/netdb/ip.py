@@ -72,6 +72,7 @@ def get_netdb_ip(ip, hours=720):
     for en in pc:
         ngtree = nglib.ngtree.get_ngtree("IP", tree_type="NetDB")
 
+
         ngtree['firstSeen'] = str(en['firstseen'])
         ngtree['lastSeen'] = str(en['lastseen'])
         ngtree['MAC'] = en['mac']
@@ -80,6 +81,7 @@ def get_netdb_ip(ip, hours=720):
         ngtree['Switch'] = en['lastswitch']
         ngtree['SwitchPort'] = en['lastport']
         ngtree['UserID'] = en['userID']
+        ngtree['VLAN'] = en['vlan']
 
         nglib.ngtree.add_child_ngtree(pngtree, ngtree)
 

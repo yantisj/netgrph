@@ -37,10 +37,101 @@ import logging
 import subprocess
 import nglib
 import nglib.query.nNode
+import nglib.netdb.ip
 
 logger = logging.getLogger(__name__)
 
 verbose = 0
+
+
+def get_full_path(net1, net2, rtype="NGTREE"):
+    """ Gets the full path (switch->rt->VRF->rt->switch)
+
+        Required NetDB for switchpath
+    """
+
+    rtypes = ('CSV', 'TREE', 'JSON', 'YAML', 'NGTREE')
+
+    if rtype in rtypes:
+
+        logger.info("Query: Finding Full Path (%s --> %s) for %s",
+                    net1, net2, nglib.user)
+
+        src, dst = net1, net2
+        n1tree, n2tree = None, None
+
+        # Translate IPs to CIDRs
+        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net1):
+            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE")
+            if n1tree:
+                net1 = n1tree['_child001']['Name']
+
+        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net2):
+            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE")
+            if n2tree:
+                net2 = n2tree['_child001']['Name']
+
+        srctree, dsttree, srcswp, dstswp = None, None, None, None
+
+        if nglib.use_netdb:
+            srctree = nglib.netdb.ip.get_netdb_ip(src)
+            dsttree = nglib.netdb.ip.get_netdb_ip(dst)
+        
+        # Find Switched Path from Source to Router
+        if srctree:
+            router = n1tree['_child001']['Router']
+            if 'StandbyRouter' in n1tree['_child001']:
+                router = router + '|' + n1tree['_child001']['StandbyRouter']
+            srcswp = get_switch_path(srctree['Switch'], router)
+        
+        # Find Switched Path from Router to Destination
+        if dsttree:
+            router = n2tree['_child001']['Router']
+            if 'StandbyRouter' in n2tree['_child001']:
+                router = router + '|' + n2tree['_child001']['StandbyRouter']
+            dstswp = get_switch_path(router, dsttree['Switch'])
+
+        switching = True
+        # Same switch/vlan check
+        if srctree and dsttree:
+            if srctree['Switch'] == dsttree['Switch'] and \
+                srctree['VLAN'] ==dsttree['VLAN']:
+                switching = False
+
+        # Parent Data Structure
+        ngtree = nglib.ngtree.get_ngtree("Complete", tree_type="PATHs")
+        ngtree["Path"] = src + " -> " + dst
+
+        # Add the SRC Data
+        n1tree['_type'] = "SRC"
+        n1tree['Name'] = src
+        nglib.ngtree.add_child_ngtree(ngtree, n1tree)
+
+        # If there's src switch data
+        if srctree and switching:
+            if srcswp:
+                srcswp['Name'] = "SRC Switched Path"
+                nglib.ngtree.add_child_ngtree(ngtree, srcswp)
+
+        # Add the routed path if exists
+        rtree = get_routed_path(net1, net2)
+        if rtree and switching:
+            nglib.ngtree.add_child_ngtree(ngtree, rtree)
+
+        # Destination Switch Data
+        if dsttree and switching:
+            if dstswp:
+                dstswp['Name'] = "DST Switched Path"
+                nglib.ngtree.add_child_ngtree(ngtree, dstswp)
+
+        # Add the DST Data
+        n2tree['_type'] = "DST"
+        n2tree['Name'] = dst
+        nglib.ngtree.add_child_ngtree(ngtree, n2tree)
+
+        # Export NGTree
+        ngtree = nglib.query.exp_ngtree(ngtree, rtype)
+        return ngtree
 
 def get_switch_path(switch1, switch2, rtype="NGTREE"):
     """
@@ -242,82 +333,86 @@ def get_routed_path(net1, net2, rtype="NGTREE"):
 
     return
 
-def get_fw_path(src, dst):
+def get_fw_path(src, dst, rtype="TEXT"):
     """Discover the Firewall Path between two IP addresses"""
 
-    logcmd = nglib.config['nglib']['logcmd']
-    logurl = nglib.config['nglib']['logurl']
+    rtypes = ('TEXT', 'TREE', 'JSON', 'YAML', 'NGTREE')
 
-    srcnet = nglib.query.net.find_cidr(src)
-    dstnet = nglib.query.net.find_cidr(dst)
+    if rtype in rtypes:
 
-    logger.info("Query: Tracing %s -> %s for %s", src, dst, nglib.user)
+        logcmd = nglib.config['nglib']['logcmd']
+        logurl = nglib.config['nglib']['logurl']
 
-    if verbose:
-        print("\nFinding security path from {:} -> {:}:\n".format(srcnet, dstnet))
+        srcnet = nglib.query.net.find_cidr(src)
+        dstnet = nglib.query.net.find_cidr(dst)
 
-    # Shortest path between VRFs
-    path = nglib.py2neo_ses.cypher.execute(
-        'MATCH (s:Network { cidr:{src} })-[e1:VRF_IN]->(sv:VRF), '
-        + '(d:Network {cidr:{dst}})-[e2:VRF_IN]->(dv:VRF), '
-        + 'p = shortestPath((sv)-[:VRF_IN|ROUTED_FW|:SWITCHED_FW*0..20]-(dv)) RETURN s,d,p',
-        src=srcnet, dst=dstnet)
+        logger.info("Query: Security Tracing %s -> %s for %s", src, dst, nglib.user)
 
-    fwsearch = dict()
+        if verbose:
+            print("\nFinding security path from {:} -> {:}:\n".format(srcnet, dstnet))
 
-    # Go through all nodes in the path
-    if len(path) > 0:
-        for r in path.records:
-            sn = r.s
-            snp = nglib.query.nNode.getJSONProperties(sn)
-            dn = r.d
-            dnp = nglib.query.nNode.getJSONProperties(dn)
+        # Shortest path between VRFs
+        path = nglib.py2neo_ses.cypher.execute(
+            'MATCH (s:Network { cidr:{src} })-[e1:VRF_IN]->(sv:VRF), '
+            + '(d:Network {cidr:{dst}})-[e2:VRF_IN]->(dv:VRF), '
+            + 'p = shortestPath((sv)-[:VRF_IN|ROUTED_FW|:SWITCHED_FW*0..20]-(dv)) RETURN s,d,p',
+            src=srcnet, dst=dstnet)
 
-            path = snp['cidr'] + " -> "
+        fwsearch = dict()
 
-            # Path
-            nodes = r.p.nodes
-            for node in nodes:
-                nProp = nglib.query.nNode.getJSONProperties(node)
-                label = nglib.query.nNode.getLabel(node)
-                if re.search('VRF', label):
-                    path = path + "VRF:" + nProp['name'] + " -> "
+        # Go through all nodes in the path
+        if len(path) > 0:
+            for r in path.records:
+                sn = r.s
+                snp = nglib.query.nNode.getJSONProperties(sn)
+                dn = r.d
+                dnp = nglib.query.nNode.getJSONProperties(dn)
 
-                if re.search('FW', label):
-                    path = path + nProp['name'] + " -> "
-                    fwsearch[nProp['name']] = nProp['hostname'] + "," + nProp['logIndex']
+                path = snp['cidr'] + " -> "
 
-            path = path + dnp['cidr']
-            print("\nSecurity Path: " + path)
+                # Path
+                nodes = r.p.nodes
+                for node in nodes:
+                    nProp = nglib.query.nNode.getJSONProperties(node)
+                    label = nglib.query.nNode.getLabel(node)
+                    if re.search('VRF', label):
+                        path = path + "VRF:" + nProp['name'] + " -> "
 
-            for fw in fwsearch.keys():
-                (hostname, logIndex) = fwsearch[fw].split(',')
+                    if re.search('FW', label):
+                        path = path + nProp['name'] + " -> "
+                        fwsearch[nProp['name']] = nProp['hostname'] + "," + nProp['logIndex']
 
-                # Splunk Specific Log Search, may need site specific adjustment
-                cmd = "{:} 'index={:} host::{:} {:} {:}'".format(
-                    logcmd, logIndex, hostname, src, dst)
-                query = 'index={:} host::{:} {:} {:}'.format(
-                    logIndex, hostname, src, dst)
+                path = path + dnp['cidr']
+                print("\nSecurity Path: " + path)
 
-                query = query.replace(" ", "%20")
+                for fw in fwsearch.keys():
+                    (hostname, logIndex) = fwsearch[fw].split(',')
 
-                print("\n{:} (15min): {:}{:}".format(fw, logurl, query))
+                    # Splunk Specific Log Search, may need site specific adjustment
+                    cmd = "{:} 'index={:} host::{:} {:} {:}'".format(
+                        logcmd, logIndex, hostname, src, dst)
+                    query = 'index={:} host::{:} {:} {:}'.format(
+                        logIndex, hostname, src, dst)
 
-                if verbose:
-                    print(cmd)
+                    query = query.replace(" ", "%20")
 
-                proc = subprocess.Popen(
-                    [cmd + " 2> /dev/null"],
-                    stdout=subprocess.PIPE,
-                    shell=True,
-                    universal_newlines=True)
+                    print("\n{:} (15min): {:}{:}".format(fw, logurl, query))
 
-                (out, err) = proc.communicate()
+                    if verbose:
+                        print(cmd)
 
-                if err:
-                    print(err)
-                elif out:
-                    print(out)
+                    proc = subprocess.Popen(
+                        [cmd + " 2> /dev/null"],
+                        stdout=subprocess.PIPE,
+                        shell=True,
+                        universal_newlines=True)
 
-        # Space out
-        print()
+                    (out, err) = proc.communicate()
+
+                    if err:
+                        print(err)
+                    elif out:
+                        print(out)
+
+            # Space out
+            print()

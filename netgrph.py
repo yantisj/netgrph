@@ -76,6 +76,9 @@ parser.add_argument("-nfilter", help="Get all networks on a filter (see netgrph.
                     action="store_true")
 parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
                     action="store_true")
+parser.add_argument("-path", metavar="src",
+                    help="Full Path Between -p src dst (ip/cidr, requires NetDB)",
+                    type=str)
 parser.add_argument("-fpath", metavar="src",
                     help="Security Path between -fp src dst",
                     type=str)
@@ -148,6 +151,11 @@ elif args.rpath:
     if args.output:
         rtype = args.output
     nglib.query.path.get_routed_path(args.rpath, args.search, rtype=rtype)
+elif args.path:
+    rtype = "TREE"
+    if args.output:
+        rtype = args.output
+    nglib.query.path.get_full_path(args.path, args.search, rtype=rtype)
 
 elif args.dev:
     rtype = "TREE"
