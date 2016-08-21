@@ -144,7 +144,7 @@ elif args.spath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_switch_path(args.spath, args.search, rtype=rtype)
+    nglib.query.path.get_switched_path(args.spath, args.search, rtype=rtype)
 
 elif args.rpath:
     rtype = "TREE"

@@ -80,14 +80,14 @@ def get_full_path(src, dst, rtype="NGTREE"):
             router = n1tree['_child001']['Router']
             if 'StandbyRouter' in n1tree['_child001']:
                 router = router + '|' + n1tree['_child001']['StandbyRouter']
-            srcswp = get_switch_path(srctree['Switch'], router, verbose=False)
+            srcswp = get_switched_path(srctree['Switch'], router, verbose=False)
         
         # Find Switched Path from Router to Destination
         if dsttree:
             router = n2tree['_child001']['Router']
             if 'StandbyRouter' in n2tree['_child001']:
                 router = router + '|' + n2tree['_child001']['StandbyRouter']
-            dstswp = get_switch_path(router, dsttree['Switch'], verbose=False)
+            dstswp = get_switched_path(router, dsttree['Switch'], verbose=False)
 
         # Same switch/vlan check
         switching = True
@@ -99,8 +99,10 @@ def get_full_path(src, dst, rtype="NGTREE"):
         ## Create Parent Data Structure
         ngtree = nglib.ngtree.get_ngtree("L2-L4", tree_type="PATHs")
 
+        # Populate Overall Paths
         if n1tree['_child001']['Name'] != n2tree['_child001']['Name']:
-            ngtree["L3 Path"] = src + " -> " + dst
+            ngtree["L3 Path"] = net1 + " -> " + net2
+            ngtree["Lx Path"] = src + " -> " + dst
         if srctree and dsttree:
             ngtree["L2 Path"] = srctree['Switch'] + " (" + srctree['SwitchPort'] \
             + ") -> " + dsttree['Switch'] + " (" + dsttree['SwitchPort'] + ")"
@@ -126,6 +128,8 @@ def get_full_path(src, dst, rtype="NGTREE"):
         if rtree and 'PATH' in rtree['_type']:
             if rtree['_type'] == 'L4-PATH':
                 ngtree['L4 Path'] = rtree['Name']
+            else:
+                ngtree['L4 Path'] = 'VRF:' + n1tree['_child001']['VRF']
             nglib.ngtree.add_child_ngtree(ngtree, rtree)
 
         # Destination Switch Data
@@ -195,7 +199,7 @@ def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False):
         
         return ngtree
 
-def get_switch_path(switch1, switch2, rtype="NGTREE", verbose=True):
+def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True):
     """
     Find the path between two switches and return all interfaces and
     devices between the two.
@@ -235,12 +239,29 @@ def get_switch_path(switch1, switch2, rtype="NGTREE", verbose=True):
             {"switch1": switch1, "switch2": switch2})
 
 
-        for rec in swp:
-            dist[rec.distance] = 1
 
+        last = 0
         for rec in swp:
-            swptree = nglib.ngtree.get_ngtree("Link", tree_type="L2-PATH")
-            swptree['Name'] = rec.psw + '(' + rec.pport +  ') <-> ' \
+            swptree = nglib.ngtree.get_ngtree("Link", tree_type="L2-HOP")
+
+            # Fix distance from directed graph
+            if rec.distance == 0:
+                swptree['distance'] = rec.distance + 1
+                last = 1
+            elif last:
+                if rec.distance == last:
+                    last += 1
+                    swptree['distance'] = rec.distance + 1
+                elif rec.distance == (last-1):
+                    swptree['distance'] = rec.distance + 1
+                else:
+                    swptree['distance'] = rec.distance
+                    last = 0
+            else:
+                swptree['distance'] = rec.distance
+
+            swptree['Name'] = '#' + str(swptree['distance']) + ' ' + \
+            rec.psw + '(' + rec.pport +  ') <-> ' \
             + rec.csw + '(' + rec.cport + ')'
             nglib.ngtree.add_child_ngtree(ngtree, swptree)
 
@@ -248,7 +269,6 @@ def get_switch_path(switch1, switch2, rtype="NGTREE", verbose=True):
             swptree['Child Port'] = rec.cport
             swptree['Parent Switch'] = rec.psw
             swptree['Parent Port'] = rec.pport
-            swptree['distance'] = rec.distance
 
             if rec.cPc:
                 swptree['Child Channel'] = rec.cPc
@@ -360,8 +380,6 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
                 if path[0] == rec['r1name'] and path[1] == rec['r2name']:
                     #print(path[0], rec['r1ip'], '-->', path[1], rec['r2ip'])
                     rtree = nglib.ngtree.get_ngtree("Hop", tree_type="L3-HOP")
-                    rtree['Name'] = "{:}({:}) -> {:}({:})".format( \
-                    rec['r1name'], rec['r1ip'], rec['r2name'], rec['r2ip'])
                     rtree['From Router'] = rec['r1name']
                     rtree['From IP'] = rec['r1ip']
                     rtree['To Router'] = rec['r2name']
@@ -378,9 +396,13 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
                     # Save distance
                     rtree['distance'] = distance
 
+                    # Rename rtree
+                    rtree['Name'] = "#{:} {:}({:}) -> {:}({:})".format( \
+                    distance, rec['r1name'], rec['r1ip'], rec['r2name'], rec['r2ip'])
+
                     # Add Switchpath if requested
                     if l2path:
-                        spath = get_switch_path(rec['r1name'], rec['r2name'], verbose=False)
+                        spath = get_switched_path(rec['r1name'], rec['r2name'], verbose=False)
                         for sp in spath:
                             if '_child' in sp and '_rvlans' in spath[sp]:
                                 vrgx = r'[^0-9]*' + rec['vid'] + '[^0-9]*'
@@ -452,7 +474,8 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
                 dn = r.d
                 dnp = nglib.query.nNode.getJSONProperties(dn)
 
-                path = snp['cidr'] + " -> "
+                startpath = snp['cidr'] + " -> "
+                path = ""
 
                 # Path
                 nodes = r.p.nodes
@@ -474,8 +497,8 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
                     nglib.ngtree.add_child_ngtree(ngtree, hop)
 
                 # Save the Path
-                path = path + dnp['cidr']
-                ngtree['Name'] = path
+                ngtree['Name'] = re.search(r'(.*)\s->\s$', path).group(1)
+                path = snp['cidr'] + " -> " + path + dnp['cidr']
 
                 # Text output for standalone query
                 if rtype == "TEXT":
