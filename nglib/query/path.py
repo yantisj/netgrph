@@ -86,7 +86,12 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
             if 'StandbyRouter' in n1tree['_child001']:
                 router = router + '|' + n1tree['_child001']['StandbyRouter']
             if routing:
-                srcswp = get_switched_path(srctree['Switch'], router, verbose=False, onepath=onepath)
+                if srctree['Switch']:
+                    srcswp = get_switched_path(srctree['Switch'], router, \
+                        verbose=False, onepath=onepath)
+                else:
+                    srctree = None
+                    print("Warning: Could not find source switch data in NetDB", file=sys.stderr)
         
         # Find Switched Path from Router to Destination
         if dsttree:
@@ -94,7 +99,13 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
             if 'StandbyRouter' in n2tree['_child001']:
                 router = router + '|' + n2tree['_child001']['StandbyRouter']
             if routing:
-                dstswp = get_switched_path(router, dsttree['Switch'], verbose=False, onepath=onepath)
+                if dsttree['Switch']:
+                    dstswp = get_switched_path(router, dsttree['Switch'], \
+                        verbose=False, onepath=onepath)
+                else:
+                    dsttree = None
+                    print("Warning: Could not find destination switch data in NetDB", file=sys.stderr)
+
             # If only switching, update srcswp to show switched path
             else:
                 srcswp = get_switched_path(srctree['Switch'], dsttree['Switch'], verbose=False, onepath=onepath)
@@ -268,9 +279,24 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
         pathRec = []
 
         # Finds all paths, then finds the relationships
+        # rtrp = nglib.py2neo_ses.cypher.execute(
+        #     'MATCH (sn:Network), (dn:Network), rp = allShortestPaths '
+        #     + '((sn)-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]-(dn)) '
+        #     + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = {vrf}) '
+        #     + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
+        #     + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
+        #     + 'MATCH (r1)<-[l1:ROUTED]-(n:Network {vrf:{vrf}})-[l2:ROUTED]->(r2) '
+        #     + 'OPTIONAL MATCH (n)-[:L3toL2]->(v:VLAN) '
+        #     + 'RETURN DISTINCT r1.name AS r1name, l1.gateway AS r1ip, '
+        #     + 'r2.name AS r2name, l2.gateway as r2ip, v.vid AS vid, '
+        #     + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
+        #     + 'AS distance ORDER BY distance',
+        #     {"net1": net1, "net2": net2, "vrf": vrf})
+        # Finds all paths, then finds the relationships
         rtrp = nglib.py2neo_ses.cypher.execute(
-            'MATCH (sn:Network), (dn:Network), rp = allShortestPaths '
-            + '((sn)-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]-(dn)) '
+            'MATCH (sn:Network)-[:ROUTED_BY|ROUTED_STANDBY]-(sr), '
+            + '(dn:Network)-[:ROUTED_BY|ROUTED_STANDBY]-(dr), rp = allShortestPaths '
+            + '((sr)-[:ROUTED*0..12]-(dr)) '
             + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = {vrf}) '
             + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
             + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
@@ -281,7 +307,6 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
             + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
             + 'AS distance ORDER BY distance',
             {"net1": net1, "net2": net2, "vrf": vrf})
-
 
         allpaths = dict()
         # Load all paths into tuples with distance value
@@ -348,11 +373,12 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
         if pathList:
 
             ngtree['Hops'] = len(pathList)
-            ngtree['Max Hops'] = max([s['distance'] for s in pathList])
+            ngtree['Distance'] = max([s['distance'] for s in pathList])
             ngtree['VRF'] = vrf
 
             if onepath:
                 ngtree['Traversal Type'] = 'Single Path'
+                ngtree['Traversal Coverage'] = path_coverage(ngtree['Distance'], ngtree['Hops'])
             else:
                 ngtree['Traversal Type'] = 'All Paths'
 
@@ -396,10 +422,10 @@ def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True, onepath=Tr
 
         swp = nglib.py2neo_ses.cypher.execute(
             'MATCH (ss:Switch), (ds:Switch), '
-            + 'sp = allShortestPaths((ss)-[:NEI*0..9]-(ds)) '
+            + 'sp = allShortestPaths((ss)-[:NEI|NEI_EQ*0..9]-(ds)) '
             + 'WHERE ss.name =~ {switch1} AND ds.name =~ {switch2}'
             + 'UNWIND nodes(sp) as s1 UNWIND nodes(sp) as s2 '
-            + 'MATCH (s1)<-[nei:NEI]-(s2), plen = shortestPath((ss)-[:NEI*0..9]-(s1)) '
+            + 'MATCH (s1)<-[nei:NEI|NEI_EQ]-(s2), plen = shortestPath((ss)-[:NEI*0..9]-(s1)) '
             + 'RETURN DISTINCT s1.name AS csw, s2.name AS psw, '
             + 'nei.pPort AS pport, nei.cPort as cport, nei.native AS native, '
             + 'nei.cPc as cPc, nei.pPc AS pPc, nei.vlans AS vlans, nei.rvlans as rvlans, '
@@ -461,13 +487,14 @@ def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True, onepath=Tr
 
         if pathList:
 
-            if onepath:
-                ngtree['Traversal Type'] = 'Single Path'
-            else:
-                ngtree['Traversal Type'] = 'All Paths'
-
             ngtree['Links'] = len(pathList)
             ngtree['Distance'] = max([s['distance'] for s in pathList])
+
+            if onepath:
+                ngtree['Traversal Type'] = 'Single Path'
+                ngtree['Traversal Coverage'] = path_coverage(ngtree['Distance'], ngtree['Links'])
+            else:
+                ngtree['Traversal Type'] = 'All Paths'
 
             # CSV Prints locally for now
             if rtype == "CSV":
@@ -517,6 +544,13 @@ def spath_direction(swp):
     + nswp['To Switch'] + '(' + nswp['To Port'] + ')'
 
     return nswp
+
+
+def path_coverage(inc, total):
+    """ Return the path coverage percentage for partial paths"""
+    perc = (inc * 100.0) / total
+    (percent) = str(perc).split('.')
+    return percent[0] + '%'
 
 
 def get_fw_path(src, dst, rtype="TEXT", verbose=True):
