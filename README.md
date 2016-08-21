@@ -2,10 +2,9 @@
 
 NetGrph maps ethernet networks as an abstract model in the
 [Neo4j](http://neo4j.com) Graph Database. This allows you to traverse your
-LAN/WAN as a graph of interconnected nodes and relationships. The purpose of
-this application is to provide a model for understanding your network as a set
-of distributed relationships to enable configuration automation and
-troubleshooting when developing other tools.
+LAN/WAN in software as a graph of interconnected nodes and relationships. The 
+purpose of this application is to serve as a model for automation and
+troubleshooting across networks rather than box by box.
 
 Currently NetGrph can calculate all possible L2/L3 paths between devices, route
 between VRFs/firewalls, find inline network taps along paths, map complicated L2
@@ -350,7 +349,7 @@ I will not be expanding the application to be a full-blown NMS, nor do I plan to
 replicate the features of NetDB in to this codebase. You are free to fork this
 code and turn it into anything you like, but if you expand the core modeling
 functionality and think it should be included in the main codebase, I'd like to
-check it out.
+consider including it here.
 
 See the [CONTRIBUTING](CONTRIBUTING.md) document for more information.
 
@@ -364,8 +363,8 @@ reports.
 
 The database update time on our localhost server with SSDs is 150sec for a
 complete network refresh. When importing to an unoptimized VM on a remote
-server, the import time is 10min. The network import speed could be dramatically
-increased if rewritten using the Bolt driver, which is planned
+server, the import time is 5min. The network import speed could be dramatically
+increased if rewritten using the Bolt driver, which is planned.
 
 ## Dependencies
 
@@ -384,8 +383,10 @@ bundled NetDB OVA with NetGrph included.
 
 If anyone has a dependable LLDP/CDP walker they recommend (I'm sure there are
 many), please contact me. This only needs src_switch,src_port,dst_switch,dst_port.
+I have tested a few different open-source packages, but have yet to find a suitable
+tool that is reliable enough.
 
-NetGrph was developed on Ubuntu 14.04 LTS, testing on 16.04, and should be
+NetGrph was developed on Ubuntu 14.04 LTS, tested on 16.04, and should be
 compatible with other versions of linux. I highly recommend using Ubuntu at this
 early stage for better support. I also plan to create an ansible build script in
 the next few months.
@@ -406,7 +407,7 @@ Please see the [Contributions](CONTRIBUTING.md) document in docs for
 information about how you can contribute back to NetGrph.
 
 ## Contributors
-* Jonathan Yantis ([yantisj](https://github.com/tcabanski))
+* Jonathan Yantis ([yantisj](https://github.com/yantisj))
 
 ## License
 NetGrph is licensed under the GNU AGPLv3 License.
