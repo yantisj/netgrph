@@ -251,33 +251,85 @@ $ ./netgrph.py -p 10.26.72.142 10.34.72.24
 │   │   ├── Path : 10.26.72.0/22 -> 10.25.11.0/24
 │   │   ├── VRF : default
 │   │   │
-│   │   ├───┬─[ L3-HOP Hop ]
+│   │   ├───┬─[ L3-HOP artmdf1(10.23.74.11) -> core1(10.23.74.10) ]
 │   │   │   ├── From IP : 10.23.74.11
 │   │   │   ├── From Router : artmdf1
 │   │   │   ├── To IP : 10.23.74.10
 │   │   │   ├── To Router : core1
-│   │   │   └── distance : 1
+│   │   │   ├── VLAN : 2074
+│   │   │   ├── distance : 1
+│   │   │   │
+│   │   │   └───┬─[ L2-PATH core1(Eth7/27) <-> artmdf1(Eth2/26) ]
+│   │   │       ├── Child Channel : 0
+│   │   │       ├── Child Port : Eth2/26
+│   │   │       ├── Child Switch : artmdf1
+│   │   │       ├── Link VLANs : 1246,2074,2446-2450,2461
+│   │   │       ├── Link rVLANs : 1246,2074,2446-2450,2461
+│   │   │       ├── Native VLAN : 1
+│   │   │       ├── Parent Channel : 0
+│   │   │       ├── Parent Port : Eth7/27
+│   │   │       ├── Parent Switch : core1
+│   │   │       └── distance : 0
 │   │   │
-│   │   ├───┬─[ L3-HOP Hop ]
+│   │   ├───┬─[ L3-HOP artmdf1(10.23.74.21) -> core2(10.23.74.20) ]
 │   │   │   ├── From IP : 10.23.74.21
 │   │   │   ├── From Router : artmdf1
 │   │   │   ├── To IP : 10.23.74.20
 │   │   │   ├── To Router : core2
-│   │   │   └── distance : 1
+│   │   │   ├── VLAN : 3074
+│   │   │   ├── distance : 1
+│   │   │   │
+│   │   │   └───┬─[ L2-PATH core2(Eth4/25) <-> artmdf1(Eth3/8) ]
+│   │   │       ├── Child Channel : 0
+│   │   │       ├── Child Port : Eth3/8
+│   │   │       ├── Child Switch : artmdf1
+│   │   │       ├── Link VLANs : 1246,3074,3446-3450,3461
+│   │   │       ├── Link rVLANs : 1246,3074,3446-3450,3461
+│   │   │       ├── Native VLAN : 1
+│   │   │       ├── Parent Channel : 0
+│   │   │       ├── Parent Port : Eth4/25
+│   │   │       ├── Parent Switch : core2
+│   │   │       └── distance : 0
 │   │   │
-│   │   ├───┬─[ L3-HOP Hop ]
+│   │   ├───┬─[ L3-HOP artmdf2(10.23.78.11) -> core1(10.23.78.10) ]
 │   │   │   ├── From IP : 10.23.78.11
 │   │   │   ├── From Router : artmdf2
 │   │   │   ├── To IP : 10.23.78.10
 │   │   │   ├── To Router : core1
-│   │   │   └── distance : 1
+│   │   │   ├── VLAN : 2078
+│   │   │   ├── distance : 1
+│   │   │   │
+│   │   │   └───┬─[ L2-PATH core1(Eth8/25) <-> artmdf2(Eth2/26) ]
+│   │   │       ├── Child Channel : 0
+│   │   │       ├── Child Port : Eth2/26
+│   │   │       ├── Child Switch : artmdf2
+│   │   │       ├── Link VLANs : 1246,2078,2451,2453,2455-2457,2462
+│   │   │       ├── Link rVLANs : 1246,2078,2451,2453,2455-2457,2462
+│   │   │       ├── Native VLAN : 1
+│   │   │       ├── Parent Channel : 0
+│   │   │       ├── Parent Port : Eth8/25
+│   │   │       ├── Parent Switch : core1
+│   │   │       └── distance : 0
 │   │   │
-│   │   └───┬─[ L3-HOP Hop ]
+│   │   └───┬─[ L3-HOP artmdf2(10.23.78.21) -> core2(10.23.78.20) ]
 │   │       ├── From IP : 10.23.78.21
 │   │       ├── From Router : artmdf2
 │   │       ├── To IP : 10.23.78.20
 │   │       ├── To Router : core2
-│   │       └── distance : 1
+│   │       ├── VLAN : 3078
+│   │       ├── distance : 1
+│   │       │
+│   │       └───┬─[ L2-PATH core2(Eth8/25) <-> artmdf2(Eth3/8) ]
+│   │           ├── Child Channel : 0
+│   │           ├── Child Port : Eth3/8
+│   │           ├── Child Switch : artmdf2
+│   │           ├── Link VLANs : 1246,3078,3451,3453,3455-3457,3462
+│   │           ├── Link rVLANs : 1246,3078,3451,3453,3455-3457,3462
+│   │           ├── Native VLAN : 1
+│   │           ├── Parent Channel : 0
+│   │           ├── Parent Port : Eth8/25
+│   │           ├── Parent Switch : core2
+│   │           └── distance : 0
 │   │
 │   ├───┬─[ L4-HOP Network ]
 │   │   ├── cidr : 10.25.11.0/24
@@ -311,33 +363,85 @@ $ ./netgrph.py -p 10.26.72.142 10.34.72.24
 │       ├── Path : 10.25.12.0/24 -> 10.34.72.0/22
 │       ├── VRF : utility
 │       │
-│       ├───┬─[ L3-HOP Hop ]
+│       ├───┬─[ L3-HOP core1(10.23.74.10) -> artmdf1(10.23.74.11) ]
 │       │   ├── From IP : 10.23.74.10
 │       │   ├── From Router : core1
 │       │   ├── To IP : 10.23.74.11
 │       │   ├── To Router : artmdf1
-│       │   └── distance : 1
+│       │   ├── VLAN : 2461
+│       │   ├── distance : 1
+│       │   │
+│       │   └───┬─[ L2-PATH core1(Eth7/27) <-> artmdf1(Eth2/26) ]
+│       │       ├── Child Channel : 0
+│       │       ├── Child Port : Eth2/26
+│       │       ├── Child Switch : artmdf1
+│       │       ├── Link VLANs : 1246,2074,2446-2450,2461
+│       │       ├── Link rVLANs : 1246,2074,2446-2450,2461
+│       │       ├── Native VLAN : 1
+│       │       ├── Parent Channel : 0
+│       │       ├── Parent Port : Eth7/27
+│       │       ├── Parent Switch : core1
+│       │       └── distance : 1
 │       │
-│       ├───┬─[ L3-HOP Hop ]
+│       ├───┬─[ L3-HOP core1(10.23.78.10) -> artmdf2(10.23.78.11) ]
 │       │   ├── From IP : 10.23.78.10
 │       │   ├── From Router : core1
 │       │   ├── To IP : 10.23.78.11
 │       │   ├── To Router : artmdf2
-│       │   └── distance : 1
+│       │   ├── VLAN : 2462
+│       │   ├── distance : 1
+│       │   │
+│       │   └───┬─[ L2-PATH core1(Eth8/25) <-> artmdf2(Eth2/26) ]
+│       │       ├── Child Channel : 0
+│       │       ├── Child Port : Eth2/26
+│       │       ├── Child Switch : artmdf2
+│       │       ├── Link VLANs : 1246,2078,2451,2453,2455-2457,2462
+│       │       ├── Link rVLANs : 1246,2078,2451,2453,2455-2457,2462
+│       │       ├── Native VLAN : 1
+│       │       ├── Parent Channel : 0
+│       │       ├── Parent Port : Eth8/25
+│       │       ├── Parent Switch : core1
+│       │       └── distance : 1
 │       │
-│       ├───┬─[ L3-HOP Hop ]
+│       ├───┬─[ L3-HOP core2(10.23.74.20) -> artmdf1(10.23.74.21) ]
 │       │   ├── From IP : 10.23.74.20
 │       │   ├── From Router : core2
 │       │   ├── To IP : 10.23.74.21
 │       │   ├── To Router : artmdf1
-│       │   └── distance : 1
+│       │   ├── VLAN : 3461
+│       │   ├── distance : 1
+│       │   │
+│       │   └───┬─[ L2-PATH core2(Eth4/25) <-> artmdf1(Eth3/8) ]
+│       │       ├── Child Channel : 0
+│       │       ├── Child Port : Eth3/8
+│       │       ├── Child Switch : artmdf1
+│       │       ├── Link VLANs : 1246,3074,3446-3450,3461
+│       │       ├── Link rVLANs : 1246,3074,3446-3450,3461
+│       │       ├── Native VLAN : 1
+│       │       ├── Parent Channel : 0
+│       │       ├── Parent Port : Eth4/25
+│       │       ├── Parent Switch : core2
+│       │       └── distance : 1
 │       │
-│       └───┬─[ L3-HOP Hop ]
+│       └───┬─[ L3-HOP core2(10.23.78.20) -> artmdf2(10.23.78.21) ]
 │           ├── From IP : 10.23.78.20
 │           ├── From Router : core2
 │           ├── To IP : 10.23.78.21
 │           ├── To Router : artmdf2
-│           └── distance : 1
+│           ├── VLAN : 3462
+│           ├── distance : 1
+│           │
+│           └───┬─[ L2-PATH core2(Eth8/25) <-> artmdf2(Eth3/8) ]
+│               ├── Child Channel : 0
+│               ├── Child Port : Eth3/8
+│               ├── Child Switch : artmdf2
+│               ├── Link VLANs : 1246,3078,3451,3453,3455-3457,3462
+│               ├── Link rVLANs : 1246,3078,3451,3453,3455-3457,3462
+│               ├── Native VLAN : 1
+│               ├── Parent Channel : 0
+│               ├── Parent Port : Eth8/25
+│               ├── Parent Switch : core2
+│               └── distance : 1
 │
 ├───┬─[ L2-PATH artmdf1|artmdf2 -> art7t1sw1 ]
 │   ├── Distance : 1

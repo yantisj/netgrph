@@ -121,10 +121,11 @@ def get_full_path(src, dst, rtype="NGTREE"):
             #srcswp['Name'] = "SRC Switched Path"
             nglib.ngtree.add_child_ngtree(ngtree, srcswp)
 
-        # Check for routed paths (inter/intra VRF)
-        rtree = get_full_routed_path(src, dst, rtype="NGTREE")
-        if rtree and rtree['_type'] == ('L3-PATH' or 'L4-PATH'):
-            ngtree['L4 Path'] = rtree['Name']
+        ## Check for routed paths (inter/intra VRF)
+        rtree = get_full_routed_path(src, dst, rtype="NGTREE", l2path=True)
+        if rtree and 'PATH' in rtree['_type']:
+            if rtree['_type'] == 'L4-PATH':
+                ngtree['L4 Path'] = rtree['Name']
             nglib.ngtree.add_child_ngtree(ngtree, rtree)
 
         # Destination Switch Data
@@ -187,7 +188,8 @@ def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False):
 
             # Last entry gets a route check
             if last:
-                rtree = get_routed_path(secpath[last]['gateway'], dst,  vrf=dstt['_child001']['VRF'])
+                rtree = get_routed_path(secpath[last]['gateway'], dst, \
+                    vrf=dstt['_child001']['VRF'], l2path=l2path)
                 if rtree:
                     nglib.ngtree.add_child_ngtree(ngtree, rtree)
         
@@ -428,7 +430,7 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
 
         logger.info("Query: Security Path %s -> %s for %s", src, dst, nglib.user)
 
-        if verbose:
+        if nglib.verbose:
             print("\nFinding security path from {:} -> {:}:\n".format(srcnet, dstnet))
 
         # Shortest path between VRFs
