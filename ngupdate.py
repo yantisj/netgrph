@@ -69,7 +69,9 @@ parser.add_argument("-full", help="Full Update on the Database",
                     action="store_true")
 parser.add_argument("-id", help="Import Devicelist into DB",
                     action="store_true")
-parser.add_argument("-ind", help="Import Neighbor Data in to DB",
+parser.add_argument("-ind", help="Import Neighbor into DB",
+                    action="store_true")
+parser.add_argument("-ild", help="Import Links Data into DB",
                     action="store_true")
 parser.add_argument("-ivrf", help="Import VRF,Seczone Data",
                     action="store_true")
@@ -175,6 +177,7 @@ if args.full:
     run_cmd(nglib.fw_update.import_fw, fileName=ngfiles['firewalls'])
 
     run_cmd(nglib.vlan_update.import_vlans, fileName=ngfiles['vlans'])
+    run_cmd(nglib.vlan_update.import_links, fileName=ngfiles['links'])
 
     run_cmd(nglib.vlan_update.update_vlans)
     stop = timer()
@@ -203,6 +206,8 @@ elif args.id:
                                        ngfiles['device_info'])
 elif args.ind:
     nglib.dev_update.import_neighbors(ngfiles['neighbors'])
+elif args.ild:
+    nglib.vlan_update.import_links(ngfiles['links'])
 elif args.ivrf:
     nglib.dev_update.import_vrfs(ngfiles['vrfs'])
 elif args.inet:

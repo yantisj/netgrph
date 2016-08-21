@@ -76,6 +76,9 @@ parser.add_argument("-nfilter", help="Get all networks on a filter (see netgrph.
                     action="store_true")
 parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
                     action="store_true")
+parser.add_argument("-path", metavar="src",
+                    help="Full Path Between -p src dst (ip/cidr, prefers NetDB)",
+                    type=str)
 parser.add_argument("-fpath", metavar="src",
                     help="Security Path between -fp src dst",
                     type=str)
@@ -85,6 +88,9 @@ parser.add_argument("-rpath", metavar="src",
 parser.add_argument("-spath", metavar="src",
                     help="Switched Path between -sp sw1 sw2 (Neo4j Regex)",
                     type=str)
+parser.add_argument("-allpaths",
+                    help="Show all Paths (defaults to single path)",
+                    action="store_true")
 parser.add_argument("-group", help="Get VLANs for a Management Group",
                     action="store_true")
 parser.add_argument("-vrange", metavar='1[-4096]', help="VLAN Range (default 1-1999)",
@@ -134,6 +140,12 @@ nglib.verbose = verbose
 # Initialize Library
 nglib.init_nglib(config_file)
 
+# Pathfinding Variable
+onepath = True
+if args.allpaths:
+    onepath = False
+
+## Pathfinding
 if args.fpath:
     nglib.query.path.get_fw_path(args.fpath, args.search)
 
@@ -141,14 +153,21 @@ elif args.spath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_switch_path(args.spath, args.search, rtype=rtype)
+    nglib.query.path.get_switched_path(args.spath, args.search, rtype=rtype, onepath=onepath)
 
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_routed_path(args.rpath, args.search, rtype=rtype)
+    nglib.query.path.get_routed_path(args.rpath, args.search, rtype=rtype, onepath=onepath)
 
+elif args.path:
+    rtype = "TREE"
+    if args.output:
+        rtype = args.output
+    nglib.query.path.get_full_path(args.path, args.search, rtype=rtype, onepath=onepath)
+
+## Individual Queries
 elif args.dev:
     rtype = "TREE"
     if args.output:

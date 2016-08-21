@@ -212,7 +212,6 @@ def link_router_to_vrf(router, vrf):
             router=router, vrf=vrf, time=time)
 
 
-
 def reseed_neighbors():
     """
     Set all Switch nodes back to nglib.max_distance and set seed nodes to 0
@@ -233,7 +232,6 @@ def reseed_neighbors():
     # Clear all NEI and NEI_EQ Relationships
     nglib.py2neo_ses.cypher.execute(
         'MATCH(s:Switch)-[e:NEI|NEI_EQ]-() DELETE e')
-
 
 
 def import_neighbors(fileName):
@@ -375,6 +373,8 @@ def import_adjacent_neighbors(en, localD, remoteD, time):
                 + 'cSwitch:{remote}, cPort:{remotePort}}]->(r)',
                 local=localName, time=time, remote=remoteName,
                 localPort=localPort, remotePort=remotePort)
+
+
 
 
 def update_distance(switch):

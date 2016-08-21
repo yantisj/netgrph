@@ -115,10 +115,12 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
                 cngt['Gateway'] = nProp['gateway']
                 cngt['Broadcast'] = str(subnet.broadcast_address)
                 cngt['Size'] = str(subsize) + " nodes"
-                cngt['Role'] = pNode['NetRole']
-                cngt['Security Level'] = pNode['SecurityLevel']
+                if 'NetRole' in pNode:
+                    cngt['Role'] = pNode['NetRole']
+                    cngt['Security Level'] = pNode['SecurityLevel']
                 cngt['Router'] = rProp['name']
-                cngt['Location'] = rProp['location']
+                if 'location' in rProp:
+                    cngt['Location'] = rProp['location']
                 if standby:
                     cngt['StandbyRouter'] = standby
                 if nProp['vid']:

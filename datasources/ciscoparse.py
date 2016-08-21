@@ -57,6 +57,7 @@ parser.add_argument("-df", metavar='devicelist', help="Devicelist CSV file from 
 parser.add_argument("-vfile", metavar='outfile', help="VLAN CSV Output File", type=str)
 parser.add_argument("-ifile", metavar='outfile', help="Interface CSV Output File", type=str)
 parser.add_argument("-dfile", metavar='outfile', help="Device Output File (SNMP etc)", type=str)
+parser.add_argument("-lfile", metavar='outfile', help="Links File", type=str)
 parser.add_argument("-debug", help="Set debugging level", type=int)
 
 # Argument Reference
@@ -141,6 +142,81 @@ def parse_snmp(parse, device):
         dentry['Location'] = location
 
     return dentry
+
+
+def get_links(device):
+    """Get all trunks"""
+
+    conf_file = conf_dir + device['Device'] + "-confg"
+
+    try:
+        parse = CiscoConfParse(conf_file)
+    except:
+        print("Warning, could not load config for ", conf_file)
+        return []
+    else:
+        l2_ints = parse_l2_interfaces(parse, device['Device'])
+        return l2_ints
+
+def parse_l2_interfaces(parse, device):
+    """Parse L2 Interfaces"""
+
+    interfaces = parse.find_objects_w_child(
+       r'^interface.*(Ethernet)(\d+)(\/\d+)*(\.\d+)?$',
+       r'switchport\smode\strunk')
+
+    links = []
+
+    for i in interfaces:
+        ientry = dict()
+        ientry['vlans'] = ""
+        ientry['desc'] = ""
+        ientry['channel'] = 0
+        ientry['native'] = 1
+        ientry['Switch'] = device
+
+        ientry['Port'] = normalize_port(i.text)
+
+        full = i.all_children
+        for line in full:
+            ientry = parse_link(line.text, ientry)
+        
+        if not ientry['vlans']:
+            ientry['vlans'] = "1-4096"
+
+        links.append(ientry)
+
+    return links
+
+
+def parse_link(line, ientry):
+    """Parse Individual Entry inside Interface"""
+
+    vlist = re.search(r'\s+switchport\strunk\sallowed\svlan\s(add\s)?(.*)$', line)
+    nv = re.search(r'\s+switchport\strunk\snative\svlan\s(\d+)$', line)
+    channel = re.search(r'\s+channel-group\s(\d+)', line)
+    descre = re.search(r'\s+description\s+\[\s*(.*)\s*\]', line)
+
+    # VLAN List
+    if vlist:
+        if ientry['vlans']:
+            ientry['vlans'] = ientry['vlans'] + ',' + vlist.group(2)
+        else:
+            ientry['vlans'] = vlist.group(2)
+        #print(ientry['vlans'])
+
+    elif nv:
+        ientry['native'] = nv.group(1)
+        #print("native", ientry['native'])
+
+    elif channel:
+        ientry['channel'] = channel.group(1)
+        #print("channel", channel.group(1))
+
+    elif descre:
+        ientry['desc'] = descre.group(1)
+
+    return ientry
 
 
 def get_interfaces(device):
@@ -255,6 +331,7 @@ def parse_vlan_interfaces(parse, device):
                     ints.append(secentry)
 
     return ints
+
 
 def parse_int(line, ientry):
     """Parse Individual Entry inside Interface"""
@@ -469,6 +546,18 @@ def getSTP(stp,vRange,priority):
     return stp
 
 
+def normalize_port(port):
+    """Normalize Ports (GigabitEthernet1/1 -> Gi1/1)"""
+
+    port = port.replace('interface ', '')
+    port = port.replace('TenGigabitEthernet', 'Te')
+    port = port.replace('GigabitEthernet', 'Gi')
+    port = port.replace('FastEthernet', 'Fa')
+    port = port.replace('Ethernet', 'Eth')
+
+    return port
+
+
 # Write results to file
 def save_vlan_file(data, out_file):
 
@@ -478,6 +567,31 @@ def save_vlan_file(data, out_file):
     print(*sorted(data), sep='\n', file=save)
     save.close()
 
+
+# Write results to file
+def save_links_file(data, out_file):
+
+    save = open(out_file, "w")
+
+    linkKeys = []
+
+    # Get Dict keys for CSV Out
+    for key in sorted(data[0].keys()):
+        if key != "__values__":
+            linkKeys.append(key)
+
+    linkWriter = csv.writer(save)
+    linkWriter.writerow(linkKeys)
+
+    # Go through all entries and dump them to CSV
+    for en in data:
+        linkValues = []
+        for key in sorted(en.keys()):
+            if key != "__values__":
+                linkValues.append(en[key])
+        # Write Values to CSV
+        linkWriter.writerow(linkValues)
+    save.close()
 
 # Save vlan data to list
 def saveVLAN(vlan,vid,vname,switch,stp):
@@ -514,6 +628,8 @@ if args.df:
 
     devdb = loadDevicelist(args.df)
 
+    links = []
+
     # Process each device
     for en in devdb:
         # VLAN File
@@ -538,6 +654,15 @@ if args.df:
         if args.dfile:
             get_device_info(en)
             save_device_file(args.dfile)
+
+        # L2 Interfaces
+        if args.lfile:
+            for link in get_links(en):
+                links.append(link)
+
+    # Save L2 Interfaces
+    if args.lfile:
+        save_links_file(links, args.lfile)
 
 # Print Help
 else:

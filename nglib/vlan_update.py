@@ -33,6 +33,8 @@
 """NetGrph VLAN Import and Topology routines"""
 
 import logging
+import csv
+from collections import defaultdict
 import nglib
 
 logger = logging.getLogger(__name__)
@@ -131,6 +133,172 @@ def import_mgmt_vlan(vdb, ignore_new):
                 vname=vname, vid=vid, mgmt=mgmt, time=time)
 
 
+def import_links(fileName):
+    """Read in all trunk links from fileName
+       Load vlans for all switches into cache
+       Find the intersecting vlans between trunk interfaces
+       Find the intersecting vlans between switches
+       Find the intersection between vlans that can exist on trunk
+       Add vlans to interface relationship
+    """
+
+    f = open(fileName)
+    lcsv = csv.DictReader(f)
+    ldb = dict()
+    vcache = cache_vlans()
+
+    # Load CSV entries into ldb dict
+    for en in lcsv:
+        ldb[(en['Switch'],en['Port'])] = en
+
+    # Get all links on network
+    links = nglib.bolt_ses.run('MATCH(ps)-[e:NEI|NEI_EQ]->(cs) ' +
+        'RETURN ps.name, e.pPort, cs.name, e.cPort')
+    
+    for en in links:
+
+        pname = en['ps.name']
+        pport = en['e.pPort']
+        cname = en['cs.name']
+        cport = en['e.cPort']
+
+        # Both sides of the link are in the LDB
+        if (pname, pport) in ldb and (cname, cport) in ldb:
+
+            # Set of intersected VLANs between two trunks
+            iset = intersect_vlans(ldb[(pname, pport)]['vlans'], \
+            ldb[(cname, cport)]['vlans'])
+
+            rset = set()
+
+            # If VLAN exists on both switches and is in trunk, then it traverses link
+            for v in iset:
+                if int(v) in vcache[pname] and int(v) in vcache[cname]:
+                    rset.add(v)
+            
+            if nglib.verbose>3:
+                print("ps", ldb[(pname, pport)]['vlans'])
+                print("cs", ldb[(cname, cport)]['vlans'])
+                print("pvc", vcache[pname])
+                print("cvc", vcache[cname])
+            if nglib.verbose>2:
+                print("ON LINK", sorted(rset), "on", pname, pport, cname, cport)
+            
+            # Convert set to sorted vstring
+            rlist = []
+            for en in sorted(rset):
+                rlist.append(str(en))
+            vstring = ','.join(rlist)
+
+            # No Vlans on trunk
+            if not vstring and nglib.verbose>1:
+                print("No VLANS", pname, pport, cname, cport)
+                print("ps", ldb[(pname, pport)]['vlans'])
+                print("cs", ldb[(cname, cport)]['vlans'])
+                print("pvc", vcache[pname])
+                print("cvc", vcache[cname])
+            
+            # Update Link Info
+            pldb = ldb[(pname, pport)]
+            pldb['_rvlans'] = vstring
+            pldb['rvlans'] = compact_vlans(rset)
+            pldb['cvlans'] = compact_vlans(iset)
+            cldb = ldb[(cname, cport)]
+            #print("Update Info", pname, pport, cname, cport, pldb, cldb )
+            add_vlans_int(pldb, cldb)
+            
+        else:
+            if nglib.verbose>1:
+                print("Link not found in ldb", (pname, pport), (cname, cport))
+
+
+def cache_vlans():
+    """Build a VLAN Cache from each switch"""
+
+    vcache = defaultdict(set)
+
+    vlans = nglib.bolt_ses.run(
+        'MATCH(s:Switch)<-[e:Switched]-(v) ' +
+        'RETURN s.name, v.vid')
+    
+    for v in vlans:
+        vcache[v['s.name']].add(int(v['v.vid']))
+    
+    return vcache
+
+
+def intersect_vlans(set1, set2):
+    """Reduce VLANS to common range, returns set"""
+
+    set1 = expand_vlans(set1)
+    set2 = expand_vlans(set2)
+    
+    iset = set(set1).intersection(set2)
+    return iset
+
+
+def expand_vlans(oset):
+    """Expand a VLAN range to a set"""
+
+    lset = oset.split(',')
+    nset = set()
+
+    # Process vlan ranges eg. 1,2,3-20,4,5 into set
+    for en in lset:
+        sset = en.split('-')
+        if len(sset) > 1:
+            for x in range(int(sset[0]), int(sset[1])+1):
+                nset.add(x)
+        elif en:
+            nset.add(int(en))
+    
+    return nset
+
+
+def compact_vlans(oset):
+    """Convert set of vlans to range format"""
+
+    last = 0
+    crange = 0
+    nset = []
+
+    for en in sorted(oset):
+        if last and en == (last+1):
+            if not crange:
+                crange = last
+        elif crange:
+            nset.pop()
+            nset.append(str(crange) + '-' + str(last))
+            crange = 0    
+            nset.append(str(en))
+        else:
+            nset.append(str(en))
+        last = en
+    
+    if crange:
+        nset.pop()
+        nset.append(str(crange) + '-' + str(last))
+    
+    #print("os", sorted(oset), "rs", nset)
+
+    return ",".join(nset)
+
+def add_vlans_int(pldb, cldb):
+    """Add VLAN Info to link pldb->cldb"""
+
+    #print({"pname": pldb['Switch'], "pPort": pldb['Port'], "cname": cldb['Switch'], "cPort": cldb['Port'], "desc": pldb['desc']})
+
+    nglib.bolt_ses.run(
+    'MATCH (ps:Switch {name:{pname}})-'
+    + '[e:NEI|NEI_EQ {pPort:{pPort}, cPort:{cPort}}]->'
+    + '(cs:Switch {name:{cname}}) '
+    + 'SET e += {desc:{desc}, native:{nv}, pPc:{pPc}, cPc:{cPc}, '
+    + 'vlans:{cvlans}, rvlans:{rvlans}, _rvlans:{_rvlans}} RETURN e',
+    {"pname": pldb['Switch'], "pPort": pldb['Port'], "cname": cldb['Switch'],
+    "cPort": cldb['Port'], "desc": pldb['desc'], "nv": pldb['native'], "pPc": pldb['channel'],
+    "cPc": cldb['channel'], "cvlans": pldb['cvlans'], "rvlans": pldb['rvlans'], "_rvlans": pldb['_rvlans']})
+
+
 def update_vlans():
     """Run VLAN update routines"""
 
@@ -200,7 +368,8 @@ def update_bidge_domains():
     # Get all Switches and their child neighbors
     results = nglib.py2neo_ses.cypher.execute(
         'MATCH (ps:Switch)-[e:NEI|NEI_EQ]->(cs:Switch) '
-        + 'RETURN ps.name as pswitch, ps.mgmt AS pmgmt, cs.name as cswitch, cs.mgmt AS cmgmt')
+        + 'RETURN ps.name as pswitch, ps.mgmt AS pmgmt, cs.name as cswitch, '
+        + 'cs.mgmt AS cmgmt, e._rvlans AS rvlans')
 
     if len(results) > 0:
         for r in results.records:
@@ -218,10 +387,13 @@ def update_bidge_domains():
                     + 'RETURN v.vid as vid',
                     cswitch=r.cswitch)
 
-                # Bridge VLANs across MGMT Domains
+                # Bridge VLANs across MGMT Domains if they exist on link
                 if len(pvlans) > 0 and len(cvlans) > 0:
                     pvdb = dict()
                     cvdb = dict()
+                    rvlans = set()
+                    if r.rvlans:
+                        rvlans = set(r.rvlans.split(','))
 
                     # Load dicts of vlan IDs both both parent and child
                     for p in pvlans.records:
@@ -233,7 +405,11 @@ def update_bidge_domains():
                     # bridge the two
                     for vlan in pvdb.keys():
                         if vlan in cvdb.keys():
-                            update_bridge(r.pmgmt, r.cmgmt, vlan, r.pswitch, r.cswitch)
+                            if vlan in rvlans:
+                                update_bridge(r.pmgmt, r.cmgmt, vlan, r.pswitch, r.cswitch)
+                            elif nglib.verbose>1:
+                                logger.debug("Switches adjacent, missing rvlans: " +
+                                "v:%s, ps:%s, cs:%s, rv:%s", vlan, r.pswitch, r.cswitch, rvlans)
 
 
 def update_bridge(pmgmt, cmgmt, vlan, pswitch, cswitch):
