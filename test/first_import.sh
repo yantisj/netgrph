@@ -11,4 +11,5 @@
 ./ngupdate.py -v -ifile ./cypher/buildfw.cyp
 ./ngupdate.py -v -ifile ./cypher/constraints.cyp
 ./ngupdate.py -full -v
+./ngupdate.py -v -ifile ./cypher/buildfw.cyp
 ./test/test_full.sh

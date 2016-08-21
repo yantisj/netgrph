@@ -57,6 +57,7 @@ qtest['-ip 10.9.136.1 -o JSON'] = '"IP": "10.9.136.1"'
 qtest['-ip 10.9.136.1 -o YAML'] = 'IP: 10.9.136.1'
 qtest['-sp xyz2mdf abc4mdf'] = 'core1'
 qtest['-rp 10.1.108.50 10.1.20.50'] = 'core1'
+qtest['-p 10.1.120.50 8.8.8.8'] = 'Description : Default Route'
 
 # Production tests
 ptest = dict()
@@ -75,12 +76,12 @@ ptest['-p 10.26.72.142 10.26.72.17'] = 'From Switch : artmdf1'
 ptest['-p 10.26.72.142 10.28.6.27'] = 'Link rVLANs'
 ptest['-p 10.26.72.142 10.34.72.24'] = 'L4-HOP FW'
 
-qtest = ptest
+#qtest = ptest
 
 rtest = dict()
-rtest['-vlans -empty -vrange 200'] = 'v6test'
-#rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
-#rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
+#rtest['-vlans -empty -vrange 200'] = 'v6test'
+rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
+rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
 
 # Update Tests (check for errors)
 utest = ('-ivrf', '-id', '-ind', '-inet', '-isnet', '-iasa', '-ivlan', '-uvlan')
