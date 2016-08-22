@@ -86,7 +86,7 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
             if 'StandbyRouter' in n1tree['_child001']:
                 router = router + '|' + n1tree['_child001']['StandbyRouter']
             if routing:
-                if srctree['Switch']:
+                if 'Switch' in srctree:
                     srcswp = get_switched_path(srctree['Switch'], router, \
                         verbose=False, onepath=onepath)
                 else:
@@ -99,7 +99,7 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
             if 'StandbyRouter' in n2tree['_child001']:
                 router = router + '|' + n2tree['_child001']['StandbyRouter']
             if routing:
-                if dsttree['Switch']:
+                if 'Switch' in dsttree:
                     dstswp = get_switched_path(router, dsttree['Switch'], \
                         verbose=False, onepath=onepath)
                 else:
@@ -133,7 +133,7 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
             ngtree["Traversal Type"] = 'All Paths'
 
         ## Add the SRC Data
-        if '_child002' in n1tree:
+        if '_child002' in n2tree:
             n1tree['_child002']['_type'] = "SRC"
             if 'SwitchPort' in n2tree['_child002']:
                 n1tree['_child002']['Name'] = src + ' ' + n1tree['_child002']['MAC'] \
@@ -196,7 +196,7 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         if '_child002' in n2tree:
             n2tree['_child002']['_type'] = "DST"
             if 'SwitchPort' in n2tree['_child002']:
-                n2tree['_child002']['Name'] = src + ' ' + n2tree['_child002']['MAC'] \
+                n2tree['_child002']['Name'] = dst + ' ' + n2tree['_child002']['MAC'] \
                     + ' ' + str(n2tree['_child002']['Switch']) + '(' \
                     + str(n2tree['_child002']['SwitchPort']) \
                     + ') [vid:' + str(n2tree['_child002']['VLAN']) + ']'
@@ -230,31 +230,32 @@ def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False, onepath=True):
         # Inter VRF
         else:
             secpath = get_fw_path(src, dst, rtype="NGTREE")
-            ngtree = nglib.ngtree.get_ngtree(secpath['Name'], tree_type="L4-PATH")
+            if secpath:
+                ngtree = nglib.ngtree.get_ngtree(secpath['Name'], tree_type="L4-PATH")
 
-            # Filter security path for relavent nodes
-            first = True
-            last = None
-            for key in sorted(secpath.keys()):
-                if '_child' in key:
-                    if re.search(r'(L4GW|L4FW)', secpath[key]['_type']):
+                # Filter security path for relavent nodes
+                first = True
+                last = None
+                for key in sorted(secpath.keys()):
+                    if '_child' in key:
+                        if re.search(r'(L4GW|L4FW)', secpath[key]['_type']):
 
-                        # First Entry gets a route check
-                        if first:
-                            rtree = get_routed_path(src, secpath[key]['gateway'], \
-                                vrf=srct['_child001']['VRF'], l2path=l2path, onepath=onepath)
-                            if rtree:
-                                nglib.ngtree.add_child_ngtree(ngtree, rtree)
-                            first = False
-                        nglib.ngtree.add_child_ngtree(ngtree, secpath[key])
-                        last = key
+                            # First Entry gets a route check
+                            if first:
+                                rtree = get_routed_path(src, secpath[key]['gateway'], \
+                                    vrf=srct['_child001']['VRF'], l2path=l2path, onepath=onepath)
+                                if rtree:
+                                    nglib.ngtree.add_child_ngtree(ngtree, rtree)
+                                first = False
+                            nglib.ngtree.add_child_ngtree(ngtree, secpath[key])
+                            last = key
 
-            # Last entry gets a route check
-            if last:
-                rtree = get_routed_path(secpath[last]['gateway'], dst, \
-                    vrf=dstt['_child001']['VRF'], l2path=l2path, onepath=onepath)
-                if rtree:
-                    nglib.ngtree.add_child_ngtree(ngtree, rtree)
+                # Last entry gets a route check
+                if last:
+                    rtree = get_routed_path(secpath[last]['gateway'], dst, \
+                        vrf=dstt['_child001']['VRF'], l2path=l2path, onepath=onepath)
+                    if rtree:
+                        nglib.ngtree.add_child_ngtree(ngtree, rtree)
         
         return ngtree
 
