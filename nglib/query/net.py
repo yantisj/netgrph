@@ -41,12 +41,13 @@ from nglib.query.nNode import getJSONProperties
 logger = logging.getLogger(__name__)
 
 
-def get_net(ip, rtype="TREE", days=7):
+def get_net(ip, rtype="TREE", days=7, verbose=True):
     """Find a network and return text output"""
 
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
 
-    logger.info("Query: Looking up %s for %s", ip, nglib.user)
+    if verbose:
+        logger.info("Query: Looking up %s for %s", ip, nglib.user)
 
     if rtype in rtypes:
         net = nglib.query.net.find_cidr(ip)
@@ -294,8 +295,8 @@ def find_cidr(ip):
     if len(networks) > 1:
         for r in networks.records:
             if ipaddress.ip_address(ip) in ipaddress.ip_network(r.cidr):
-                if nglib.verbose:
-                    print(ip + " in " + r.cidr)
+                if nglib.verbose>1:
+                    print("find_cidr", ip + " in " + r.cidr)
                 mostSpecific = compare_cidr(mostSpecific, r.cidr)
 
 

@@ -58,6 +58,8 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             popt['l2path'] = True
         if 'verbose' not in popt:
             popt['verbose'] = False
+        if nglib.verbose:
+            popt['verbose'] = True
 
         logger.info("Query: Finding Full Path (%s --> %s) for %s",
                     src, dst, nglib.user)
@@ -67,12 +69,12 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
 
         # Translate IPs to CIDRs
         if re.search(r'^\d+\.\d+\.\d+\.\d+$', net1):
-            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE")
+            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
             if n1tree:
                 net1 = n1tree['_child001']['Name']
 
         if re.search(r'^\d+\.\d+\.\d+\.\d+$', net2):
-            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE")
+            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
             if n2tree:
                 net2 = n2tree['_child001']['Name']
 
@@ -230,10 +232,10 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
 
         # Translate IPs to CIDRs
         if re.search(r'^\d+\.\d+\.\d+\.\d+$', src):
-            srct = nglib.query.net.get_net(src, rtype="NGTREE")
+            srct = nglib.query.net.get_net(src, rtype="NGTREE", verbose=popt['verbose'])
 
         if re.search(r'^\d+\.\d+\.\d+\.\d+$', dst):
-            dstt = nglib.query.net.get_net(dst, rtype="NGTREE")
+            dstt = nglib.query.net.get_net(dst, rtype="NGTREE", verbose=popt['verbose'])
 
         # Intra VRF
         if srct['_child001']['VRF'] == dstt['_child001']['VRF']:
@@ -306,11 +308,11 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
 
         # Translate IPs to CIDRs
         if re.search(r'^\d+\.\d+\.\d+\.\d+$', net1):
-            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE")
+            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
             net1 = n1tree['_child001']['Name']
 
         if re.search(r'^\d+\.\d+\.\d+\.\d+$', net2):
-            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE")
+            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
             if n2tree:
                 net2 = n2tree['_child001']['Name']
 
