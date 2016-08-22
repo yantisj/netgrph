@@ -72,16 +72,19 @@ ptest['-vtree Core-641'] = '10.32.0.0/17'
 ptest['-ip 10.32.1.1 -o JSON'] = '"IP": "10.32.1.1"'
 ptest['-sp mdcmdf hvt404mdf'] = 'core1'
 ptest['-rp 10.33.1.100 10.26.76.1'] = 'core1'
-ptest['-p 10.26.72.142 10.26.72.17'] = 'From Switch : artmdf1'
-ptest['-p 10.26.72.142 10.28.6.27'] = 'Link rVLANs'
-ptest['-p 10.26.72.142 10.34.72.24'] = 'L4-HOP FW'
+ptest['-p 10.26.72.142 10.34.72.24'] = 'L4FW FwutilFW'
+ptest['10.26.72.142 10.34.72.24'] = 'L4FW FwutilFW'
 
-#qtest = ptest
+
+# NetDB
+#ptest['-p 10.26.72.142 10.28.6.27'] = 'Link rVLANs'
+
+qtest = ptest
 
 rtest = dict()
-#rtest['-vlans -empty -vrange 200'] = 'v6test'
-rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
-rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
+rtest['-vlans -empty -vrange 200'] = 'v6test'
+#rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
+#rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
 
 # Update Tests (check for errors)
 utest = ('-ivrf', '-id', '-ind', '-inet', '-isnet', '-iasa', '-ivlan', '-uvlan')

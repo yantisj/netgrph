@@ -54,6 +54,8 @@ def exp_ngtree(ngtree, rtype):
 
     if rtype == "TREE":
         nglib.ngtree.print_ngtree(ngtree, dtree=dict())
+    elif rtype == 'QTREE':
+        nglib.ngtree.export.exp_qtree(ngtree)
     elif rtype == "CSV":
         nglib.ngtree.export.exp_CSV(ngtree)
     elif rtype == "JSON":

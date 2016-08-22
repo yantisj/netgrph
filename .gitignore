@@ -10,4 +10,3 @@ build-commands
 ngtest.py.bak
 .cache/
 .DS_Store
-.cache/

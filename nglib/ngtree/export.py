@@ -37,6 +37,7 @@ Helper functions to export ngtrees in the right format
 import logging
 import json
 import yaml
+import nglib.ngtree
 
 verbose = 0
 logger = logging.getLogger(__name__)
@@ -63,7 +64,12 @@ def get_YAML(ngtree):
     ytree = yaml.dump(ngtree, Dumper=yaml.Dumper, default_flow_style=False)
     return ytree
 
+def exp_qtree(ngtree):
+    """Prints an ngtree with headers only"""
 
+    stree = strip_ngtree(ngtree)
+
+    nglib.ngtree.print_ngtree(stree, dtree=dict())
 
 def exp_CSV(ngtree):
     """Broken: Attempts to Flatten JSON and dump as CSV"""
@@ -106,3 +112,16 @@ def tocsv(json_content):
         return _tocsv(value)
     else:
         raise ValueError("JSON root object must be a hash")
+
+def strip_ngtree(ngtree, top=True):
+    """Strips everything but headers from ngtree"""
+
+    newtree = nglib.ngtree.get_ngtree(ngtree['Name'], tree_type=ngtree['_type'])
+
+    for en in ngtree:
+        if '_child' in en:
+            newtree[en] = strip_ngtree(ngtree[en], top=False)
+        elif top:
+            newtree[en] = ngtree[en]
+
+    return newtree

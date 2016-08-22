@@ -66,6 +66,8 @@ parser = argparse.ArgumentParser(prog='netgrph',
 
 parser.add_argument("search", help="Search the NetGrph Database (Wildcard Default)",
                     type=str)
+parser.add_argument("qpath", help="Combine with search for Path Analysis (optional)",
+                    nargs='?', default=None, type=str)
 parser.add_argument("-ip", help="Network Details for an IP",
                     action="store_true")
 parser.add_argument("-net", help="All networks within a CIDR (eg. 10.0.0.0/8)",
@@ -77,7 +79,7 @@ parser.add_argument("-nfilter", help="Get all networks on a filter (see netgrph.
 parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
                     action="store_true")
 parser.add_argument("-path", metavar="src",
-                    help="Full Path Between -p src dst (ip/cidr, prefers NetDB)",
+                    help="L2-L4 Path Between -p src dst (ip/cidr), defaults to a single path.",
                     type=str)
 parser.add_argument("-fpath", metavar="src",
                     help="Security Path between -fp src dst",
@@ -89,7 +91,10 @@ parser.add_argument("-spath", metavar="src",
                     help="Switched Path between -sp sw1 sw2 (Neo4j Regex)",
                     type=str)
 parser.add_argument("-allpaths",
-                    help="Show all Paths (defaults to single path)",
+                    help="Return all Paths",
+                    action="store_true")
+parser.add_argument("-singlepath",
+                    help="Return a single path",
                     action="store_true")
 parser.add_argument("-group", help="Get VLANs for a Management Group",
                     action="store_true")
@@ -106,6 +111,14 @@ parser.add_argument("--debug", help="Set debugging level", type=int)
 parser.add_argument("--verbose", help="Verbose Output", action="store_true")
 
 args = parser.parse_args()
+
+def check_path(singlepath):
+    """ Modifies bool if options set """
+    if args.allpaths:
+        singlepath = False
+    if args.singlepath:
+        singlepath = True
+    return singlepath
 
 # Alternate Config File
 if args.conf:
@@ -140,32 +153,39 @@ nglib.verbose = verbose
 # Initialize Library
 nglib.init_nglib(config_file)
 
-# Pathfinding Variable
-onepath = True
-if args.allpaths:
-    onepath = False
-
 ## Pathfinding
 if args.fpath:
     nglib.query.path.get_fw_path(args.fpath, args.search)
 
-elif args.spath:
-    rtype = "TREE"
+# Quick Path
+elif args.qpath:
+    rtype = "QTREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_switched_path(args.spath, args.search, rtype=rtype, onepath=onepath)
+    nglib.query.path.get_full_path(args.search, args.qpath, rtype=rtype, \
+        onepath=check_path(False))   
+
+elif args.spath:
+    rtype = "TREE"
+
+    if args.output:
+        rtype = args.output
+    nglib.query.path.get_switched_path(args.spath, args.search, rtype=rtype, \
+        onepath=check_path(False))
 
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_routed_path(args.rpath, args.search, rtype=rtype, onepath=onepath)
+    nglib.query.path.get_routed_path(args.rpath, args.search, rtype=rtype, \
+        onepath=check_path(False))
 
 elif args.path:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_full_path(args.path, args.search, rtype=rtype, onepath=onepath)
+    nglib.query.path.get_full_path(args.path, args.search, rtype=rtype, \
+        onepath=check_path(True))
 
 ## Individual Queries
 elif args.dev:

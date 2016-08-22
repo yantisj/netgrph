@@ -162,7 +162,15 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
             print("{:}┌─[{:} ]".format(indent, header))
             print("│")
         else:
-            print("{:}┬─[{:} ]".format(indent, header))
+            headonly = True
+            for en in ngtree:
+                if not re.search(r'Name|_type', en):
+                    headonly = False
+                    break
+            if headonly:
+                print("{:}──[{:} ]".format(indent, header))
+            else:
+                print("{:}┬─[{:} ]".format(indent, header))
 
 
     # Store Children as a list to be able to locate final child for indentation
