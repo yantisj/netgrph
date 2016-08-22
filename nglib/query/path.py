@@ -48,7 +48,7 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         Required NetDB for switchpath
     """
 
-    rtypes = ('CSV', 'TREE', 'JSON', 'YAML', 'NGTREE')
+    rtypes = ('CSV', 'TREE', 'JSON', 'YAML', 'NGTREE', 'QTREE')
 
     if rtype in rtypes:
 
@@ -135,7 +135,9 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         ## Add the SRC Data
         if '_child002' in n1tree:
             n1tree['_child002']['_type'] = "SRC"
-            n1tree['_child002']['Name'] = src
+            n1tree['_child002']['Name'] = src + ' ' + n1tree['_child002']['MAC'] \
+                + ' ' + n1tree['_child002']['Switch'] + '(' \
+                + n1tree['_child002']['SwitchPort'] + ')'
             nglib.ngtree.add_child_ngtree(ngtree, n1tree['_child002'])
 
         # Add L2 path if not switching
@@ -151,6 +153,11 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         # Add L3 Gateway
         if switching and routing:
             n1tree['_child001']['_type'] = "L3GW"
+            n1tree['_child001']['Name'] = n1tree['_child001']['Name'] \
+                + ' ' + n1tree['_child001']['Router']
+            if 'StandbyRouter' in n1tree['_child001']:
+                n1tree['_child001']['Name'] = n1tree['_child001']['Name'] \
+                    + '|' + n1tree['_child001']['StandbyRouter']
             nglib.ngtree.add_child_ngtree(ngtree, n1tree['_child001'])
 
         ## Check for routed paths (inter/intra VRF)
@@ -181,7 +188,9 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         # NetDB Destination Data
         if '_child002' in n2tree:
             n2tree['_child002']['_type'] = "DST"
-            n2tree['_child002']['Name'] = dst
+            n2tree['_child002']['Name'] = dst + ' ' + n2tree['_child002']['MAC'] \
+                + ' ' + n2tree['_child002']['Switch'] + '(' \
+                + n2tree['_child002']['SwitchPort'] + ')'
             nglib.ngtree.add_child_ngtree(ngtree, n2tree['_child002'])
 
         # Export NGTree
@@ -219,7 +228,7 @@ def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False, onepath=True):
             last = None
             for key in sorted(secpath.keys()):
                 if '_child' in key:
-                    if re.search(r'(Network|FW)', secpath[key]['Name']):
+                    if re.search(r'(L4GW|L4FW)', secpath[key]['_type']):
 
                         # First Entry gets a route check
                         if first:
@@ -352,6 +361,9 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
                     rtree['Name'] = "#{:} {:}({:}) -> {:}({:})".format( \
                     distance, rec['r1name'], rec['r1ip'], rec['r2name'], rec['r2ip'])
 
+                    if 'VLAN' in rtree and rtree['VLAN'] != '0':
+                        rtree['Name'] = rtree['Name'] + ' [vid:' + rtree['VLAN'] + ']'
+
                     # Add Switchpath if requested
                     if l2path:
                         spath = get_switched_path(rec['r1name'], rec['r2name'], verbose=False)
@@ -473,7 +485,7 @@ def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True, onepath=Tr
                 swptree['_rvlans'] = rec.p_rvlans
                 swptree['Native VLAN'] = rec.native
 
-            # Add directions to traversal
+            # Add directions to traversal and update name
             if 'Parent Switch' in swptree:
                 swptree = spath_direction(swptree)
 
@@ -543,6 +555,10 @@ def spath_direction(swp):
     nswp['From Switch'] + '(' + nswp['From Port'] +  ') -> ' \
     + nswp['To Switch'] + '(' + nswp['To Port'] + ')'
 
+    if 'From Channel' in nswp and nswp['From Channel'] != '0':
+        nswp['Name'] = nswp['Name'] + ' [pc:' + nswp['From Channel'] \
+            + '->' + nswp['To Channel'] + ']'
+
     return nswp
 
 
@@ -601,11 +617,25 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
                     hop = nglib.ngtree.get_ngtree(tlabel.group(1), tree_type="L4-HOP")
                     if re.search('VRF', label):
                         path = path + "VRF:" + nProp['name'] + " -> "
+                        hop['_type'] = "L4VRF"
 
                     if re.search('FW', label):
                         path = path + nProp['name'] + " -> "
                         fwsearch[nProp['name']] = nProp['hostname'] + "," + nProp['logIndex']
-                        hop['Name'] = "FW"
+                        hop['Name'] = nProp['name']
+                        hop['_type'] = "L4FW"
+
+                    # Network Hop
+                    elif re.search('Network', label):
+                        hop['Name'] = nProp['cidr']
+                        hop['_type'] = "L4GW"
+
+                        # Add properties
+                        #router = get_router(nProp)
+                        if 'vid' and 'vrf' in nProp:
+                            hop['Name'] = hop['Name'] + ' [rtr:' + get_router(nProp) + ' vid:' + nProp['vid'] \
+                                + ' vrf:' + nProp['vrf'] + ']'
+                            #hop['Name'] = hop['Name'] + ' VRF:' + nProp['vrf']
                                         
                     for prop in nProp:
                         hop[prop] = nProp[prop]
@@ -655,3 +685,12 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
             ngtree = nglib.query.exp_ngtree(ngtree, rtype)
             return ngtree
 
+def get_router(ngtree):
+    """ Return router and standby router properties if they exist"""
+
+    router = ""
+    if 'Router' in ngtree:
+        router = ngtree['Router']
+    if 'StandbyRouter' in ngtree:
+        router = router + '|' + ngtree['StandbyRouter']
+    return router

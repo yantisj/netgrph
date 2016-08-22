@@ -66,6 +66,8 @@ parser = argparse.ArgumentParser(prog='netgrph',
 
 parser.add_argument("search", help="Search the NetGrph Database (Wildcard Default)",
                     type=str)
+parser.add_argument("qpath", help="Combine with search for Path Analysis (optional)",
+                    nargs='?', default=None, type=str)
 parser.add_argument("-ip", help="Network Details for an IP",
                     action="store_true")
 parser.add_argument("-net", help="All networks within a CIDR (eg. 10.0.0.0/8)",
@@ -154,6 +156,14 @@ nglib.init_nglib(config_file)
 ## Pathfinding
 if args.fpath:
     nglib.query.path.get_fw_path(args.fpath, args.search)
+
+# Quick Path
+elif args.qpath:
+    rtype = "QTREE"
+    if args.output:
+        rtype = args.output
+    nglib.query.path.get_full_path(args.search, args.qpath, rtype=rtype, \
+        onepath=check_path(False))   
 
 elif args.spath:
     rtype = "TREE"
