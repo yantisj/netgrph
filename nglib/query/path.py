@@ -135,10 +135,11 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         ## Add the SRC Data
         if '_child002' in n1tree:
             n1tree['_child002']['_type'] = "SRC"
-            if 'Switchport' in n2tree['_child002']:
+            if 'SwitchPort' in n2tree['_child002']:
                 n1tree['_child002']['Name'] = src + ' ' + n1tree['_child002']['MAC'] \
                     + ' ' + str(n1tree['_child002']['Switch']) + '(' \
-                    + str(n1tree['_child002']['SwitchPort']) + ')'
+                    + str(n1tree['_child002']['SwitchPort']) \
+                    + ') [vid:' + str(n1tree['_child002']['VLAN']) + ']'
             nglib.ngtree.add_child_ngtree(ngtree, n1tree['_child002'])
 
         # Add L2 path if not switching
@@ -195,9 +196,10 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         if '_child002' in n2tree:
             n2tree['_child002']['_type'] = "DST"
             if 'SwitchPort' in n2tree['_child002']:
-                n2tree['_child002']['Name'] = dst + ' ' + n2tree['_child002']['MAC'] \
+                n2tree['_child002']['Name'] = src + ' ' + n2tree['_child002']['MAC'] \
                     + ' ' + str(n2tree['_child002']['Switch']) + '(' \
-                    + str(n2tree['_child002']['SwitchPort']) + ')'
+                    + str(n2tree['_child002']['SwitchPort']) \
+                    + ') [vid:' + str(n2tree['_child002']['VLAN']) + ']'
             nglib.ngtree.add_child_ngtree(ngtree, n2tree['_child002'])
 
         # Export NGTree

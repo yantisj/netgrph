@@ -9,15 +9,15 @@
 
 ### Example 1: L2 -> L2 : Quick Path between two devices on the same Switch/VLAN
 ```
-$ ./netgrph.py -p 10.26.72.142 10.26.73.17
+./netgrph.py 10.26.72.142 10.26.73.17
 ┌─[ PATHs L2-L4 ]
 │
 ├── L2 Path : art7t1sw1 (Gi2/42) -> art7t1sw1 (Gi4/2)
 ├── Traversal Type : All Paths
 │
-├─────[ SRC 10.26.72.142 04bd.88cb.xxxx art7t1sw1(Gi2/42) ]
+├─────[ SRC 10.26.72.142 04bd.88cb.xxxx art7t1sw1(Gi2/42) [vid:260] ]
 │
-└─────[ DST 10.26.73.17 40e3.d6c5.xxxx art7t1sw1(Gi4/2) ]
+└─────[ DST 10.26.72.142 40e3.d6c5.xxxx art7t1sw1(Gi4/2) [vid:260] ]
 ```
 
 ### Example 2: L2 -> L2 : Detailed Path between two devices on different switches, same VLAN
@@ -28,7 +28,7 @@ $ ./netgrph.py -all -p 10.26.72.142 10.26.73.254
 ├── L2 Path : art7t1sw1 (Gi2/42) -> art1t2sw1 (Gi2/0/37)
 ├── Traversal Type : All Paths
 │
-├───┬─[ SRC 10.26.72.142 04bd.88cb.xxxx art7t1sw1(Gi2/42) ]
+├─────[ SRC 10.26.72.142 04bd.88cb.xxxx art7t1sw1(Gi2/42) [vid:260] ]
 │   ├── FQDN : art7035-nw-ap1.xxxx
 │   ├── MAC : 04bd.88cb.xxxx
 │   ├── Switch : art7t1sw1
@@ -92,7 +92,7 @@ $ ./netgrph.py -all -p 10.26.72.142 10.26.73.254
 │       ├── To Switch : art1t2sw1
 │       └── distance : 2
 │
-└───┬─[ DST 10.26.73.254 6cf3.7fcd.xxxx art1t2sw1(Gi2/0/37) ]
+└─────[ DST 10.26.72.142 6cf3.7fcd.xxxx art1t2sw1(Gi2/0/37) [vid:260] ]
     ├── FQDN : art1302-c-ap1.xxxx
     ├── MAC : 6cf3.7fcd.xxxx
     ├── Switch : art1t2sw1
@@ -106,6 +106,7 @@ $ ./netgrph.py -all -p 10.26.72.142 10.26.73.254
 
 ### Example 3: L2 -> L3 -> L2: Quick Path between two devices on the same Switch, different VLAN
 ```
+
 ┌─[ PATHs L2-L4 ]
 │
 ├── L2 Path : art7t1sw1 (Gi2/42) -> art7t1sw1 (Gi9/47)
@@ -113,7 +114,7 @@ $ ./netgrph.py -all -p 10.26.72.142 10.26.73.254
 ├── Lx Path : 10.26.72.142 -> 10.28.7.137
 ├── Traversal Type : All Paths
 │
-├─────[ SRC 10.26.72.142 04bd.88cb.xxxx art7t1sw1(Gi2/42) ]
+├─────[ SRC 10.26.72.142 04bd.88cb.xxxx art7t1sw1(Gi2/42) [vid:260] ]
 │
 ├───┬─[ L2-PATH art7t1sw1 -> artmdf1|artmdf2 ]
 │   │
@@ -131,7 +132,7 @@ $ ./netgrph.py -all -p 10.26.72.142 10.26.73.254
 │   │
 │   └─────[ L2-HOP #1 artmdf2(Eth1/8) -> art7t1sw1(Te6/1) [pc:108->1] ]
 │
-└─────[ DST 10.28.7.137 ecb1.d7f7.xxxx art7t1sw1(Gi9/47) ]
+└─────[ DST 10.26.72.142 ecb1.d7f7.xxxx art7t1sw1(Gi9/47) [vid:280] ]
 ```
 
 ### Example 4: L2 -> L4 -> L2: Quick Paths between two devices on the same Switch, different VRF
