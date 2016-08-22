@@ -82,7 +82,7 @@ def process_vlans(vlanRange):
 
     (vlow, vhigh) = get_vlan_range(vlanRange)
 
-    if DEBUG: print("VLAN Range Low: " + str(vlow) + " High: " + str(vhigh), file=sys.stderr)
+    if DEBUG>2: print("VLAN Range Low: " + str(vlow) + " High: " + str(vhigh), file=sys.stderr)
 
 def get_vlan_range(vlan_range):
     vlans = vlan_range.rsplit("-")
@@ -101,9 +101,6 @@ def get_vlan_range(vlan_range):
 def loadDevicelist(dev_file):
     """Load NetGrph devices.csv"""
 
-    if DEBUG:
-        print("Loading Devicelist: " + devfile, file=sys.stderr)
-
     f = open(dev_file)
     devdb = csv.DictReader(f)
     return devdb
@@ -116,7 +113,7 @@ def get_device_info(device):
     try:
         parse = CiscoConfParse(conf_file)
     except:
-        print("Warning, could not load config for ", conf_file)
+        #print("Warning, could not load config for ", conf_file)
         return
     else:
         dentry = parse_snmp(parse, device['Device'])
@@ -152,7 +149,7 @@ def get_links(device):
     try:
         parse = CiscoConfParse(conf_file)
     except:
-        print("Warning, could not load config for ", conf_file)
+        #print("Warning, could not load config for ", conf_file)
         return []
     else:
         l2_ints = parse_l2_interfaces(parse, device['Device'])
@@ -180,7 +177,7 @@ def parse_l2_interfaces(parse, device):
         full = i.all_children
         for line in full:
             ientry = parse_link(line.text, ientry)
-        
+
         if not ientry['vlans']:
             ientry['vlans'] = "1-4096"
 
@@ -229,11 +226,13 @@ def get_interfaces(device):
         try:
             parse = CiscoConfParse(conf_file)
         except:
-            print("Warning, could not load config for ", conf_file)
             return
         else:
+            default_shut = False
+            if len(parse.find_objects('no shutdown')):
+                default_shut = True
 
-            vlan_ints = parse_vlan_interfaces(parse, device['Device'])
+            vlan_ints = parse_vlan_interfaces(parse, device['Device'], default_shut)
 
             for en in vlan_ints:
                 en['MgmtGroup'] = device['MgmtGroup']
@@ -243,7 +242,7 @@ def get_interfaces(device):
                     en['Standby'] = False
                 interface_list.append(en)
 
-            l3_ints = parse_l3_interfaces(parse, device['Device'])
+            l3_ints = parse_l3_interfaces(parse, device['Device'], default_shut)
 
             for en in l3_ints:
                 en['MgmtGroup'] = device['MgmtGroup']
@@ -254,7 +253,7 @@ def get_interfaces(device):
                 interface_list.append(en)
 
 
-def parse_l3_interfaces(parse, device):
+def parse_l3_interfaces(parse, device, default_shut):
     """Parse Routed interfaces and IOS Router Gi0/0.X interfaces"""
 
     interfaces = parse.find_objects_w_child(
@@ -280,7 +279,7 @@ def parse_l3_interfaces(parse, device):
 
         full = i.all_children
         for line in full:
-            ientry = parse_int(line.text, ientry)
+            ientry = parse_int(line.text, ientry, default_shut)
 
         if 'ip' in ientry.keys():
             ientry['network'] = ipaddress.ip_network(ientry['ip'], strict=False)
@@ -292,7 +291,7 @@ def parse_l3_interfaces(parse, device):
     return ints
 
 
-def parse_vlan_interfaces(parse, device):
+def parse_vlan_interfaces(parse, device, default_shut):
     """Parse interface VlanX interfaces"""
 
     interfaces = parse.find_objects("^interface Vlan(\d+)$")
@@ -310,16 +309,22 @@ def parse_vlan_interfaces(parse, device):
         if int(cvlan) >= vlow and int(cvlan) <= vhigh:
             ientry['vid'] = cvlan
             ientry['desc'] = 'None'
+
+            ientry['online'] = not default_shut
             full = i.all_children
             for line in full:
-                ientry = parse_int(line.text, ientry)
+                ientry = parse_int(line.text, ientry, default_shut)
 
             if 'ip' in ientry.keys():
                 ientry['network'] = ipaddress.ip_network(ientry['ip'], strict=False)
                 ientry['device'] = device
                 if 'vrf' not in ientry.keys():
                     ientry['vrf'] = 'default'
-                ints.append(ientry)
+
+                if ientry['online']:
+                    ints.append(ientry)
+                elif DEBUG>1:
+                    print("Discarding", default_shut, ientry)
 
                 # Secondary
                 if 'sec_ip' in ientry.keys():
@@ -333,7 +338,7 @@ def parse_vlan_interfaces(parse, device):
     return ints
 
 
-def parse_int(line, ientry):
+def parse_int(line, ientry, default_shut):
     """Parse Individual Entry inside Interface"""
 
     nxip  = re.search('\s+ip\saddress\s(\d+.\d+.\d+.\d+)(/\d+)$', line)
@@ -345,6 +350,10 @@ def parse_int(line, ientry):
     nxvrf = re.search('\s+vrf member (\w+)', line)
     catvrf = re.search('\s+ip vrf forwarding (\w+)', line)
     descre = re.search('\s+description\s+\[\s*(.*)\s*\]', line)
+    noshut = re.search('\s+no\sshutdown', line)
+    shut = re.search('\s+shutdown', line)
+
+
 
     # Nexus IP
     if nxip:
@@ -406,6 +415,11 @@ def parse_int(line, ientry):
     elif descre:
         ientry['desc'] = descre.group(1)
 
+    elif noshut and default_shut:
+        ientry['online'] = True
+    elif shut and not default_shut:
+        ientry['online'] = False
+        print(line)
 
     return ientry
 
