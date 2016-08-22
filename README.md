@@ -457,7 +457,8 @@ tool that is reliable enough.
 NetGrph was developed on Ubuntu 14.04 LTS, tested on 16.04, and should be
 compatible with other versions of linux. I highly recommend using Ubuntu at this
 early stage for better support. I also plan to create an ansible build script in
-the next few months.
+the next few months. It also works just find on MacOS but there are no Ansible or
+install instructions for that OS.
 
 ## Installation
 

@@ -42,7 +42,7 @@ import nglib.netdb.ip
 logger = logging.getLogger(__name__)
 
 
-def get_full_path(src, dst, rtype="NGTREE", onepath=True):
+def get_full_path(src, dst, popt, rtype="NGTREE"):
     """ Gets the full path (switch->rt->VRF->rt->switch)
 
         Required NetDB for switchpath
@@ -51,6 +51,13 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
     rtypes = ('CSV', 'TREE', 'JSON', 'YAML', 'NGTREE', 'QTREE')
 
     if rtype in rtypes:
+
+        if 'onepath' not in popt:
+            popt['onepath'] = True
+        if 'l2path' not in popt:
+            popt['l2path'] = True
+        if 'verbose' not in popt:
+            popt['verbose'] = False
 
         logger.info("Query: Finding Full Path (%s --> %s) for %s",
                     src, dst, nglib.user)
@@ -79,7 +86,7 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         if nglib.use_netdb:
             srctree = nglib.netdb.ip.get_netdb_ip(src)
             dsttree = nglib.netdb.ip.get_netdb_ip(dst)
-        
+
         # Find Switched Path from Source to Router
         if srctree:
             router = n1tree['_child001']['Router']
@@ -87,12 +94,11 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
                 router = router + '|' + n1tree['_child001']['StandbyRouter']
             if routing:
                 if 'Switch' in srctree:
-                    srcswp = get_switched_path(srctree['Switch'], router, \
-                        verbose=False, onepath=onepath)
+                    srcswp = get_switched_path(srctree['Switch'], router, popt)
                 else:
                     srctree = None
                     print("Warning: Could not find source switch data in NetDB", file=sys.stderr)
-        
+
         # Find Switched Path from Router to Destination
         if dsttree:
             router = n2tree['_child001']['Router']
@@ -100,15 +106,15 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
                 router = router + '|' + n2tree['_child001']['StandbyRouter']
             if routing:
                 if 'Switch' in dsttree:
-                    dstswp = get_switched_path(router, dsttree['Switch'], \
-                        verbose=False, onepath=onepath)
+                    dstswp = get_switched_path(router, dsttree['Switch'], popt)
                 else:
                     dsttree = None
-                    print("Warning: Could not find destination switch data in NetDB", file=sys.stderr)
+                    print("Warning: Could not find destination switch data in NetDB", \
+                        file=sys.stderr)
 
             # If only switching, update srcswp to show switched path
             else:
-                srcswp = get_switched_path(srctree['Switch'], dsttree['Switch'], verbose=False, onepath=onepath)
+                srcswp = get_switched_path(srctree['Switch'], dsttree['Switch'], popt)
 
         # Same switch/vlan check
         switching = True
@@ -127,7 +133,7 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         if srctree and dsttree:
             ngtree["L2 Path"] = srctree['Switch'] + " (" + srctree['SwitchPort'] \
             + ") -> " + dsttree['Switch'] + " (" + dsttree['SwitchPort'] + ")"
-        if onepath:
+        if popt['onepath']:
             ngtree["Traversal Type"] = 'Single Path'
         else:
             ngtree["Traversal Type"] = 'All Paths'
@@ -163,7 +169,7 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
             nglib.ngtree.add_child_ngtree(ngtree, n1tree['_child001'])
 
         ## Check for routed paths (inter/intra VRF)
-        rtree = get_full_routed_path(src, dst, rtype="NGTREE", l2path=True, onepath=onepath)
+        rtree = get_full_routed_path(src, dst, popt)
         if rtree and 'PATH' in rtree['_type']:
 
             # Breakdown L4 Path
@@ -189,7 +195,6 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
 
         # Destination Switch Data
         if switching and dstswp:
-            #dstswp['Name'] = "DST Switched Path"
             nglib.ngtree.add_child_ngtree(ngtree, dstswp)
 
         # NetDB Destination Data
@@ -206,13 +211,20 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         ngtree = nglib.query.exp_ngtree(ngtree, rtype)
         return ngtree
 
-def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False, onepath=True):
+def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
     """ Gets the full L3 Path between src -> dst IPs including inter-vrf routing
     """
 
     rtypes = ('CSV', 'TREE', 'JSON', 'YAML', 'NGTREE')
 
     if rtype in rtypes:
+
+        if 'l2path' not in popt:
+            popt['l2path'] = False
+        if 'onepath' not in popt:
+            popt['onepath'] = True
+        if 'VRF' not in popt:
+            popt['VRF'] = "default"
 
         srct, dstt, ngtree = None, None, None
 
@@ -222,14 +234,14 @@ def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False, onepath=True):
 
         if re.search(r'^\d+\.\d+\.\d+\.\d+$', dst):
             dstt = nglib.query.net.get_net(dst, rtype="NGTREE")
-        
+
         # Intra VRF
         if srct['_child001']['VRF'] == dstt['_child001']['VRF']:
-            ngtree = get_routed_path(src, dst, verbose=False, onepath=onepath)                 
-        
+            ngtree = get_routed_path(src, dst, popt)
+
         # Inter VRF
         else:
-            secpath = get_fw_path(src, dst, rtype="NGTREE")
+            secpath = get_fw_path(src, dst, popt, rtype="NGTREE")
             if secpath:
                 ngtree = nglib.ngtree.get_ngtree(secpath['Name'], tree_type="L4-PATH")
 
@@ -242,8 +254,9 @@ def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False, onepath=True):
 
                             # First Entry gets a route check
                             if first:
-                                rtree = get_routed_path(src, secpath[key]['gateway'], \
-                                    vrf=srct['_child001']['VRF'], l2path=l2path, onepath=onepath)
+                                npopt = popt.copy()
+                                npopt['VRF'] = srct['_child001']['VRF']
+                                rtree = get_routed_path(src, secpath[key]['gateway'], popt)
                                 if rtree:
                                     nglib.ngtree.add_child_ngtree(ngtree, rtree)
                                 first = False
@@ -252,15 +265,16 @@ def get_full_routed_path(src, dst, rtype="NGTREE", l2path=False, onepath=True):
 
                 # Last entry gets a route check
                 if last:
-                    rtree = get_routed_path(secpath[last]['gateway'], dst, \
-                        vrf=dstt['_child001']['VRF'], l2path=l2path, onepath=onepath)
+                    npopt = popt.copy()
+                    npopt['VRF'] = srct['_child001']['VRF']
+                    rtree = get_routed_path(secpath[last]['gateway'], dst, popt)
                     if rtree:
                         nglib.ngtree.add_child_ngtree(ngtree, rtree)
         
         return ngtree
 
 
-def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2path=True, onepath=True):
+def get_routed_path(net1, net2, popt, rtype="NGTREE"):
     """
     Find the routed path between two CIDRs and return all interfaces and
     devices between the two. This query need optimization.
@@ -275,8 +289,18 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
 
     if rtype in rtypes:
 
-        logger.info("Query: Finding Routed Paths (%s --> %s) for %s",
-                    net1, net2, nglib.user)
+        if 'l2path' not in popt:
+            popt['l2path'] = False
+        if 'onepath' not in popt:
+            popt['onepath'] = True
+        if 'VRF' not in popt:
+            popt['VRF'] = "default"
+        if 'verbose' not in popt:
+            popt['verbose'] = True
+
+        if popt['verbose']:
+            logger.info("Query: Finding Routed Paths (%s --> %s) for %s",
+                        net1, net2, nglib.user)
 
         hopSet = set()
 
@@ -289,7 +313,7 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
             n2tree = nglib.query.net.get_net(net2, rtype="NGTREE")
             if n2tree:
                 net2 = n2tree['_child001']['Name']
-        
+
         ngtree = nglib.ngtree.get_ngtree("Path", tree_type="L3-PATH")
         ngtree["Path"] = net1 + " -> " + net2
         ngtree['Name'] = ngtree['Path']
@@ -325,7 +349,7 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
             + 'r2.name AS r2name, l2.gateway as r2ip, v.vid AS vid, '
             + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
             + 'AS distance ORDER BY distance',
-            {"net1": net1, "net2": net2, "vrf": vrf})
+            {"net1": net1, "net2": net2, "vrf": popt['VRF']})
 
         allpaths = dict()
         # Load all paths into tuples with distance value
@@ -375,8 +399,8 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
                         rtree['Name'] = rtree['Name'] + ' [vid:' + str(rtree['VLAN']) + ']'
 
                     # Add Switchpath if requested
-                    if l2path:
-                        spath = get_switched_path(rec['r1name'], rec['r2name'], verbose=False)
+                    if popt['l2path']:
+                        spath = get_switched_path(rec['r1name'], rec['r2name'], popt)
                         if spath:
                             for sp in spath:
                                 if '_child' in sp and '_rvlans' in spath[sp]:
@@ -387,7 +411,8 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
                                     #     print(spath[sp]['_rvlans'])
                                     # nglib.ngtree.add_child_ngtree(rtree, spath[sp])
 
-                    if not onepath or distance not in hopSet:
+                    # Single / Multi-path
+                    if not popt['onepath'] or distance not in hopSet:
                         hopSet.add(distance)
                         nglib.ngtree.add_child_ngtree(ngtree, rtree)
                     pathList.append(rtree)
@@ -397,9 +422,9 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
 
             ngtree['Hops'] = len(pathList)
             ngtree['Distance'] = max([s['distance'] for s in pathList])
-            ngtree['VRF'] = vrf
+            ngtree['VRF'] = popt['VRF']
 
-            if onepath:
+            if popt['onepath']:
                 ngtree['Traversal Type'] = 'Single Path'
                 ngtree['Traversal Coverage'] = path_coverage(ngtree['Distance'], ngtree['Hops'])
             else:
@@ -414,11 +439,12 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
                 # Export NGTree
                 ngtree = nglib.query.exp_ngtree(ngtree, rtype)
                 return ngtree
-        elif verbose:
-            print("No results found for path between {:} and {:}".format(net1, net2), file=sys.stderr)
+        elif popt['verbose']:
+            print("No results found for path between {:} and {:}".format(net1, net2), \
+                file=sys.stderr)
 
 
-def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True, onepath=True):
+def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
     """
     Find the path between two switches and return all interfaces and
     devices between the two.
@@ -435,8 +461,15 @@ def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True, onepath=Tr
 
     if rtype in rtypes:
 
-        logger.info("Query: Finding Switched Paths (%s --> %s) for %s",
-                    switch1, switch2, nglib.user)
+
+        if 'onepath' not in popt:
+            popt['onepath'] = False
+        if 'verbose' not in popt:
+            popt['verbose'] = True
+
+        if popt['verbose']:
+            logger.info("Query: Finding Switched Paths (%s --> %s) for %s",
+                        switch1, switch2, nglib.user)
 
         pathList = []
         hopSet = set()
@@ -501,10 +534,10 @@ def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True, onepath=Tr
                 swptree = spath_direction(swptree)
 
             # Save data structures
-            if not onepath or swptree['distance'] not in hopSet:
+            if not popt['onepath'] or swptree['distance'] not in hopSet:
                 hopSet.add(swptree['distance'])
                 nglib.ngtree.add_child_ngtree(ngtree, swptree)
-            
+
             # App Paths go in pathlist
             pathList.append(swptree)
 
@@ -513,7 +546,7 @@ def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True, onepath=Tr
             ngtree['Links'] = len(pathList)
             ngtree['Distance'] = max([s['distance'] for s in pathList])
 
-            if onepath:
+            if popt['onepath']:
                 ngtree['Traversal Type'] = 'Single Path'
                 ngtree['Traversal Coverage'] = path_coverage(ngtree['Distance'], ngtree['Links'])
             else:
@@ -528,14 +561,14 @@ def get_switched_path(switch1, switch2, rtype="NGTREE", verbose=True, onepath=Tr
                 # Export NGTree
                 ngtree = nglib.query.exp_ngtree(ngtree, rtype)
                 return ngtree
-        elif verbose:
+        elif popt['verbose']:
             print("No results found for path between {:} and {:}".format(switch1, switch2))
 
     return
 
 
 def spath_direction(swp):
-    """ Adds directionality to spath queries 
+    """ Adds directionality to spath queries
         All spath queries traverse the directed paths from the core out
         Examine _reverse value for reversal of From -> To
     """
@@ -557,9 +590,9 @@ def spath_direction(swp):
                 nswp[nen] = swp[en]
             else:
                 nen = en.replace('Parent', 'From')
-                nswp[nen] = swp[en]   
+                nswp[nen] = swp[en]
         else:
-            nswp[en] = swp[en]    
+            nswp[en] = swp[en]
 
     # Update Name
     nswp['Name'] = '#' + str(swp['distance']) + ' ' + \
@@ -580,12 +613,20 @@ def path_coverage(inc, total):
     return percent[0] + '%'
 
 
-def get_fw_path(src, dst, rtype="TEXT", verbose=True):
+def get_fw_path(src, dst, popt, rtype="TEXT"):
     """Discover the Firewall Path between two IP addresses"""
 
     rtypes = ('TEXT', 'TREE', 'JSON', 'YAML', 'NGTREE')
 
     if rtype in rtypes:
+
+        if 'onepath' not in popt:
+            popt['onepath'] = False
+        if 'verbose' not in popt:
+            popt['verbose'] = True
+
+        if popt['verbose']:
+            logger.info("Query: Security Path %s -> %s for %s", src, dst, nglib.user)
 
         logcmd = nglib.config['nglib']['logcmd']
         logurl = nglib.config['nglib']['logurl']
@@ -593,7 +634,6 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
         srcnet = nglib.query.net.find_cidr(src)
         dstnet = nglib.query.net.find_cidr(dst)
 
-        logger.info("Query: Security Path %s -> %s for %s", src, dst, nglib.user)
 
         if nglib.verbose:
             print("\nFinding security path from {:} -> {:}:\n".format(srcnet, dstnet))
@@ -644,10 +684,11 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
                         # Add properties
                         #router = get_router(nProp)
                         if 'vid' and 'vrf' in nProp:
-                            hop['Name'] = hop['Name'] + ' [rtr:' + get_router(nProp) + ' vid:' + nProp['vid'] \
+                            hop['Name'] = hop['Name'] + ' [rtr:' + get_router(nProp) \
+                                + ' vid:' + nProp['vid'] \
                                 + ' vrf:' + nProp['vrf'] + ']'
                             #hop['Name'] = hop['Name'] + ' VRF:' + nProp['vrf']
-                                        
+
                     for prop in nProp:
                         hop[prop] = nProp[prop]
                     nglib.ngtree.add_child_ngtree(ngtree, hop)
@@ -673,7 +714,7 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
 
                         print("\n{:} (15min): {:}{:}".format(fw, logurl, query))
 
-                        if verbose:
+                        if popt['verbose']:
                             print(cmd)
 
                         proc = subprocess.Popen(
@@ -689,8 +730,8 @@ def get_fw_path(src, dst, rtype="TEXT", verbose=True):
                         elif out:
                             print(out)
 
-                # Space out
-                print()
+                    # Space out
+                    print()
 
             # Export NGTree
             ngtree = nglib.query.exp_ngtree(ngtree, rtype)

@@ -32,11 +32,8 @@
 """
 Test Database functions for errors
 """
-import os
 import re
 import sys
-import argparse
-import pytest
 import subprocess
 
 ngcmd = './netgrph.py' + ' '

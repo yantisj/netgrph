@@ -125,3 +125,4 @@ def strip_ngtree(ngtree, top=True):
             newtree[en] = ngtree[en]
 
     return newtree
+    
