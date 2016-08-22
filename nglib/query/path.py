@@ -135,9 +135,10 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         ## Add the SRC Data
         if '_child002' in n1tree:
             n1tree['_child002']['_type'] = "SRC"
-            n1tree['_child002']['Name'] = src + ' ' + n1tree['_child002']['MAC'] \
-                + ' ' + n1tree['_child002']['Switch'] + '(' \
-                + n1tree['_child002']['SwitchPort'] + ')'
+            if 'Switchport' in n2tree['_child002']:
+                n1tree['_child002']['Name'] = src + ' ' + n1tree['_child002']['MAC'] \
+                    + ' ' + n1tree['_child002']['Switch'] + '(' \
+                    + n1tree['_child002']['SwitchPort'] + ')'
             nglib.ngtree.add_child_ngtree(ngtree, n1tree['_child002'])
 
         # Add L2 path if not switching
@@ -178,6 +179,11 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         # Add the DST L3GW Data
         if switching and routing:
             n2tree['_child001']['_type'] = "L3GW"
+            n2tree['_child001']['Name'] = n2tree['_child001']['Name'] \
+                + ' ' + n2tree['_child001']['Router']
+            if 'StandbyRouter' in n2tree['_child001']:
+                n2tree['_child001']['Name'] = n2tree['_child001']['Name'] \
+                    + '|' + n2tree['_child001']['StandbyRouter']
             nglib.ngtree.add_child_ngtree(ngtree, n2tree['_child001'])
 
         # Destination Switch Data
@@ -188,9 +194,10 @@ def get_full_path(src, dst, rtype="NGTREE", onepath=True):
         # NetDB Destination Data
         if '_child002' in n2tree:
             n2tree['_child002']['_type'] = "DST"
-            n2tree['_child002']['Name'] = dst + ' ' + n2tree['_child002']['MAC'] \
-                + ' ' + n2tree['_child002']['Switch'] + '(' \
-                + n2tree['_child002']['SwitchPort'] + ')'
+            if 'SwitchPort' in n2tree['_child002']:
+                n2tree['_child002']['Name'] = dst + ' ' + n2tree['_child002']['MAC'] \
+                    + ' ' + n2tree['_child002']['Switch'] + '(' \
+                    + n2tree['_child002']['SwitchPort'] + ')'
             nglib.ngtree.add_child_ngtree(ngtree, n2tree['_child002'])
 
         # Export NGTree
@@ -362,19 +369,20 @@ def get_routed_path(net1, net2, rtype="NGTREE", vrf="default", verbose=True, l2p
                     distance, rec['r1name'], rec['r1ip'], rec['r2name'], rec['r2ip'])
 
                     if 'VLAN' in rtree and rtree['VLAN'] != '0':
-                        rtree['Name'] = rtree['Name'] + ' [vid:' + rtree['VLAN'] + ']'
+                        rtree['Name'] = rtree['Name'] + ' [vid:' + str(rtree['VLAN']) + ']'
 
                     # Add Switchpath if requested
                     if l2path:
                         spath = get_switched_path(rec['r1name'], rec['r2name'], verbose=False)
-                        for sp in spath:
-                            if '_child' in sp and '_rvlans' in spath[sp]:
-                                vrgx = r'[^0-9]*' + rec['vid'] + '[^0-9]*'
-                                if re.search(vrgx, spath[sp]['_rvlans']):
-                                    nglib.ngtree.add_child_ngtree(rtree, spath[sp])
-                                # else:
-                                #     print(spath[sp]['_rvlans'])
-                                # nglib.ngtree.add_child_ngtree(rtree, spath[sp])
+                        if spath:
+                            for sp in spath:
+                                if '_child' in sp and '_rvlans' in spath[sp]:
+                                    vrgx = r'[^0-9]*' + rec['vid'] + '[^0-9]*'
+                                    if re.search(vrgx, spath[sp]['_rvlans']):
+                                        nglib.ngtree.add_child_ngtree(rtree, spath[sp])
+                                    # else:
+                                    #     print(spath[sp]['_rvlans'])
+                                    # nglib.ngtree.add_child_ngtree(rtree, spath[sp])
 
                     if not onepath or distance not in hopSet:
                         hopSet.add(distance)
