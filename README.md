@@ -43,49 +43,85 @@ via both the native Neo4j API as well as NetGrph's tree data structure.
 
 ## Program Example
 
-### Universal Path Analysis (Truncated)
-
-See [Traversal Details](docs/PathSample.md)
-
-#### Truncated Example
+### L2-L4 Traversal on the same switch, different VRF (details omitted)
 ```
 $ ./netgrph.py -p 10.26.72.142 10.34.72.24
 
 ┌─[ PATHs L2-L4 ]
-├───┬─[ SRC 10.26.72.142 ]
+│
+├── L2 Path : abc7t1sw1 (Gi2/42) -> abc7t1sw1 (Gi1/38)
+├── L3 Path : 10.26.72.0/22 -> 10.34.72.0/22
+├── L4 Path : VRF:default -> FwutilFW -> VRF:utility
+├── Lx Path : 10.26.72.142 -> 10.34.72.24
+├── Traversal Type : All Paths
+│
+├─────[ SRC 10.26.72.142 04bd.88cb.xxxx abc7t1sw1(Gi2/42) [vid:260] ]
+│
 ├───┬─[ L2-PATH abc7t1sw1 -> abcmdf1|abcmdf2 ]
-│   ├───┬─[ L2-HOP #1 abc7t1sw1(Te5/1) -> abcmdf1(Eth1/8) ]
-│   └───┬─[ L2-HOP #1 abc7t1sw1(Te6/1) -> abcmdf2(Eth1/8) ]
-├───┬─[ L3GW 10.26.72.0/22 ]
+│   │
+│   ├─────[ L2-HOP #1 abc7t1sw1(Te5/1) -> abcmdf1(Eth1/8) [pc:1->108] ]
+│   │
+│   └─────[ L2-HOP #1 abc7t1sw1(Te6/1) -> abcmdf2(Eth1/8) [pc:1->108] ]
+│
+├─────[ L3GW 10.26.72.0/22 abcmdf1|abcmdf2 ]
+│
 ├───┬─[ L3-PATH 10.26.72.0/22 -> 10.25.11.0/24 ]
-│   ├───┬─[ L3-HOP #1 abcmdf1(10.23.74.11) -> core1(10.23.74.10) ]
-│   │   └───┬─[ L2-HOP #1 abcmdf1(Eth2/26) -> core1(Eth7/27) ]
-│   ├───┬─[ L3-HOP #1 abcmdf1(10.23.74.21) -> core2(10.23.74.20) ]
-│   │   └───┬─[ L2-HOP #1 abcmdf1(Eth3/8) -> core2(Eth4/25) ]
-│   ├───┬─[ L3-HOP #1 abcmdf2(10.23.78.11) -> core1(10.23.78.10) ]
-│   │   └───┬─[ L2-HOP #1 abcmdf2(Eth2/26) -> core1(Eth8/25) ]
-│   └───┬─[ L3-HOP #1 abcmdf2(10.23.78.21) -> core2(10.23.78.20) ]
-│       └───┬─[ L2-HOP #1 abcmdf2(Eth3/8) -> core2(Eth8/25) ]
-├───┬─[ L4-HOP Network ]
-├───┬─[ L4-HOP FW ]
-├───┬─[ L4-HOP Network ]
+│   │
+│   ├───┬─[ L3-HOP #1 abcmdf1(10.23.74.11) -> core1(10.23.74.10) [vid:2074] ]
+│   │   │
+│   │   └─────[ L2-HOP #1 abcmdf1(Eth2/26) -> core1(Eth7/27) ]
+│   │
+│   ├───┬─[ L3-HOP #1 abcmdf1(10.23.74.21) -> core2(10.23.74.20) [vid:3074] ]
+│   │   │
+│   │   └─────[ L2-HOP #1 abcmdf1(Eth3/8) -> core2(Eth4/25) ]
+│   │
+│   ├───┬─[ L3-HOP #1 abcmdf2(10.23.78.11) -> core1(10.23.78.10) [vid:2078] ]
+│   │   │
+│   │   └─────[ L2-HOP #1 abcmdf2(Eth2/26) -> core1(Eth8/25) ]
+│   │
+│   └───┬─[ L3-HOP #1 abcmdf2(10.23.78.21) -> core2(10.23.78.20) [vid:3078] ]
+│       │
+│       └─────[ L2-HOP #1 abcmdf2(Eth3/8) -> core2(Eth8/25) ]
+│
+├─────[ L4GW 10.25.11.0/24 [rtr: vid:1601 vrf:default] ]
+│
+├─────[ L4FW FwutilFW ]
+│
+├─────[ L4GW 10.25.12.0/24 [rtr: vid:1602 vrf:utility] ]
+│
 ├───┬─[ L3-PATH 10.25.12.0/24 -> 10.34.72.0/22 ]
-│   ├───┬─[ L3-HOP #1 core1(10.23.74.10) -> abcmdf1(10.23.74.11) ]
-│   │   └───┬─[ L2-HOP #1 core1(Eth7/27) -> abcmdf1(Eth2/26) ]
-│   ├───┬─[ L3-HOP #1 core1(10.23.78.10) -> abcmdf2(10.23.78.11) ]
-│   │   └───┬─[ L2-HOP #1 core1(Eth8/25) -> abcmdf2(Eth2/26) ]
-│   ├───┬─[ L3-HOP #1 core2(10.23.74.20) -> abcmdf1(10.23.74.21) ]
-│   │   └───┬─[ L2-HOP #1 core2(Eth4/25) -> abcmdf1(Eth3/8) ]
-│   └───┬─[ L3-HOP #1 core2(10.23.78.20) -> abcmdf2(10.23.78.21) ]
-│       └───┬─[ L2-HOP #1 core2(Eth8/25) -> abcmdf2(Eth3/8) ]
-├───┬─[ L3GW 10.34.72.0/22 ]
+│   │
+│   ├───┬─[ L3-HOP #1 core1(10.23.74.10) -> abcmdf1(10.23.74.11) [vid:2461] ]
+│   │   │
+│   │   └─────[ L2-HOP #1 core1(Eth7/27) -> abcmdf1(Eth2/26) ]
+│   │
+│   ├───┬─[ L3-HOP #1 core1(10.23.78.10) -> abcmdf2(10.23.78.11) [vid:2462] ]
+│   │   │
+│   │   └─────[ L2-HOP #1 core1(Eth8/25) -> abcmdf2(Eth2/26) ]
+│   │
+│   ├───┬─[ L3-HOP #1 core2(10.23.74.20) -> abcmdf1(10.23.74.21) [vid:3461] ]
+│   │   │
+│   │   └─────[ L2-HOP #1 core2(Eth4/25) -> abcmdf1(Eth3/8) ]
+│   │
+│   └───┬─[ L3-HOP #1 core2(10.23.78.20) -> abcmdf2(10.23.78.21) [vid:3462] ]
+│       │
+│       └─────[ L2-HOP #1 core2(Eth8/25) -> abcmdf2(Eth3/8) ]
+│
+├─────[ L3GW 10.34.72.0/22 abcmdf1|abcmdf2 ]
+│
 ├───┬─[ L2-PATH abcmdf1|abcmdf2 -> abc7t1sw1 ]
-│   ├───┬─[ L2-HOP #1 abcmdf1(Eth1/8) -> abc7t1sw1(Te5/1) ]
-│   └───┬─[ L2-HOP #1 abcmdf2(Eth1/8) -> abc7t1sw1(Te6/1) ]
-└───┬─[ DST 10.34.72.24 ]
-
-
+│   │
+│   ├─────[ L2-HOP #1 abcmdf1(Eth1/8) -> abc7t1sw1(Te5/1) [pc:108->1] ]
+│   │
+│   └─────[ L2-HOP #1 abcmdf2(Eth1/8) -> abc7t1sw1(Te6/1) [pc:108->1] ]
+│
+└─────[ DST 10.34.72.24 000a.b004.xxxx abc7t1sw1(Gi1/38) [vid:340] ]
 ```
+
+### More Universal Path Examples
+
+See [Traversal Details](docs/PathSample.md)
+
 ### Query Options
 ```
 
@@ -123,6 +159,7 @@ Examples: netgrph 10.1.1.1 (Free Search for IP), netgrph -net 10.1.1.0/24
 
 ```
 <br>
+
 ### Report Options
 ```
 $ ngreport -h
@@ -145,7 +182,7 @@ optional arguments:
   --debug DEBUG     Set debugging level
   --verbose         Verbose Output
 ```
-<br>
+
 ### Discovering a Security Path
 ```
 $ netgrph -fp 10.170.16.1 8.8.8.8
@@ -157,32 +194,8 @@ PerimeterFW Logs (15min): [firewall logs link]
 
 ExternalFW Logs (15min): [firewall logs link]
 ```
-<br>
-### Discovering all Routed Paths from IP to CIDR
-```
-$ netgrph -rp 10.33.100.1 10.26.8.0/22
-┌─[ RPATHS Routed Paths ]
-│
-├── Hops : 6
-├── Max Hops : 2
-│
-├───┬─[ RPATH Hop ]
-│   ├── From IP : 10.23.97.11
-│   ├── From Router : servchas1
-│   ├── To IP : 10.23.97.10
-│   ├── To Router : core1
-│   └── distance : 1
-│
-├───┬─[ RPATH Hop ]
-│   ├── From IP : 10.23.97.21
-│   ├── From Router : servchas1
-│   ├── To IP : 10.23.97.20
-│   ├── To Router : core2
-│   └── distance : 1
-{...}
-```
-<br>
-### Discovering all equal Switched Paths as CSV using a regex
+
+### Discovering all equal Switched Paths as CSV between servchas. -> spp2.*
 ```
 $ netgrph -sp servchas. spp2.* -o csv
 ChildPort,ChildSwitch,Name,ParentPort,ParentSwitch,_type,distance
@@ -190,7 +203,7 @@ Te3/1,servchas1,Link,Eth7/25,core1,SPATH,0
 Te1/4,servchas2,Link,Eth8/31,core1,SPATH,0
 {...}
 ```
-<br>
+
 ### IP Search on the most specific CIDR (optional NetDB data included)
 ```
 $ netgrph -ip 10.32.1.1
@@ -224,7 +237,7 @@ $ netgrph -ip 10.32.1.1
     ├── lastSeen : 2016-07-01 10:10:45
     └── vendor : Apple, Inc.
 ```
-<br>
+
 ### Report on a Network Device
 ```
 $ netgrph abc4mdf
@@ -304,7 +317,7 @@ $ netgrph abc4mdf
 │       └── Description : vendor-span
 
 ```
-<br>
+
 ### L2 VLAN (Includes all bridge domains as a tree from the root)
 ```
 $ netgrph -vid 1246
@@ -326,7 +339,7 @@ $ netgrph -vid 1246
 |   |--> localstp : 32768
 {...}
 ```
-<br>
+
 ### VLAN Database on a range for a switch group
 ```
 $ netgrph -group ECL -vr 200-1400
@@ -339,7 +352,7 @@ VID             Name            Sw/Macs/Ports  Root       Switches
  420 : ecl-v120-voice             6/2/0        ecl4mdf    ecl4sw1 ecl437sw2 ecl437sw1 ecl2sw1..
 1246 : SPAN-1246                  2/1/1        core1      ecl4mdf ecl2e1sw1
 ```
-<br>
+
 ### Filtered Networks as JSON output (Guest CIDRs in this case)
 ```
 netgrph -nlist guest -o JSON
@@ -363,7 +376,7 @@ netgrph -nlist guest -o JSON
     "_type": "CIDR"
   },
 ```
-<br>
+
 ## Motivation
 
 NetGrph was written to explore the potential of graph databases for networks,
@@ -371,16 +384,17 @@ and is being shared to help others with network discovery and automation. Please
 contribute back any useful additions.
 
 
-### Planned Features
+## Planned Features
 
-* Add configuration snippets option for each hop on traverals
-* Import all Network ACL's for analysis
+* Add configuration snippets for each hop on traverals
+* Import all Network ACL's for L4 analysis
 * Improve NetDB integration with universal search
 * Implement Dijkstra's Algorithm for cost-based path traversals (database plugin)
 * REST API for nglib queries (Flask Based)
 * Simple Web Interface for Path Traversals and report generation
+* Statseeker integration for including graphs/errors in reports
 
-### Future
+## Future
 
 NetGrph will be rapidly evolving at first to meet the needs of network and
 security automation in large switched networks. I am open to expanding it for
