@@ -72,9 +72,11 @@ ptest['-vtree Core-641'] = '10.32.0.0/17'
 ptest['-ip 10.32.1.1 -o JSON'] = '"IP": "10.32.1.1"'
 ptest['-sp mdcmdf hvt404mdf'] = 'core1'
 ptest['-rp 10.33.1.100 10.26.76.1'] = 'core1'
-ptest['-p 10.26.72.142 10.26.72.17'] = 'From Switch : artmdf1'
-ptest['-p 10.26.72.142 10.28.6.27'] = 'Link rVLANs'
 ptest['-p 10.26.72.142 10.34.72.24'] = 'L4-HOP FW'
+
+
+# NetDB
+#ptest['-p 10.26.72.142 10.28.6.27'] = 'Link rVLANs'
 
 qtest = ptest
 

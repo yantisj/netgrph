@@ -1,21 +1,20 @@
 ## Synopsis
 
-NetGrph maps ethernet networks as an abstract model in the
-[Neo4j](http://neo4j.com) Graph Database. This allows you to traverse your
-LAN/WAN in software as a graph of interconnected nodes and relationships. The 
-purpose of this application is to serve as a model for automation and
-troubleshooting across networks rather than box by box.
+NetGrph models ethernet networks in the [Neo4j](http://neo4j.com) Graph
+Database. The model enables you to navigate your LAN/WAN as paths of
+interconnected nodes and relationships in software, enabling automation and
+troubleshooting across the network instead of box by box.
 
-Currently NetGrph can calculate all possible L2/L3 paths between devices, route
-between VRFs/firewalls, find inline network taps along paths, map complicated L2
-VLAN bridge domains, and more. It should scale well on even the largest
-networks, allowing sub-second queries across thousands of nodes. This enables
-complex dependency tree mapping for discovery and automation.
+NetGrph can perform universal L2/L3/L4 path traversals, providing context for
+each layer along the path. It also serves as a VLAN and subnet database, showing
+how everything is related. It should scale well on even the largest networks,
+allowing sub-second queries across thousands of network devices. This enables
+the mapping of complex network relationships for discovery and automation.
 
-Data from queries can be returned as CSV, JSON, YAML, or Ascii tree-art.
-Network Visualizations can be created by querying the Neo4j webapp as shown
-below. The data model should also translate for use with tools such as D3.js or
-vis.js via both the native Neo4j API as well as NetGrph's tree data structure.
+Data from queries can be returned as CSV, JSON, YAML, or Ascii tree-art. Network
+Visualizations can be created by querying the Neo4j webapp as shown below. The
+data model should translate for use with tools such as D3.js, vis.js or Graphwiz
+via both the native Neo4j API as well as NetGrph's tree data structure.
 
 ## Data Model
 ### Discovering the Routed SVI Paths from Vlan 110 to 200
@@ -25,6 +24,7 @@ vis.js via both the native Neo4j API as well as NetGrph's tree data structure.
 [L3 SVIs: Yellow] [L2 VLANs: Green] [Switches/Routers: Blue]
 <br>
 <br>
+
 ### Discovering the Security Path from Vlan 696 --> 641 across multiple L2/L3 Firewalls
 ![fwpath](https://dl.dropboxusercontent.com/u/73454/security-path2.svg)
 
@@ -32,6 +32,7 @@ vis.js via both the native Neo4j API as well as NetGrph's tree data structure.
 [Networks: Yellow] [VRFs: Green] [Firewalls: Blue]
 
 <br>
+
 ### Neighbor Tree from the Core out to a distance of 3
 
 <img src="https://dl.dropboxusercontent.com/u/73454/network-graph.svg" alt="NEI Tree" width="800" height="800">
@@ -39,10 +40,55 @@ vis.js via both the native Neo4j API as well as NetGrph's tree data structure.
 
 
 <br>
+
 ## Program Example
 
+### Universal Path Analysis (Truncated)
+
+See [Traversal Details](docs/PathSample.md)
+
+#### Truncated Example
+```
+$ ./netgrph.py -p 10.26.72.142 10.34.72.24
+
+┌─[ PATHs L2-L4 ]
+├───┬─[ SRC 10.26.72.142 ]
+├───┬─[ L2-PATH abc7t1sw1 -> abcmdf1|abcmdf2 ]
+│   ├───┬─[ L2-HOP #1 abc7t1sw1(Te5/1) -> abcmdf1(Eth1/8) ]
+│   └───┬─[ L2-HOP #1 abc7t1sw1(Te6/1) -> abcmdf2(Eth1/8) ]
+├───┬─[ L3GW 10.26.72.0/22 ]
+├───┬─[ L3-PATH 10.26.72.0/22 -> 10.25.11.0/24 ]
+│   ├───┬─[ L3-HOP #1 abcmdf1(10.23.74.11) -> core1(10.23.74.10) ]
+│   │   └───┬─[ L2-HOP #1 abcmdf1(Eth2/26) -> core1(Eth7/27) ]
+│   ├───┬─[ L3-HOP #1 abcmdf1(10.23.74.21) -> core2(10.23.74.20) ]
+│   │   └───┬─[ L2-HOP #1 abcmdf1(Eth3/8) -> core2(Eth4/25) ]
+│   ├───┬─[ L3-HOP #1 abcmdf2(10.23.78.11) -> core1(10.23.78.10) ]
+│   │   └───┬─[ L2-HOP #1 abcmdf2(Eth2/26) -> core1(Eth8/25) ]
+│   └───┬─[ L3-HOP #1 abcmdf2(10.23.78.21) -> core2(10.23.78.20) ]
+│       └───┬─[ L2-HOP #1 abcmdf2(Eth3/8) -> core2(Eth8/25) ]
+├───┬─[ L4-HOP Network ]
+├───┬─[ L4-HOP FW ]
+├───┬─[ L4-HOP Network ]
+├───┬─[ L3-PATH 10.25.12.0/24 -> 10.34.72.0/22 ]
+│   ├───┬─[ L3-HOP #1 core1(10.23.74.10) -> abcmdf1(10.23.74.11) ]
+│   │   └───┬─[ L2-HOP #1 core1(Eth7/27) -> abcmdf1(Eth2/26) ]
+│   ├───┬─[ L3-HOP #1 core1(10.23.78.10) -> abcmdf2(10.23.78.11) ]
+│   │   └───┬─[ L2-HOP #1 core1(Eth8/25) -> abcmdf2(Eth2/26) ]
+│   ├───┬─[ L3-HOP #1 core2(10.23.74.20) -> abcmdf1(10.23.74.21) ]
+│   │   └───┬─[ L2-HOP #1 core2(Eth4/25) -> abcmdf1(Eth3/8) ]
+│   └───┬─[ L3-HOP #1 core2(10.23.78.20) -> abcmdf2(10.23.78.21) ]
+│       └───┬─[ L2-HOP #1 core2(Eth8/25) -> abcmdf2(Eth3/8) ]
+├───┬─[ L3GW 10.34.72.0/22 ]
+├───┬─[ L2-PATH abcmdf1|abcmdf2 -> abc7t1sw1 ]
+│   ├───┬─[ L2-HOP #1 abcmdf1(Eth1/8) -> abc7t1sw1(Te5/1) ]
+│   └───┬─[ L2-HOP #1 abcmdf2(Eth1/8) -> abc7t1sw1(Te6/1) ]
+└───┬─[ DST 10.34.72.24 ]
+
+
+```
 ### Query Options
 ```
+
 usage: netgrph [-h] [-ip] [-net] [-nlist] [-dev] [-fpath src] [-rpath src]
                [-spath src] [-group] [-vrange 1[-4096]] [-vid] [-vtree]
                [-output TREE] [--conf file] [--debug DEBUG] [--verbose]
@@ -74,6 +120,7 @@ optional arguments:
 Examples: netgrph 10.1.1.1 (Free Search for IP), netgrph -net 10.1.1.0/24
 (Search for CIDR), netgrph -group MDC (VLAN Database Search), netgrph -fp
 10.1.1.1 10.2.2.1 (Firewall Path Search)
+
 ```
 <br>
 ### Report Options
@@ -323,15 +370,25 @@ NetGrph was written to explore the potential of graph databases for networks,
 and is being shared to help others with network discovery and automation. Please
 contribute back any useful additions.
 
+
+### Planned Features
+
+* Add configuration snippets option for each hop on traverals
+* Import all Network ACL's for analysis
+* Improve NetDB integration with universal search
+* Implement Dijkstra's Algorithm for cost-based path traversals (database plugin)
+* REST API for nglib queries (Flask Based)
+* Simple Web Interface for Path Traversals and report generation
+
 ### Future
 
 NetGrph will be rapidly evolving at first to meet the needs of network and
 security automation in large switched networks. I am open to expanding it for
 the needs of MPLS networks and other network/security domains where appropriate.
-I would also like to expand the application to support both underlay and overlay
-networks for technologies such as VMWare NSX and Cisco ACI.
+The application was written to be generic and approachable for use with both SDN
+and existing networks.
 
-I will also be adding some lightweight integration with my existing [NetDB
+I have also added some lightweight integration with my existing [NetDB
 application](http://netdbtracking.sourceforge.net), but that will be both
 focused and optional. If you manage to create any new parsers or integrate with
 other vendor APIs, please contribute your code back.
@@ -342,24 +399,21 @@ time I'm focussed on using the application to automate tasks. In theory, it
 should be easy to create [D3
 visualizations](https://github.com/d3/d3/wiki/Gallery) from the NGTree
 data-structures. If anyone manages to create a simple GUI or use this
-application to create some interesting visualizations, I'd love to see the
-results, and if you run in to trouble with the data model, please let me know.
+application to create some interesting visualizations, I'd be happy to help and
+would love to see the results.
 
-I will not be expanding the application to be a full-blown NMS, nor do I plan to
-replicate the features of NetDB in to this codebase. You are free to fork this
-code and turn it into anything you like, but if you expand the core modeling
-functionality and think it should be included in the main codebase, I'd like to
-consider including it here.
+I will not be expanding the application to be a full-blown NMS, but you are free
+to fork this code and turn it into anything you like. If you manage to expand
+the core modeling functionality and think it should be included in the main
+codebase, I'd like to consider including it here.
 
 See the [CONTRIBUTING](CONTRIBUTING.md) document for more information.
 
 ## Performance
 
 On our network containing 700+ routers/switches, 2000+ SVIs and 10,000+ VLAN to
-switch mappings, performance on almost all netgrph queries is below 150ms. The
-only highly unoptimized query is routed paths, which needs further optimization.
-Full ngreport queries can take longer, but are generally for creating large
-reports.
+switch mappings, performance on almost all netgrph queries is below 150ms. Full
+ngreport queries can take longer, but it's for creating network-wide reports.
 
 The database update time on our localhost server with SSDs is 150sec for a
 complete network refresh. When importing to an unoptimized VM on a remote
