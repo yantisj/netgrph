@@ -120,6 +120,7 @@ def check_path(singlepath):
         singlepath = True
     return singlepath
 
+
 # Alternate Config File
 if args.conf:
     config_file = args.conf
@@ -155,37 +156,37 @@ nglib.init_nglib(config_file)
 
 ## Pathfinding
 if args.fpath:
-    nglib.query.path.get_fw_path(args.fpath, args.search)
+    nglib.query.path.get_fw_path(args.fpath, args.search, dict())
 
 # Quick Path
 elif args.qpath:
     rtype = "QTREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_full_path(args.search, args.qpath, rtype=rtype, \
-        onepath=check_path(False))   
+    nglib.query.path.get_full_path(args.search, args.qpath, \
+        {"onepath": check_path(False)}, rtype=rtype)
 
 elif args.spath:
     rtype = "TREE"
 
     if args.output:
         rtype = args.output
-    nglib.query.path.get_switched_path(args.spath, args.search, rtype=rtype, \
-        onepath=check_path(False))
+    nglib.query.path.get_switched_path(args.spath, args.search, \
+        {"onepath": check_path(False)}, rtype=rtype)
 
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_routed_path(args.rpath, args.search, rtype=rtype, \
-        onepath=check_path(False))
+    nglib.query.path.get_routed_path(args.rpath, args.search, \
+        {"onepath":check_path(False)}, rtype=rtype)
 
 elif args.path:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_full_path(args.path, args.search, rtype=rtype, \
-        onepath=check_path(True))
+    nglib.query.path.get_full_path(args.path, args.search, \
+        {"onepath": check_path(False)}, rtype=rtype)
 
 ## Individual Queries
 elif args.dev:

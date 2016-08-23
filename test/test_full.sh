@@ -8,4 +8,9 @@ if ! type "$pytestcmd" 2> /dev/null; then
     export pytestcmd="py.test"
 fi
 
-$pytestcmd --resultlog=/tmp/pytest.log ngtest.py
+if [ "$1" = "prod" ]; then
+    $pytestcmd --resultlog=/tmp/pytest.log -k test_prod ngtest.py
+else
+    $pytestcmd --resultlog=/tmp/pytest.log -k test_dev ngtest.py
+fi
+

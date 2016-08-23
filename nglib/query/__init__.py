@@ -177,7 +177,7 @@ def get_filter_dict(group=None, nFilter=None):
         gFilter = nFilter
     else:
         raise Exception("Must pass in group or filter")
-    
+
     # Split all VRFs by spaces
     vrfFilters = gFilter.rsplit()
 
