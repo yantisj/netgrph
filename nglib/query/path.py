@@ -95,7 +95,7 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             if 'StandbyRouter' in n1tree['_child001']:
                 router = router + '|' + n1tree['_child001']['StandbyRouter']
             if routing:
-                if 'Switch' in srctree:
+                if 'Switch' in srctree and srctree['Switch']:
                     srcswp = get_switched_path(srctree['Switch'], router, popt)
                 else:
                     srctree = None
@@ -107,7 +107,7 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             if 'StandbyRouter' in n2tree['_child001']:
                 router = router + '|' + n2tree['_child001']['StandbyRouter']
             if routing:
-                if 'Switch' in dsttree:
+                if 'Switch' in dsttree and dsttree['Switch']:
                     dstswp = get_switched_path(router, dsttree['Switch'], popt)
                 else:
                     dsttree = None
@@ -476,7 +476,7 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
         pathList = []
         hopSet = set()
         ngtree = nglib.ngtree.get_ngtree("Switched Paths", tree_type="L2-PATH")
-        ngtree["Name"] = switch1 + " -> " + switch2
+        ngtree["Name"] = str(switch1) + " -> " + str(switch2)
 
         swp = nglib.py2neo_ses.cypher.execute(
             'MATCH (ss:Switch), (ds:Switch), '

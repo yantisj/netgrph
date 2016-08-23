@@ -76,15 +76,16 @@ ptest['10.26.72.142 10.34.72.24'] = 'L4FW FwutilFW'
 # NetDB
 #ptest['-p 10.26.72.142 10.28.6.27'] = 'Link rVLANs'
 
-qtest = ptest
-
 rtest = dict()
-rtest['-vlans -empty -vrange 200'] = 'v6test'
-#rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
-#rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
+#rtest['-vlans -empty -vrange 200'] = 'v6test'
+rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
+rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
+
+prtest = dict()
+prtest['-vlans -empty -vrange 200'] = 'v6test'
 
 # Update Tests (check for errors)
-utest = ('-ivrf', '-id', '-ind', '-inet', '-isnet', '-iasa', '-ivlan', '-uvlan')
+utest = ('-ivrf', '-id', '-ind', '-inet', '-isnet', '-iasa', '-ivlan', '-uvlan', '-ild')
 
 def run_query(cmd, option, result):
     """Run Queries for testing"""
@@ -104,8 +105,14 @@ def run_query(cmd, option, result):
     else:
         return False
 
+def test_dev_updates():
+    print("Testing Update Routines")
 
-def test_queries():
+    for ut in utest:
+        print(ut)
+        assert(run_query(upngcmd, ut, None)) == True
+
+def test_dev_queries():
     """netgrph query testing"""
 
     print("Testing Query Routines")
@@ -118,10 +125,15 @@ def test_queries():
         print(key)
         assert(run_query(ngrepcmd, key, rtest[key])) == True
 
+def test_prod_updates():
+    test_dev_updates()
 
-def test_updates():
-    print("Testing Update Routines")
+def test_prod_queries():
+    global qtest
+    global rtest
+    qtest = ptest
+    rtest = prtest
 
-    for ut in utest:
-        print(ut)
-        assert(run_query(upngcmd, ut, None)) == True
+    test_dev_queries()
+
+
