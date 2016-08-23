@@ -80,6 +80,13 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
 
         srctree, dsttree, srcswp, dstswp = None, None, None, None
 
+        if 'vrfcidr' not in n1tree['_child001']:
+            print("Warning: Could not locate", src, file=sys.stderr)
+            return
+        if 'vrfcidr' not in n2tree['_child001']:
+            print("Warning: Could not locate", dst, file=sys.stderr)
+            return          
+
         # Routing Check
         routing = True
         if n1tree['_child001']['vrfcidr'] == n2tree['_child001']['vrfcidr']:
@@ -94,28 +101,26 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             router = n1tree['_child001']['Router']
             if 'StandbyRouter' in n1tree['_child001']:
                 router = router + '|' + n1tree['_child001']['StandbyRouter']
-            if routing:
-                if 'Switch' in srctree and srctree['Switch']:
-                    srcswp = get_switched_path(srctree['Switch'], router, popt)
-                else:
-                    srctree = None
-                    print("Warning: Could not find source switch data in NetDB", file=sys.stderr)
+            if 'Switch' in srctree and srctree['Switch']:
+                srcswp = get_switched_path(srctree['Switch'], router, popt)
+            else:
+                srctree = None
+                print("Warning: Could not find source switch data in NetDB:", src, file=sys.stderr)
 
         # Find Switched Path from Router to Destination
         if dsttree:
             router = n2tree['_child001']['Router']
             if 'StandbyRouter' in n2tree['_child001']:
                 router = router + '|' + n2tree['_child001']['StandbyRouter']
-            if routing:
-                if 'Switch' in dsttree and dsttree['Switch']:
-                    dstswp = get_switched_path(router, dsttree['Switch'], popt)
-                else:
-                    dsttree = None
-                    print("Warning: Could not find destination switch data in NetDB", \
-                        file=sys.stderr)
+            if 'Switch' in dsttree and dsttree['Switch']:
+                dstswp = get_switched_path(router, dsttree['Switch'], popt)
+            else:
+                dsttree = None
+                print("Warning: Could not find destination switch data in NetDB", \
+                    dst, file=sys.stderr)
 
             # If only switching, update srcswp to show switched path
-            else:
+            if not routing and srctree and dsttree:
                 srcswp = get_switched_path(srctree['Switch'], dsttree['Switch'], popt)
 
         # Same switch/vlan check
@@ -141,9 +146,9 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             ngtree["Traversal Type"] = 'All Paths'
 
         ## Add the SRC Data
-        if '_child002' in n2tree:
+        if '_child002' in n1tree:
             n1tree['_child002']['_type'] = "SRC"
-            if 'SwitchPort' in n2tree['_child002']:
+            if 'SwitchPort' in n1tree['_child002']:
                 n1tree['_child002']['Name'] = src + ' ' + n1tree['_child002']['MAC'] \
                     + ' ' + str(n1tree['_child002']['Switch']) + '(' \
                     + str(n1tree['_child002']['SwitchPort']) \
