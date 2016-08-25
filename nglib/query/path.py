@@ -274,7 +274,6 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
                 if last:
                     npopt = popt.copy()
                     npopt['VRF'] = dstt['_child001']['VRF']
-                    print("VRF Check",  npopt['VRF'], dst, popt)
                     rtree = get_routed_path(secpath[last]['gateway'], dst, npopt)
                     if rtree:
                         nglib.ngtree.add_child_ngtree(ngtree, rtree)
