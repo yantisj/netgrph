@@ -201,7 +201,7 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             nglib.ngtree.add_child_ngtree(ngtree, n2tree['_child001'])
 
         # Destination Switch Data
-        if switching and dstswp:
+        if switching and routing and dstswp:
             nglib.ngtree.add_child_ngtree(ngtree, dstswp)
 
         # NetDB Destination Data
