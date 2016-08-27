@@ -36,12 +36,17 @@ import os
 import re
 import json
 import logging
-from flask import Flask, jsonify, request, g
+from flask import Flask, jsonify, request, g, make_response
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.exceptions import default_exceptions
+from werkzeug.exceptions import HTTPException
 import nglib
 import nglib.query
+import nglib.api.user
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
+auth = HTTPBasicAuth()
 
 verbose = 1
 
@@ -56,25 +61,43 @@ if re.search(r'\/dev$', dirname):
 elif re.search(r'\/test$', dirname):
     config_file = "netgrphdev.ini"
 
+@app.errorhandler(404)
+def not_found(error=None):
+    message = {
+            'status': 404,
+            'message': 'Not Found: ' + request.url,
+    }
+    resp = jsonify(message)
+    resp.status_code = 404
 
-@app.route('/')
-def hello_world():
-    nglib.verbose = verbose
-    nglib.init_nglib(config_file)
-    g.nglib = nglib
-    ngtree = nglib.query.path.get_full_path('128.23.1.1', '128.23.200.186', {})
-    ngjson = json.dumps(ngtree, indent=2, sort_keys=True)
+    return resp
 
-    ngjson = ngjson.replace('\n', '<br>')
+@auth.error_handler
+def auth_failed(error=None):
+    message = {
+            'status': 401,
+            'message': 'Authentication Failed: ' + request.url
+    }
+    resp = jsonify(message)
+    resp.status_code = 401
 
-    dump = "<code>" + ngjson + "</code>"
-    return dump
+    return resp
+
+@app.errorhandler(400)
+def bad_request(error):
+    return make_response(jsonify({'error': 'Bad request'}), 400)
+
+@app.route('/test')
+@auth.login_required
+def app_test():
+
+    return jsonify(nglib.query.net.get_net('128.23.1.1', \
+        rtype="NGTREE", verbose=False))
 
 @app.route('/netgrph/api/v1.0/path', methods=['GET'])
+@auth.login_required
 def get_full_path():
     # Initialize Library
-    nglib.verbose = verbose
-    nglib.init_nglib(config_file)
     return jsonify(nglib.query.path.get_full_path(request.args['src'], \
         request.args['dst'], {}))
 
@@ -83,3 +106,15 @@ def get_full_path():
 def close_db(error):
     if hasattr(g, 'nglib'):
         logger.info("Closing Database Connection")
+
+@auth.verify_password
+def verify_password(username, password):
+
+    # Initialize Library On Authentication
+    nglib.verbose = verbose
+    nglib.init_nglib(config_file)
+
+    if not nglib.api.user.authenticate_user(username, password):
+        return False
+    g.user = username
+    return True
