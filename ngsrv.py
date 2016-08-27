@@ -35,11 +35,15 @@ NetGrph API Server
 import os
 import re
 import json
-from flask import Flask, jsonify, request
+import logging
+from flask import Flask, jsonify, request, g
 import nglib
 import nglib.query
-app = Flask(__name__)
 
+app = Flask(__name__)
+logger = logging.getLogger(__name__)
+
+verbose = 1
 
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
@@ -53,11 +57,11 @@ elif re.search(r'\/test$', dirname):
     config_file = "netgrphdev.ini"
 
 
-# Initialize Library
-nglib.init_nglib(config_file)
-
 @app.route('/')
 def hello_world():
+    nglib.verbose = verbose
+    nglib.init_nglib(config_file)
+    g.nglib = nglib
     ngtree = nglib.query.path.get_full_path('128.23.1.1', '128.23.200.186', {})
     ngjson = json.dumps(ngtree, indent=2, sort_keys=True)
 
@@ -68,6 +72,14 @@ def hello_world():
 
 @app.route('/netgrph/api/v1.0/path', methods=['GET'])
 def get_full_path():
-    print(request.args)
+    # Initialize Library
+    nglib.verbose = verbose
+    nglib.init_nglib(config_file)
     return jsonify(nglib.query.path.get_full_path(request.args['src'], \
         request.args['dst'], {}))
+
+
+@app.teardown_appcontext
+def close_db(error):
+    if hasattr(g, 'nglib'):
+        logger.info("Closing Database Connection")
