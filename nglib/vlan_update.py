@@ -143,6 +143,8 @@ def import_links(fileName):
        Add vlans to interface relationship
     """
 
+    logger.info("Importing Trunk Links from " + fileName)
+
     f = open(fileName)
     lcsv = csv.DictReader(f)
     ldb = dict()
@@ -303,30 +305,33 @@ def add_vlans_int(pldb, cldb):
 def update_vlans():
     """Run VLAN update routines"""
 
-    logger.info("Updating VLAN Topology")
-
-    # update_bridge_direction("Core-16", "16", "core1")
-    # update_bridge_direction("MUH-105", "105", "medmdf1")
+    logger.info("Updating VLAN Topology (Descriptions, Bridges, and Roots)")
 
     # Update descriptions
-    #update_vlan_desc()
+    if nglib.verbose:
+        logger.info("Updating Descriptions")
+    update_vlan_desc()
 
     # Update Bridge Domains
+    if nglib.verbose:
+        logger.info("Updating Bridge Domains")
     update_bridge_domains()
-    #
+
     # Root election
     root_election()
-
-    #find_bridged_root()
 
 
 def root_election():
     """Kick off a root election for VLANs"""
 
     # Find the local root for each switch domain
+    if nglib.verbose:
+        logger.info("Local Switch Domain Root Election")
     find_local_root()
 
     # Search all bridge trees for lowest STP and link the root domain to the root
+    if nglib.verbose:
+        logger.info("Bridged Switch Domain Root Election")
     find_bridged_root()
 
 
@@ -361,7 +366,8 @@ def update_vlan_desc():
             if descdb.keys():
                 topDesc = max(descdb.keys())
 
-            logger.debug("Updating top description for VLAN:%s Desc:%s", vname, topDesc)
+            if nglib.verbose>2:
+                logger.debug("Updating top description for VLAN:%s Desc:%s", vname, topDesc)
 
             nglib.py2neo_ses.cypher.execute(
                 'MATCH (v:VLAN {name:{vname}}) SET v.desc={topDesc} RETURN v',
@@ -413,8 +419,8 @@ def update_bridge_domains():
                         if vlan in cvdb.keys():
                             if vlan in rvlans:
                                 update_bridge(r.pmgmt, r.cmgmt, vlan, r.pswitch, r.cswitch)
-                            elif nglib.verbose>2:
-                                logger.debug("Switches adjacent, missing rvlans: " +
+                            elif nglib.verbose>1:
+                                logger.debug("Switches adjacent, missing rvlans to bridge: " +
                                 "v:%s, ps:%s, cs:%s, rv:%s", vlan, r.pswitch, r.cswitch, rvlans)
 
 
@@ -513,6 +519,7 @@ def find_bridged_root():
                 + 'RETURN v.name AS name, v.lstp AS lstp, v.lroot AS lroot, v.vid as vid',
                 vname=vname)
 
+            dup = 32768
             if len(bridged) > 0:
                 for b in bridged:
 
@@ -520,6 +527,9 @@ def find_bridged_root():
                     if int(b.lstp) < stp:
                         #print("Low STP: ",vname,b.name,b.lstp,b.lroot)
                         stp = int(b.lstp)
+                        dup = stp
+                    elif int(b.lstp) == stp:
+                        dup = stp
 
             # Check local stp values
             if len(local) > 0:
@@ -536,7 +546,10 @@ def find_bridged_root():
                         if nglib.verbose > 3:
                             print("Low STP: ", vname, stp, rootSwitch)
                         link_vlan_to_root(vname, stp, rootSwitch)
-                        update_bridge_direction(vname, vid, rootSwitch)
+                        if stp != dup:
+                            update_bridge_direction(vname, vid, rootSwitch)
+                        elif nglib.verbose:
+                            logger.info("Duplicate Root Found across another domain: %s rs:%s", vname, rootSwitch)
 
 
 def link_vlan_to_root(vname, stp, rootSwitch):
