@@ -1,5 +1,6 @@
 #!/bin/sh
 ./ngupdate.py -v --dropDatabase
+sleep 2
 ./ngupdate.py -ivrf -v
 ./ngupdate.py -id -v
 ./ngupdate.py -ind -v

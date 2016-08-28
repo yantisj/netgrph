@@ -308,16 +308,16 @@ def update_vlans():
     # update_bridge_direction("Core-16", "16", "core1")
     # update_bridge_direction("MUH-105", "105", "medmdf1")
 
-    # # Update descriptions
-    # update_vlan_desc()
-    #
-    # # Update Bridge Domains
-    # update_bridge_domains()
-    # #
-    # # Root election
-    # root_election()
+    # Update descriptions
+    #update_vlan_desc()
 
-    find_bridged_root()
+    # Update Bridge Domains
+    update_bridge_domains()
+    #
+    # Root election
+    root_election()
+
+    #find_bridged_root()
 
 
 def root_election():
@@ -447,7 +447,7 @@ def update_bridge(pmgmt, cmgmt, vlan, pswitch, cswitch):
 
         results = nglib.py2neo_ses.cypher.execute(
             'MATCH (pv:VLAN {name:{pvlan}})-[e:BRIDGE]-(cv:VLAN {name:{cvlan}}) '
-            + 'SET e += {pswitch:{pswitch}, cswitch:{cswitch}, time:{time}} RETURN e',
+            + 'SET e += {time:{time}} RETURN e',
             pvlan=pvlan, cvlan=cvlan, pswitch=pswitch, cswitch=cswitch, time=time)
 
 
@@ -594,54 +594,21 @@ def update_bridge_direction(vname, vid, rootSwitch):
 
         # Compares direction of path to root, reverses wrong directions
         for rec in rpath:
-            lastp = None
-            lastc = None
             lastm = rmgmt
             for b in rec['e']:
                 props = b.properties
                 if 'pswitch' in props:
                     cmgmt = nglib.query.dev.get_mgmt_domain(props['pswitch'])
-                    if (props['pswitch'], props['cswitch']) not in revcache \
+                    if vname not in revcache \
                         and lastm != cmgmt:
-                        print("Reversing xHOP", vname, props['pswitch'], props['cswitch'], lastm, cmgmt)
-                        print(rec['dist'], b)
-                        #reverse_bridge(vid, props['pswitch'], props['cswitch'])
-                        revcache[(props['pswitch'], props['cswitch'])] = 1
+                        #print("Reversing xHOP", rec['dist'], vname, props['pswitch'], props['cswitch'], lastm, cmgmt)
+                        reverse_bridge(vid, props['pswitch'], props['cswitch'])
+                        revcache[vname] = 1
                     lastm = nglib.query.dev.get_mgmt_domain(props['cswitch'])
 
-                    # elif vid == "105":
-                    #     print("\nNOT Reversing xHOP", vid, props['pswitch'], props['cswitch'], lastm, cmgmt)
-                    #     print(rec)
-                    #lastm = cmgmt
-
-
-                    # # Bad direction on multi-hop
-                    # if lastp and props['cswitch'] != lastp and \
-                    #     (props['pswitch'], props['cswitch']) not in revcache:
-                    #     print("Reversing xHOP", vid, lastp, lastc)
-                    #     if vid == "16":
-                    #         print(lastp, rec)
-                    #     #reverse_bridge(vid, lastp, lastc)
-                    #
-                    # # Single hops must compare mgmt domains
-                    # elif not lastp and props['cswitch'] and rec['dist'] == 2:
-                    #     pmgmt = nglib.query.dev.get_mgmt_domain(props['pswitch'])
-                    #
-                    #     # Bad single hop direction, reverse and cache
-                    #     if rmgmt != pmgmt:
-                    #         print("Reversing 1HOP", vid, rmgmt, pmgmt)
-                    #         #reverse_bridge(vid, props['pswitch'], props['cswitch'], onehop=True)
-                    #
-                    #         # Cache link as reversed
-                    #         revcache[(props['pswitch'], props['cswitch'])] = 1
-
-                    # Cache last parent for next iter
-                    # lastm = props['cswitch']
-                    # lastp = props['pswitch']
-                    # lastc = props['cswitch']
 
 def reverse_bridge(vid, pswitch, cswitch):
-    logger.info("Reversing Bridge Direction: %s %s %s", vid, pswitch, cswitch)
+    logger.info("Update: Reversing Bridge Direction: %s %s %s", vid, pswitch, cswitch)
 
     current = nglib.bolt_ses.run(
         'MATCH(pv:VLAN {vid:{vid}})-'
