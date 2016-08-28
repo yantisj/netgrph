@@ -604,7 +604,7 @@ def update_bridge_direction(vname, vid, rootSwitch):
                     if (props['pswitch'], props['cswitch']) not in revcache \
                         and lastm != cmgmt:
                         print("Reversing xHOP", vname, props['pswitch'], props['cswitch'], lastm, cmgmt)
-                        print(b)
+                        print(rec['dist'], b)
                         #reverse_bridge(vid, props['pswitch'], props['cswitch'])
                         revcache[(props['pswitch'], props['cswitch'])] = 1
                     lastm = nglib.query.dev.get_mgmt_domain(props['cswitch'])
