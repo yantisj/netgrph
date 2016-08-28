@@ -36,6 +36,7 @@ import logging
 import csv
 from collections import defaultdict
 import nglib
+import nglib.query.dev
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +155,7 @@ def import_links(fileName):
     # Get all links on network
     links = nglib.bolt_ses.run('MATCH(ps)-[e:NEI|NEI_EQ]->(cs) ' +
         'RETURN ps.name, e.pPort, cs.name, e.cPort')
-    
+
     for en in links:
 
         pname = en['ps.name']
@@ -175,7 +176,7 @@ def import_links(fileName):
             for v in iset:
                 if int(v) in vcache[pname] and int(v) in vcache[cname]:
                     rset.add(v)
-            
+
             if nglib.verbose>3:
                 print("ps", ldb[(pname, pport)]['vlans'])
                 print("cs", ldb[(cname, cport)]['vlans'])
@@ -183,7 +184,7 @@ def import_links(fileName):
                 print("cvc", vcache[cname])
             if nglib.verbose>2:
                 print("ON LINK", sorted(rset), "on", pname, pport, cname, cport)
-            
+
             # Convert set to sorted vstring
             rlist = []
             for en in sorted(rset):
@@ -197,7 +198,7 @@ def import_links(fileName):
                 print("cs", ldb[(cname, cport)]['vlans'])
                 print("pvc", vcache[pname])
                 print("cvc", vcache[cname])
-            
+
             # Update Link Info
             pldb = ldb[(pname, pport)]
             pldb['_rvlans'] = vstring
@@ -206,7 +207,7 @@ def import_links(fileName):
             cldb = ldb[(cname, cport)]
             #print("Update Info", pname, pport, cname, cport, pldb, cldb )
             add_vlans_int(pldb, cldb)
-            
+
         else:
             if nglib.verbose>1:
                 print("Link not found in ldb", (pname, pport), (cname, cport))
@@ -220,10 +221,10 @@ def cache_vlans():
     vlans = nglib.bolt_ses.run(
         'MATCH(s:Switch)<-[e:Switched]-(v) ' +
         'RETURN s.name, v.vid')
-    
+
     for v in vlans:
         vcache[v['s.name']].add(int(v['v.vid']))
-    
+
     return vcache
 
 
@@ -232,7 +233,7 @@ def intersect_vlans(set1, set2):
 
     set1 = expand_vlans(set1)
     set2 = expand_vlans(set2)
-    
+
     iset = set(set1).intersection(set2)
     return iset
 
@@ -251,7 +252,7 @@ def expand_vlans(oset):
                 nset.add(x)
         elif en:
             nset.add(int(en))
-    
+
     return nset
 
 
@@ -269,16 +270,16 @@ def compact_vlans(oset):
         elif crange:
             nset.pop()
             nset.append(str(crange) + '-' + str(last))
-            crange = 0    
+            crange = 0
             nset.append(str(en))
         else:
             nset.append(str(en))
         last = en
-    
+
     if crange:
         nset.pop()
         nset.append(str(crange) + '-' + str(last))
-    
+
     #print("os", sorted(oset), "rs", nset)
 
     return ",".join(nset)
@@ -304,14 +305,19 @@ def update_vlans():
 
     logger.info("Updating VLAN Topology")
 
-    # Update descriptions
-    update_vlan_desc()
+    # update_bridge_direction("Core-16", "16", "core1")
+    # update_bridge_direction("MUH-105", "105", "medmdf1")
 
-    # Update Bridge Domains
-    update_bidge_domains()
+    # # Update descriptions
+    # update_vlan_desc()
+    #
+    # # Update Bridge Domains
+    # update_bridge_domains()
+    # #
+    # # Root election
+    # root_election()
 
-    # Root election
-    root_election()
+    find_bridged_root()
 
 
 def root_election():
@@ -362,7 +368,7 @@ def update_vlan_desc():
                 vname=vname, topDesc=topDesc)
 
 
-def update_bidge_domains():
+def update_bridge_domains():
     """Update all vlan bridges between vlan management domains"""
 
     # Get all Switches and their child neighbors
@@ -407,7 +413,7 @@ def update_bidge_domains():
                         if vlan in cvdb.keys():
                             if vlan in rvlans:
                                 update_bridge(r.pmgmt, r.cmgmt, vlan, r.pswitch, r.cswitch)
-                            elif nglib.verbose>1:
+                            elif nglib.verbose>2:
                                 logger.debug("Switches adjacent, missing rvlans: " +
                                 "v:%s, ps:%s, cs:%s, rv:%s", vlan, r.pswitch, r.cswitch, rvlans)
 
@@ -437,13 +443,12 @@ def update_bridge(pmgmt, cmgmt, vlan, pswitch, cswitch):
             pvlan=pvlan, cvlan=cvlan, pswitch=pswitch, cswitch=cswitch, time=time)
 
     else:
-        logger.debug("Updating VLAN %s-[:BRIDGE]->%s Relationship", pvlan, cvlan)
+        logger.debug("Updating VLAN %s-[:BRIDGE]-%s Relationship", pvlan, cvlan)
 
         results = nglib.py2neo_ses.cypher.execute(
-            'MATCH (pv:VLAN {name:{pvlan}})-[e:BRIDGE]->(cv:VLAN {name:{cvlan}}) '
+            'MATCH (pv:VLAN {name:{pvlan}})-[e:BRIDGE]-(cv:VLAN {name:{cvlan}}) '
             + 'SET e += {pswitch:{pswitch}, cswitch:{cswitch}, time:{time}} RETURN e',
             pvlan=pvlan, cvlan=cvlan, pswitch=pswitch, cswitch=cswitch, time=time)
-
 
 
 def find_local_root():
@@ -505,7 +510,7 @@ def find_bridged_root():
             # Local Values
             local = nglib.py2neo_ses.cypher.execute(
                 'MATCH (v:VLAN {name:{vname}}) '
-                + 'RETURN v.name AS name, v.lstp AS lstp, v.lroot AS lroot',
+                + 'RETURN v.name AS name, v.lstp AS lstp, v.lroot AS lroot, v.vid as vid',
                 vname=vname)
 
             if len(bridged) > 0:
@@ -524,12 +529,14 @@ def find_bridged_root():
                 if int(v.lstp) <= stp:
                     stp = int(v.lstp)
                     rootSwitch = v.lroot
+                    vid = v.vid
 
                     # Link Bridge domain to root
                     if stp < 32768:
                         if nglib.verbose > 3:
                             print("Low STP: ", vname, stp, rootSwitch)
                         link_vlan_to_root(vname, stp, rootSwitch)
+                        update_bridge_direction(vname, vid, rootSwitch)
 
 
 def link_vlan_to_root(vname, stp, rootSwitch):
@@ -558,6 +565,103 @@ def link_vlan_to_root(vname, stp, rootSwitch):
             'MATCH (v:VLAN {name:{vname}})-[e:ROOT]->(s:Switch {name:{rootSwitch}}) '
             + 'SET e += {stp:{stp}, time:{time}} RETURN e',
             vname=vname, rootSwitch=rootSwitch, stp=stp, time=time)
+
+
+def update_bridge_direction(vname, vid, rootSwitch):
+    """Find all directionless bridges and fix directions towards root
+       Keeps a cache of reversed directions
+    """
+
+    rmgmt = nglib.query.dev.get_mgmt_domain(rootSwitch)
+    revcache = dict()
+
+    # All directionless bridges
+    bridges = nglib.bolt_ses.run(
+        'MATCH(v:VLAN {name:{vname}})-[e:BRIDGE*]-(rv) RETURN rv.name as name',
+        {"vname": vname})
+
+    for en in bridges:
+
+        # Remote VLAN name
+        rv = en['name']
+
+        # Path from remote vlan to root switch
+        rpath = nglib.bolt_ses.run(
+             'MATCH(v:VLAN {name:{vname}}), (s:Switch {name:{rswitch}}), '
+             + 'p = shortestPath((s)-[e:BRIDGE|ROOT*0..20]-(v)) '
+             + 'RETURN e, LENGTH(p) as dist',
+             {"vname": rv, "rswitch": rootSwitch})
+
+        # Compares direction of path to root, reverses wrong directions
+        for rec in rpath:
+            lastp = None
+            lastc = None
+            lastm = rmgmt
+            for b in rec['e']:
+                props = b.properties
+                if 'pswitch' in props:
+                    cmgmt = nglib.query.dev.get_mgmt_domain(props['pswitch'])
+                    if (props['pswitch'], props['cswitch']) not in revcache \
+                        and lastm != cmgmt:
+                        print("Reversing xHOP", vname, props['pswitch'], props['cswitch'], lastm, cmgmt)
+                        print(b)
+                        #reverse_bridge(vid, props['pswitch'], props['cswitch'])
+                        revcache[(props['pswitch'], props['cswitch'])] = 1
+                    lastm = nglib.query.dev.get_mgmt_domain(props['cswitch'])
+
+                    # elif vid == "105":
+                    #     print("\nNOT Reversing xHOP", vid, props['pswitch'], props['cswitch'], lastm, cmgmt)
+                    #     print(rec)
+                    #lastm = cmgmt
+
+
+                    # # Bad direction on multi-hop
+                    # if lastp and props['cswitch'] != lastp and \
+                    #     (props['pswitch'], props['cswitch']) not in revcache:
+                    #     print("Reversing xHOP", vid, lastp, lastc)
+                    #     if vid == "16":
+                    #         print(lastp, rec)
+                    #     #reverse_bridge(vid, lastp, lastc)
+                    #
+                    # # Single hops must compare mgmt domains
+                    # elif not lastp and props['cswitch'] and rec['dist'] == 2:
+                    #     pmgmt = nglib.query.dev.get_mgmt_domain(props['pswitch'])
+                    #
+                    #     # Bad single hop direction, reverse and cache
+                    #     if rmgmt != pmgmt:
+                    #         print("Reversing 1HOP", vid, rmgmt, pmgmt)
+                    #         #reverse_bridge(vid, props['pswitch'], props['cswitch'], onehop=True)
+                    #
+                    #         # Cache link as reversed
+                    #         revcache[(props['pswitch'], props['cswitch'])] = 1
+
+                    # Cache last parent for next iter
+                    # lastm = props['cswitch']
+                    # lastp = props['pswitch']
+                    # lastc = props['cswitch']
+
+def reverse_bridge(vid, pswitch, cswitch):
+    logger.info("Reversing Bridge Direction: %s %s %s", vid, pswitch, cswitch)
+
+    current = nglib.bolt_ses.run(
+        'MATCH(pv:VLAN {vid:{vid}})-'
+        + '[e:BRIDGE {pswitch:{pswitch}, cswitch:{cswitch}}]'
+        + '->(cv {vid:{vid}}) RETURN pv.name as pvname, cv.name as cvname, e.time as time',
+        {"vid":vid, "pswitch":pswitch, "cswitch":cswitch})
+
+    for rec in current:
+        nglib.bolt_ses.run(
+                'MATCH(pv:VLAN {vid:{vid}})-'
+                + '[e:BRIDGE {pswitch:{pswitch}, cswitch:{cswitch}}]'
+                + '->(cv {vid:{vid}}) DELETE e',
+                {"vid":vid, "pswitch":pswitch, "cswitch":cswitch})
+
+        nglib.bolt_ses.run(
+                'MATCH(pv:VLAN {name:{pvname}}), (cv {name:{cvname}}) '
+                + 'CREATE (cv)-[e:BRIDGE '
+                + '{pswitch:{cswitch}, cswitch:{pswitch}, time:{time}, test:{pswitch}}]->(pv)',
+                {"pvname":rec['pvname'], "cvname":rec['cvname'], "pswitch":pswitch, "cswitch":cswitch, "time":rec['time']})
+
 
 def netdb_vlan_import():
     """For all (switch, vlan) entries, get mac and port counts"""

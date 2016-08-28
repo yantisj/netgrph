@@ -274,4 +274,16 @@ def get_devlist_vrf(vrf):
 
     return devlist
 
+def get_mgmt_domain(switch):
+    """Returns the management domain for a switch"""
+
+    mgmt = nglib.bolt_ses.run(
+        'MATCH(s:Switch {name:{switch}}) return s.mgmt AS mgmt',
+        {"switch": switch})
+
+    for rec in mgmt:
+        return rec['mgmt']
+
+    return None
+
 #END

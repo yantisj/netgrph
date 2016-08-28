@@ -290,7 +290,7 @@ def get_parent_ngtree(vname):
 
 def get_vlan_bridges(vid):
     """
-    Get all distinct vlan bridges returning the root node for each
+    Get all distinct vlan bridges returning the root node of the tree for each
     Used for VLAN ID Searches
     """
 
