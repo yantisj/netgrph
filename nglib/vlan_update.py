@@ -156,7 +156,7 @@ def import_links(fileName):
 
     # Get all links on network
     links = nglib.bolt_ses.run('MATCH(ps)-[e:NEI|NEI_EQ]->(cs) ' +
-        'RETURN ps.name, e.pPort, cs.name, e.cPort')
+                               'RETURN ps.name, e.pPort, cs.name, e.cPort')
 
     for en in links:
 
@@ -289,17 +289,16 @@ def compact_vlans(oset):
 def add_vlans_int(pldb, cldb):
     """Add VLAN Info to link pldb->cldb"""
 
-    #print({"pname": pldb['Switch'], "pPort": pldb['Port'], "cname": cldb['Switch'], "cPort": cldb['Port'], "desc": pldb['desc']})
-
     nglib.bolt_ses.run(
-    'MATCH (ps:Switch {name:{pname}})-'
-    + '[e:NEI|NEI_EQ {pPort:{pPort}, cPort:{cPort}}]->'
-    + '(cs:Switch {name:{cname}}) '
-    + 'SET e += {desc:{desc}, native:{nv}, pPc:{pPc}, cPc:{cPc}, '
-    + 'vlans:{cvlans}, rvlans:{rvlans}, _rvlans:{_rvlans}} RETURN e',
-    {"pname": pldb['Switch'], "pPort": pldb['Port'], "cname": cldb['Switch'],
-    "cPort": cldb['Port'], "desc": pldb['desc'], "nv": pldb['native'], "pPc": pldb['channel'],
-    "cPc": cldb['channel'], "cvlans": pldb['cvlans'], "rvlans": pldb['rvlans'], "_rvlans": pldb['_rvlans']})
+        'MATCH (ps:Switch {name:{pname}})-'
+        + '[e:NEI|NEI_EQ {pPort:{pPort}, cPort:{cPort}}]->'
+        + '(cs:Switch {name:{cname}}) '
+        + 'SET e += {desc:{desc}, native:{nv}, pPc:{pPc}, cPc:{cPc}, '
+        + 'vlans:{cvlans}, rvlans:{rvlans}, _rvlans:{_rvlans}} RETURN e',
+        {"pname": pldb['Switch'], "pPort": pldb['Port'], "cname": cldb['Switch'],
+         "cPort": cldb['Port'], "desc": pldb['desc'], "nv": pldb['native'],
+         "pPc": pldb['channel'], "cPc": cldb['channel'], "cvlans": pldb['cvlans'],
+         "rvlans": pldb['rvlans'], "_rvlans": pldb['_rvlans']})
 
 
 def update_vlans():
@@ -366,7 +365,7 @@ def update_vlan_desc():
             if descdb.keys():
                 topDesc = max(descdb.keys())
 
-            if nglib.verbose>2:
+            if nglib.verbose > 2:
                 logger.debug("Updating top description for VLAN:%s Desc:%s", vname, topDesc)
 
             nglib.py2neo_ses.cypher.execute(
@@ -421,7 +420,8 @@ def update_bridge_domains():
                                 update_bridge(r.pmgmt, r.cmgmt, vlan, r.pswitch, r.cswitch)
                             elif nglib.verbose>1:
                                 logger.debug("Switches adjacent, missing rvlans to bridge: " +
-                                "v:%s, ps:%s, cs:%s, rv:%s", vlan, r.pswitch, r.cswitch, rvlans)
+                                             "v:%s, ps:%s, cs:%s, rv:%s",
+                                             vlan, r.pswitch, r.cswitch, rvlans)
 
 
 def update_bridge(pmgmt, cmgmt, vlan, pswitch, cswitch):
@@ -549,7 +549,8 @@ def find_bridged_root():
                         if stp != dup:
                             update_bridge_direction(vname, vid, rootSwitch)
                         elif nglib.verbose:
-                            logger.info("Duplicate Root Found across another domain: %s rs:%s", vname, rootSwitch)
+                            logger.info("Duplicate Root Found across another domain:"
+                                        + " %s rs:%s", vname, rootSwitch)
 
 
 def link_vlan_to_root(vname, stp, rootSwitch):
@@ -600,10 +601,10 @@ def update_bridge_direction(vname, vid, rootSwitch):
 
         # Path from remote vlan to root switch
         rpath = nglib.bolt_ses.run(
-             'MATCH(v:VLAN {name:{vname}}), (s:Switch {name:{rswitch}}), '
-             + 'p = shortestPath((s)-[e:BRIDGE|ROOT*0..20]-(v)) '
-             + 'RETURN e, LENGTH(p) as dist',
-             {"vname": rv, "rswitch": rootSwitch})
+            'MATCH(v:VLAN {name:{vname}}), (s:Switch {name:{rswitch}}), '
+            + 'p = shortestPath((s)-[e:BRIDGE|ROOT*0..20]-(v)) '
+            + 'RETURN e, LENGTH(p) as dist',
+            {"vname": rv, "rswitch": rootSwitch})
 
         # Compares direction of path to root, reverses wrong directions
         for rec in rpath:
@@ -614,13 +615,14 @@ def update_bridge_direction(vname, vid, rootSwitch):
                     cmgmt = nglib.query.dev.get_mgmt_domain(props['pswitch'])
                     if vname not in revcache \
                         and lastm != cmgmt:
-                        #print("Reversing xHOP", rec['dist'], vname, props['pswitch'], props['cswitch'], lastm, cmgmt)
                         reverse_bridge(vid, props['pswitch'], props['cswitch'])
                         revcache[vname] = 1
                     lastm = nglib.query.dev.get_mgmt_domain(props['cswitch'])
 
 
 def reverse_bridge(vid, pswitch, cswitch):
+    """Reverse Direction of BRIDGE links towards root"""
+
     logger.info("Update: Reversing Bridge Direction: %s %s %s", vid, pswitch, cswitch)
 
     current = nglib.bolt_ses.run(
@@ -631,16 +633,16 @@ def reverse_bridge(vid, pswitch, cswitch):
 
     for rec in current:
         nglib.bolt_ses.run(
-                'MATCH(pv:VLAN {vid:{vid}})-'
-                + '[e:BRIDGE {pswitch:{pswitch}, cswitch:{cswitch}}]'
-                + '->(cv {vid:{vid}}) DELETE e',
-                {"vid":vid, "pswitch":pswitch, "cswitch":cswitch})
+            'MATCH(pv:VLAN {vid:{vid}})-'
+            + '[e:BRIDGE {pswitch:{pswitch}, cswitch:{cswitch}}]'
+            + '->(cv {vid:{vid}}) DELETE e',
+            {"vid":vid, "pswitch":pswitch, "cswitch":cswitch})
 
         nglib.bolt_ses.run(
-                'MATCH(pv:VLAN {name:{pvname}}), (cv {name:{cvname}}) '
-                + 'CREATE (cv)-[e:BRIDGE '
-                + '{pswitch:{cswitch}, cswitch:{pswitch}, time:{time}, test:{pswitch}}]->(pv)',
-                {"pvname":rec['pvname'], "cvname":rec['cvname'], "pswitch":pswitch, "cswitch":cswitch, "time":rec['time']})
+            'MATCH(pv:VLAN {name:{pvname}}), (cv {name:{cvname}}) '
+            + 'CREATE (cv)-[e:BRIDGE '
+            + '{pswitch:{cswitch}, cswitch:{pswitch}, time:{time}, test:{pswitch}}]->(pv)',
+            {"pvname":rec['pvname'], "cvname":rec['cvname'], "pswitch":pswitch, "cswitch":cswitch, "time":rec['time']})
 
 
 def netdb_vlan_import():
@@ -660,6 +662,5 @@ def netdb_vlan_import():
             'MATCH (v:VLAN {name:{vname}})-[e:Switched]->(s:Switch {name:{switch}}) '
             + 'SET e += {pcount:{pcount}, mcount:{mcount}} RETURN e',
             {"vname": en['vname'], "switch": en['switch'], "pcount": pcount, "mcount": mcount})
-
 
 # END

@@ -244,6 +244,11 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
 
         # Intra VRF
         if srct['_child001']['VRF'] == dstt['_child001']['VRF']:
+            # Same router Check
+            if srct['_child001']['Router'] == dstt['_child001']['Router']:
+                return
+
+            # Intra VRF Route
             ngtree = get_routed_path(src, dst, popt)
 
         # Inter VRF
