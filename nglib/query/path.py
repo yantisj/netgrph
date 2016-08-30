@@ -201,7 +201,7 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             nglib.ngtree.add_child_ngtree(ngtree, n2tree['_child001'])
 
         # Destination Switch Data
-        if switching and dstswp:
+        if switching and routing and dstswp:
             nglib.ngtree.add_child_ngtree(ngtree, dstswp)
 
         # NetDB Destination Data
@@ -244,6 +244,11 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
 
         # Intra VRF
         if srct['_child001']['VRF'] == dstt['_child001']['VRF']:
+            # Same router Check
+            if srct['_child001']['Router'] == dstt['_child001']['Router']:
+                return
+
+            # Intra VRF Route
             ngtree = get_routed_path(src, dst, popt)
 
         # Inter VRF
@@ -263,7 +268,7 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
                             if first:
                                 npopt = popt.copy()
                                 npopt['VRF'] = srct['_child001']['VRF']
-                                rtree = get_routed_path(src, secpath[key]['gateway'], popt)
+                                rtree = get_routed_path(src, secpath[key]['gateway'], npopt)
                                 if rtree:
                                     nglib.ngtree.add_child_ngtree(ngtree, rtree)
                                 first = False
@@ -273,8 +278,8 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
                 # Last entry gets a route check
                 if last:
                     npopt = popt.copy()
-                    npopt['VRF'] = srct['_child001']['VRF']
-                    rtree = get_routed_path(secpath[last]['gateway'], dst, popt)
+                    npopt['VRF'] = dstt['_child001']['VRF']
+                    rtree = get_routed_path(secpath[last]['gateway'], dst, npopt)
                     if rtree:
                         nglib.ngtree.add_child_ngtree(ngtree, rtree)
         

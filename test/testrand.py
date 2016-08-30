@@ -5,7 +5,7 @@ import subprocess
 ip1 = open('/tmp/ip1.txt', 'r')
 ip2 = open('/tmp/ip2.txt', 'r')
 
-verbose = True
+verbose = False
 
 for e1, e2 in zip(ip1, ip2):
     e1 = e1.strip()

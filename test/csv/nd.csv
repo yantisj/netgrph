@@ -27,10 +27,10 @@ xyz4sw1,Te5/2,xyz2mdf,Gi2/0/5
 xyz4sw1,Te5/1,xyz2mdf,Gi1/0/5
 xyz3sw1,Te5/2,xyz2mdf,Gi2/0/4
 xyz3sw1,Te5/1,xyz2mdf,Gi1/0/4
-xyz1sw2,Gi2/1/1,xyz2mdf,Gi1/0/2
-xyz1sw2,Gi1/1/1,xyz2mdf,Gi2/0/2
 xyz4sw2,Gi1/1/2,xyz2mdf,Gi2/0/6
 xyz4sw2,Gi1/1/1,xyz2mdf,Gi1/0/6
+xyz1sw2,Gi2/1/1,xyz2mdf,Gi1/0/2
+xyz1sw2,Gi1/1/1,xyz2mdf,Gi2/0/2
 xyz2mdf,Gi1/0/12,core1,Eth10/5
 xyz2mdf,Gi2/0/12,core2,Eth10/5
 xyz2mdf,Gi2/0/4,xyz3sw1,Te5/2

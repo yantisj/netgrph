@@ -42,6 +42,21 @@ import nglib.ngtree
 verbose = 0
 logger = logging.getLogger(__name__)
 
+def exp_ngtree(ngtree, rtype):
+    """Prints or Returns NGTree in Requested format"""
+
+    if rtype == "TREE":
+        nglib.ngtree.print_ngtree(ngtree, dtree=dict())
+    elif rtype == 'QTREE':
+        exp_qtree(ngtree)
+    elif rtype == "CSV":
+        exp_CSV(ngtree)
+    elif rtype == "JSON":
+        exp_JSON(ngtree)
+    elif rtype == "YAML":
+        exp_YAML(ngtree)
+    else:
+        return ngtree
 
 def exp_JSON(ngtree):
     """Prints an ngtree as JSON"""

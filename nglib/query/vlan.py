@@ -113,10 +113,7 @@ def get_vtree(vname, rtype="TREE"):
         print()
         ngtree = load_bridge_tree(vname, getSW=allSwitches)
         if rtype == "TREE":
-
-            print()
             nglib.ngtree.print_ngtree(ngtree, dict())
-            print()
         elif rtype == "JSON":
             nglib.ngtree.export.exp_JSON(ngtree)
         elif rtype == "YAML":
@@ -130,9 +127,9 @@ def load_bridge_tree(vname, root=True, getSW=False):
     """
     Create a Bridge Tree in NetGrph Object Format
     Recursively Build Trees for child vnames
+    Starts from the root device and builds out from there.
 
     Notes: getSW returns all switches instead of truncated (JSON/YAML)
-    Bugs: Currently does not work for odd topologies
     """
 
     sMax = 7
@@ -230,6 +227,7 @@ def load_bridge_tree(vname, root=True, getSW=False):
             for c in children:
                 cvname = c.vname
                 cngtree = load_bridge_tree(cvname, root=False, getSW=getSW)
+                cngtree = add_bridge_data(cngtree, vname, cvname)
                 if cngtree:
                     nglib.ngtree.add_child_ngtree(ngtree, cngtree)
 
@@ -290,7 +288,7 @@ def get_parent_ngtree(vname):
 
 def get_vlan_bridges(vid):
     """
-    Get all distinct vlan bridges returning the root node for each
+    Get all distinct vlan bridges returning the root node of the tree for each
     Used for VLAN ID Searches
     """
 
@@ -452,6 +450,19 @@ def get_vlans_on_group(group, vrange):
     else:
         print("No VLANs for for Management Group: " + group)
         nglib.query.display_mgmt_groups()
+
+def add_bridge_data(ngtree, parent, child):
+    """Add data to ngtree about a parent bridge"""
+
+    bridge = nglib.bolt_ses.run(
+        'MATCH (pv:VLAN {name:{pvname}})-[e:BRIDGE]->(cv:VLAN {name:{cvname}}) '
+        + 'RETURN e.pswitch AS pswitch, e.cswitch AS cswitch',
+        {"pvname":parent, "cvname":child})
+    
+    for rec in bridge:
+        ngtree["Bridge"] = rec["cswitch"] + ' <-> ' + rec["pswitch"]
+
+    return ngtree
 
 
 def get_l3_from_l2(vname):

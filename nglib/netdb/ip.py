@@ -64,9 +64,12 @@ def get_netdb_ip(ip, hours=720):
     if not len(pc):
         return None
 
-    # Multiple entries nest under one parent
+    # If multiple entries, primary returns under ngtree, the rest return
+    # as historical nested data
     if len(pc) > 1:
         multi_entry = True
+    
+    latest = None
 
     # Gather details from DB in ngtree structure
     for en in pc:
@@ -83,11 +86,22 @@ def get_netdb_ip(ip, hours=720):
         ngtree['UserID'] = en['userID']
         ngtree['VLAN'] = en['vlan']
 
+
+        if not latest:
+            latest = ngtree
+        elif latest['lastSeen'] < ngtree['lastSeen']:
+            latest = ngtree
+
         nglib.ngtree.add_child_ngtree(pngtree, ngtree)
 
         # Return as parent if single entry
         if not multi_entry:
             return ngtree
 
-    # Return nested IP results
-    return pngtree
+    # Return latest IP as root and nest others under a new tree
+    multitree = nglib.ngtree.get_ngtree("Historical IPs", tree_type="NetDB")
+    for en in pngtree:
+        if '_child' in en and pngtree[en] != latest:
+            nglib.ngtree.add_child_ngtree(multitree, pngtree[en])
+    nglib.ngtree.add_child_ngtree(latest, multitree)
+    return latest

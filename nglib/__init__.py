@@ -72,7 +72,7 @@ use_netdb = False
 
 
 def get_db_client(dbhost, dbuser, dbpass, bolt=False):
-    """Return a Neo4j DB session. bolt=True uses bolt driver"""
+    """Return a Neo4j DB session. bolt=True uses bolt driver"""    
 
     if verbose > 4:
         print("DB Creds", dbhost, dbuser, dbpass)
@@ -173,6 +173,9 @@ def init_nglib(configFile):
     config = configparser.ConfigParser()
     config.read(configFile)
 
+    # Initialize Logging
+    init_logging()
+
     # Tries to Loads NetDB Variables
     try:
         use_netdb = config['netdb']['host']
@@ -188,6 +191,8 @@ def init_nglib(configFile):
     dbhost = config['nglib']['dbhost']
 
     # Login to DB for parent Variables
+    if verbose > 1:
+        logger.info("Connecting to Neo4j: %s %s", dbhost, dbuser)
     bolt_ses = get_db_client(dbhost, dbuser, dbpass, bolt=True)
     py2neo_ses = get_db_client(dbhost, dbuser, dbpass)
 
@@ -195,8 +200,6 @@ def init_nglib(configFile):
     max_distance = int(config['topology']['max_distance'])
     dev_seeds = config['topology']['seeds']
 
-    # Initialize Logging
-    init_logging()
     logger.debug("Initialized Configuration Successfully")
 
 

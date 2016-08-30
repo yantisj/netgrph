@@ -100,6 +100,8 @@ parser.add_argument("-group", help="Get VLANs for a Management Group",
                     action="store_true")
 parser.add_argument("-vrange", metavar='1[-4096]', help="VLAN Range (default 1-1999)",
                     type=str)
+parser.add_argument("-vrf", metavar='name', help="Specific VRF",
+                    type=str)
 parser.add_argument("-vid", help="VLAN ID Search", action="store_true")
 parser.add_argument("-vtree", help="Get the VLAN Tree for a VNAME",
                     action="store_true")
@@ -148,6 +150,10 @@ if not args.vrange:
 if args.output:
     args.output = args.output.upper()
 
+# Default VRF
+if not args.vrf:
+    args.vrf = 'default'
+
 # Setup Globals for Debugging
 nglib.verbose = verbose
 
@@ -179,7 +185,7 @@ elif args.rpath:
     if args.output:
         rtype = args.output
     nglib.query.path.get_routed_path(args.rpath, args.search, \
-        {"onepath":check_path(False)}, rtype=rtype)
+        {"onepath":check_path(False), "VRF": args.vrf}, rtype=rtype)
 
 elif args.path:
     rtype = "TREE"

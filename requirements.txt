@@ -3,3 +3,6 @@ pyyaml
 pymysql
 py2neo==2.0.8
 neo4j-driver
+Flask
+Flask-HTTPAuth
+requests

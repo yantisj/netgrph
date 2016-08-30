@@ -1,4 +1,5 @@
 Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby
+10.3.108.10/31,2108,default,core1,10.3.108.10,Core,abc4mdf,True,False
 10.3.108.10/31,2323,guest,core1,10.3.108.10,Core,abc4mdf-core1 vrf guest,True,False
 10.3.108.10/31,2360,perim,core1,10.3.108.10,Core,core1-abc4mdf vrf perim,True,False
 10.3.108.10/31,2460,utility,core1,10.3.108.10,Core,core1-abc4mdf vrf utility,True,False
@@ -26,7 +27,11 @@ Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby
 10.3.108.20/31,3360,perim,abc4mdf,10.3.108.21,ABC,abc4mdf-core2 vrf perim,True,False
 10.3.108.20/31,3460,utility,abc4mdf,10.3.108.21,ABC,abc4mdf-core2 vrf utlility,True,False
 10.3.20.10/31,2020,default,core1,10.3.20.10,Core,XYZ2mdf EALERT,True,False
+10.3.20.10/31,2372,guest,core1,10.3.20.10,Core,xyz2mdf vrf guest,True,False
+10.3.20.10/31,2373,perim,core1,10.3.20.10,Core,xyz2mdf-core1-vrf-perim,True,False
 10.3.20.10/31,2474,utility,core1,10.3.20.10,Core,core1-xyz vrf utility,True,False
+10.3.20.20/31,3020,default,core2,10.3.20.20,Core,XYZ2MDF P2P,True,True
+10.3.20.20/31,3372,guest,core2,10.3.20.20,Core,XYZ2MDF-core2-vrf-perim,True,True
 10.3.20.20/31,3474,utility,core2,10.3.20.20,Core,core2-xyz vrf utility,True,True
 10.4.20.0/24,1,default,xyz2mdf,10.4.20.1,XYZ,None,False,False
 10.1.20.0/23,20,default,xyz2mdf,10.1.20.50,XYZ,None,False,False

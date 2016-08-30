@@ -364,6 +364,27 @@ def import_adjacent_neighbors(en, localD, remoteD, time):
 
         # New Bidirectional Relationship
         elif len(existingNei1) == 0 and len(existingNei2) == 0:
+
+            # Check for NEI_EQ Prioritization (lower is better)
+            if 'nei_priority' in nglib.config['topology']:
+                nei_eq = nglib.config['topology']['nei_priority'].split(',')
+                localP = 1000
+                remoteP = 1000
+                if localName in nei_eq:
+                    localP = nei_eq.index(localName)
+                if remoteName in nei_eq:
+                    remoteP = nei_eq.index(remoteName)
+
+                # Observe priorities
+                if int(remoteP) < int(localP):
+                    localName, remoteName = remoteName, localName
+                    localPort, remotePort = remotePort, localPort
+
+                # If equal priorities, prefer lower name
+                elif localP == remoteP and remoteName < localName:
+                    localName, remoteName = remoteName, localName
+                    localPort, remotePort = remotePort, localPort
+
             logger.info("New: Creating NEI_EQ Relationship %s --> %s",
                         localName, remoteName)
 

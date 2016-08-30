@@ -39,6 +39,7 @@ import os
 import argparse
 import configparser
 import logging
+import getpass
 from timeit import default_timer as timer
 import nglib
 import nglib.dev_update
@@ -47,6 +48,7 @@ import nglib.fw_update
 import nglib.cache_update
 import nglib.vlan_update
 import nglib.alerts
+import nglib.api.user
 
 
 # Default Config File Location
@@ -92,6 +94,10 @@ parser.add_argument("-ifile", metavar='file',
                     type=str)
 parser.add_argument("-unetdb", help="Update Data from NetDB (optional)",
                     action="store_true")
+parser.add_argument("--adduser", metavar="user", help="Add API User to DB", type=str)
+parser.add_argument("--newpass", metavar="user", help="Update Password", type=str)
+parser.add_argument("--testuser", metavar="user", help="Test Authentication", type=str)
+parser.add_argument("--deluser", metavar="user", help="Delete API User", type=str)
 parser.add_argument("--alerts", help="Process Alerts", action="store_true")
 parser.add_argument("--clearEdges", help="Clear Edges Older than -h hours",
                     action="store_true")
@@ -183,6 +189,54 @@ if args.full:
     stop = timer()
     runtime = "%.3f" % (stop - start)
     logger.info("Import Completed in " + str(runtime) + "sec")
+
+# Add user to DB
+elif args.adduser:
+
+    passwd = getpass.getpass('Password:')
+    verify = getpass.getpass('Verify Password:')
+
+    if passwd == verify:
+        phash = nglib.api.user.add_user(args.adduser, passwd)
+        print(nglib.api.user.authenticate_user(args.adduser, passwd))
+        if phash:
+            print("Successfully Added User to Database")
+        else:
+            print("Error: Could not Add User to Database")
+    else:
+        print("Error: Passwords do not match")
+    
+# Update User Password
+elif args.newpass:
+    passwd = getpass.getpass('New Password:')
+    verify = getpass.getpass('Verify Password:')
+
+    if passwd == verify:
+        phash = nglib.api.user.update_password(args.newpass, passwd)
+        if phash:
+            print("Successfully Updated Password")
+        else:
+            print("Error: Could not Update Password")
+    else:
+        print("Error: Passwords do not match")
+
+# Delete a User
+elif args.deluser:
+    ucheck = nglib.api.user.del_user(args.deluser)
+
+    if ucheck:
+        print("Successfully Deleted User")
+    else:
+        print("Username not found in DB")
+
+# Test Authentication
+elif args.testuser:
+    passwd = getpass.getpass('Password:')
+    phash = nglib.api.user.authenticate_user(args.testuser, passwd)
+    if phash:
+        print("Successfully Authenticated")
+    else:
+        print("Authentication Failed")
 
 # Reseed is a single operation
 elif args.reSeed:

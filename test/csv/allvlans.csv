@@ -1,7 +1,9 @@
 MGMT,VID,VName,Switch,STP
+Core,2108,core-abc4mdf,core1,0
 Core,2323,core1-abcmdf-guest-vrf,core1,0
 Core,2360,core1-abc4mdf-vrf-perim,core1,0
 Core,2460,core1-abc4mdf-utility,core1,0
+Core,3108,core2-abc4mdf,core2,0
 Core,3323,core2-abcmdf-guest-vrf,core2,0
 Core,3360,core2-abc4mdf-vrf-perim,core2,0
 Core,3460,core1-abc4mdf-utility,core2,0
@@ -19,7 +21,7 @@ ABC,120,Abc2-TestNet,abc437sw2,0
 ABC,120,Abc2-TestNet,abc4sw1,0
 ABC,1246,vendor-span,abc2e1sw1,0
 ABC,1246,vendor-span,abc4mdf,0
-ABC,2108,Abc4mdf-core1,abc4mdf,0
+ABC,2108,core1-abc4mdf-default,abc4mdf,0
 ABC,2323,abcmdf-core1-guest-vrf,abc4mdf,0
 ABC,2360,abc4mdf-core1-vrf-perim,abc4mdf,0
 ABC,2460,core1-abc4mdf-utility,abc4mdf,0
@@ -35,7 +37,7 @@ ABC,280,Printers,abc437sw1,0
 ABC,280,Printers,abc437sw2,0
 ABC,280,Printers,abc4mdf,24576
 ABC,280,Printers,abc4sw1,0
-ABC,3108,Abc4mdf-core2,abc4mdf,0
+ABC,3108,core2-abc4mdf-default,abc4mdf,0
 ABC,3323,abcmdf-core2-guest-vrf,abc4mdf,0
 ABC,3360,abc4mdf-core2-vrf-perim,abc4mdf,0
 ABC,34,PerimeterNet,abc2e1sw1,0
