@@ -34,7 +34,6 @@ NetGrph API Server
 """
 import os
 import re
-import json
 import logging
 from flask import Flask, jsonify, request, g, make_response
 from flask_httpauth import HTTPBasicAuth
@@ -48,7 +47,7 @@ app = Flask(__name__)
 logger = logging.getLogger(__name__)
 auth = HTTPBasicAuth()
 
-verbose = 1
+verbose = 2
 
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
@@ -94,10 +93,11 @@ def app_test():
     return jsonify(nglib.query.net.get_net('128.23.1.1', \
         rtype="NGTREE", verbose=False))
 
-@app.route('/netgrph/api/v1.0/path', methods=['GET'])
+@app.route('/api/v1.0/path', methods=['GET'])
 @auth.login_required
 def get_full_path():
     # Initialize Library
+    nglib.init_nglib(config_file)
     return jsonify(nglib.query.path.get_full_path(request.args['src'], \
         request.args['dst'], {}))
 
@@ -111,6 +111,7 @@ def close_db(error):
 def verify_password(username, password):
 
     # Initialize Library On Authentication
+
     nglib.verbose = verbose
     nglib.init_nglib(config_file)
 
@@ -118,3 +119,9 @@ def verify_password(username, password):
         return False
     g.user = username
     return True
+
+
+if __name__ == "__main__":
+    context = ('/Users/yantisj/netgrph/newhal.crt', '/Users/yantisj/netgrph/newhal.key')
+
+    app.run(host='0.0.0.0', port=5000, ssl_context=context, threaded=True, debug=True)

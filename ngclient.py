@@ -39,9 +39,9 @@ import nglib.ngtree.export
 
 user = 'yantisj'
 passwd = 'testapi'
-url = 'http://localhost:5000/'
+url = 'https://localhost:5000/'
 
-r = requests.get(url + 'test', auth=(user, passwd))
+r = requests.get(url + '/netgrph/api2/v1.0/path?src=128.23.1.1&dst=128.23.200.186', auth=(user, passwd), verify=False)
 
 if r.status_code == 200:
     response = r.json()
