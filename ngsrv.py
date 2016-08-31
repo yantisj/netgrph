@@ -47,7 +47,7 @@ app = Flask(__name__)
 logger = logging.getLogger(__name__)
 auth = HTTPBasicAuth()
 
-verbose = 2
+verbose = 1
 
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
@@ -59,6 +59,27 @@ if re.search(r'\/dev$', dirname):
     config_file = 'netgrphdev.ini'
 elif re.search(r'\/test$', dirname):
     config_file = "netgrphdev.ini"
+
+
+@app.route('/test')
+@auth.login_required
+def app_test():
+
+    return jsonify(nglib.query.net.get_net('128.23.1.1', \
+        rtype="NGTREE", verbose=False))
+
+@app.route('/netgrph/api/v1.0/path', methods=['GET'])
+@auth.login_required
+def get_full_path():
+    # Initialize Library
+    nglib.init_nglib(config_file)
+    onepath = False
+    if 'onepath' in request.args:
+        if request.args['onepath'] == "True":
+            onepath = True
+    return jsonify(nglib.query.path.get_full_path(request.args['src'], \
+        request.args['dst'], {"onepath": onepath}))
+
 
 @app.errorhandler(404)
 def not_found(error=None):
@@ -85,22 +106,6 @@ def auth_failed(error=None):
 @app.errorhandler(400)
 def bad_request(error):
     return make_response(jsonify({'error': 'Bad request'}), 400)
-
-@app.route('/test')
-@auth.login_required
-def app_test():
-
-    return jsonify(nglib.query.net.get_net('128.23.1.1', \
-        rtype="NGTREE", verbose=False))
-
-@app.route('/api/v1.0/path', methods=['GET'])
-@auth.login_required
-def get_full_path():
-    # Initialize Library
-    nglib.init_nglib(config_file)
-    return jsonify(nglib.query.path.get_full_path(request.args['src'], \
-        request.args['dst'], {}))
-
 
 @app.teardown_appcontext
 def close_db(error):

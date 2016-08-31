@@ -37,9 +37,19 @@
 import os
 import re
 import argparse
-import nglib
-import nglib.query
+import requests
+import configparser
+import nglib.ngtree
 
+try:
+    import nglib
+    import nglib.query
+except ImportError:
+    pass
+
+# API Variables
+use_api = False
+api = dict()
 
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
@@ -122,6 +132,16 @@ def check_path(singlepath):
         singlepath = True
     return singlepath
 
+def api_call(apicall, lrtype):
+    """ Uses the API for queries instead of the nglib library """
+    r = requests.get(api['url'] + apicall, \
+        auth=(api['user'], api['pass']), verify=api['verify'])
+
+    if r.status_code == 200:
+        response = r.json()
+        nglib.ngtree.export.exp_ngtree(response, lrtype)
+    else:
+        print("API Request Error:", r.status_code, r.text)
 
 # Alternate Config File
 if args.conf:
@@ -154,11 +174,28 @@ if args.output:
 if not args.vrf:
     args.vrf = 'default'
 
-# Setup Globals for Debugging
-nglib.verbose = verbose
+# API Client Check
+config = configparser.ConfigParser()
+config.read(config_file)
+if 'apiXXXX' in config:
+    use_api = True
+    try:
+        api['url'] = config['api']['url']
+        api['user'] = config['api']['user']
+        api['pass'] = config['api']['pass']
+        api['verify'] = config['api']['verify']
+    except KeyError:
+        raise Exception("Please configure the API url, user and pass")
+    if api['verify'] == 'False':
+        api['verify'] = False
+    else:
+        api['verify'] = True
+else:
+    # Setup Globals for Debugging
+    nglib.verbose = verbose
 
-# Initialize Library
-nglib.init_nglib(config_file)
+    # Initialize Library
+    nglib.init_nglib(config_file)
 
 ## Pathfinding
 if args.fpath:
@@ -167,10 +204,15 @@ if args.fpath:
 # Quick Path
 elif args.qpath:
     rtype = "QTREE"
-    if args.output:
-        rtype = args.output
-    nglib.query.path.get_full_path(args.search, args.qpath, \
-        {"onepath": check_path(False)}, rtype=rtype)
+    if use_api:
+        call = 'path?src=' + args.search + '&dst=' +  args.qpath \
+            + '&onepath=' + str(check_path(False))
+        api_call(call, rtype)
+    else:
+        if args.output:
+            rtype = args.output
+        nglib.query.path.get_full_path(args.search, args.qpath, \
+            {"onepath": check_path(False)}, rtype=rtype)
 
 elif args.spath:
     rtype = "TREE"
@@ -189,10 +231,15 @@ elif args.rpath:
 
 elif args.path:
     rtype = "TREE"
-    if args.output:
-        rtype = args.output
-    nglib.query.path.get_full_path(args.path, args.search, \
-        {"onepath": check_path(False)}, rtype=rtype)
+    if use_api:
+        call = 'path?src=' + args.path + '&dst=' +  args.search \
+        + '&onepath=' + str(check_path(True))
+        api_call(call, rtype)
+    else:
+        if args.output:
+            rtype = args.output
+        nglib.query.path.get_full_path(args.path, args.search, \
+            {"onepath": check_path(True)}, rtype=rtype)
 
 ## Individual Queries
 elif args.dev:
@@ -209,7 +256,7 @@ elif args.ip:
     nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
 
 elif args.net:
-    rtype = "CSV"
+    rtype = "TREE"
     if args.output:
         rtype = args.output
     nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
@@ -244,15 +291,6 @@ elif args.vid:
 # Universal Search
 elif args.search:
 
-    # Try VLAN ID First
-    # try:
-    #     #vid = int(args.search)
-    #
-    #     if vid >= 0 and vid <= 4096:
-    #         rtype = "TREE"
-    #         if args.output: rtype = args.output
-    #         nglib.query.searchVLANID(args.search,rtype=rtype)
-    # except:
     vid = re.search(r'^(\d+)$', args.search)
     vname = re.search(r'^(\w+\-\d+)$', args.search)
     ip = re.search(r'^(\d+\.\d+\.\d+\.\d+)$', args.search)

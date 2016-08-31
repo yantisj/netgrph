@@ -45,8 +45,8 @@ def get_netdb_ip(ip, hours=720):
 
     netdb_ses = nglib.netdb.netdb_ses
 
-    if not netdb_ses:
-        netdb_ses = nglib.netdb.connect_netdb()
+    
+    netdb_ses = nglib.netdb.connect_netdb()
 
     lastseen = nglib.netdb.get_lastseen(hours)
 
