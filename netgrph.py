@@ -37,8 +37,8 @@
 import os
 import re
 import argparse
-import requests
 import configparser
+import requests
 import nglib.ngtree
 
 try:

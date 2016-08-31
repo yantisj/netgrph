@@ -43,9 +43,6 @@ logger = logging.getLogger(__name__)
 def get_netdb_ip(ip, hours=720):
     """Get All Details for an IP"""
 
-    netdb_ses = nglib.netdb.netdb_ses
-
-    
     netdb_ses = nglib.netdb.connect_netdb()
 
     lastseen = nglib.netdb.get_lastseen(hours)
@@ -68,7 +65,7 @@ def get_netdb_ip(ip, hours=720):
     # as historical nested data
     if len(pc) > 1:
         multi_entry = True
-    
+
     latest = None
 
     # Gather details from DB in ngtree structure
