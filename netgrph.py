@@ -41,6 +41,7 @@ import configparser
 import requests
 import nglib.ngtree
 
+# API client can fail these imports
 try:
     import nglib
     import nglib.query
@@ -177,8 +178,9 @@ if not args.vrf:
 # API Client Check
 config = configparser.ConfigParser()
 config.read(config_file)
-if 'apiXXXX' in config:
+if 'apiX' in config:
     use_api = True
+    print("Using API")
     try:
         api['url'] = config['api']['url']
         api['user'] = config['api']['user']
@@ -231,13 +233,13 @@ elif args.rpath:
 
 elif args.path:
     rtype = "TREE"
+    if args.output:
+        rtype = args.output
     if use_api:
         call = 'path?src=' + args.path + '&dst=' +  args.search \
         + '&onepath=' + str(check_path(True))
         api_call(call, rtype)
     else:
-        if args.output:
-            rtype = args.output
         nglib.query.path.get_full_path(args.path, args.search, \
             {"onepath": check_path(True)}, rtype=rtype)
 
@@ -252,8 +254,11 @@ elif args.ip:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-
-    nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
+    if use_api:
+        call = 'net?ip=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
 
 elif args.net:
     rtype = "TREE"
@@ -265,7 +270,11 @@ elif args.nlist:
     rtype = "CSV"
     if args.output:
         rtype = args.output
-    nglib.query.net.get_networks_on_filter(args.search, rtype=rtype)
+    if use_api:
+        call = 'nlist?group=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.net.get_networks_on_filter(args.search, rtype=rtype)
 
 elif args.nfilter:
     rtype = "CSV"
@@ -312,7 +321,7 @@ elif args.search:
             rtype = args.output
         nglib.query.vlan.get_vtree(args.search, rtype=rtype)
     elif net:
-        rtype = "CSV"
+        rtype = "TREE"
         if args.output:
             rtype = args.output
         nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)

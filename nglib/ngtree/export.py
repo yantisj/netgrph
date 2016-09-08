@@ -37,6 +37,8 @@ Helper functions to export ngtrees in the right format
 import logging
 import json
 import yaml
+import csv
+import sys
 import nglib.ngtree
 
 verbose = 0
@@ -86,17 +88,6 @@ def exp_qtree(ngtree):
 
     nglib.ngtree.print_ngtree(stree, dtree=dict())
 
-def exp_CSV(ngtree):
-    """Broken: Attempts to Flatten JSON and dump as CSV"""
-
-    ngjson = json.dumps(ngtree, sort_keys=True)
-    #ngstr = json.dumps(ngjson)
-
-    fdict = tocsv(ngjson)
-
-    for key in fdict.keys():
-        print(key)
-
 
 def cleanNGTree(ngtree):
     """Removes counts from output"""
@@ -105,17 +96,30 @@ def cleanNGTree(ngtree):
     cleanND.pop('_ccount', None)
     return cleanND
 
+def exp_CSV(ngtree):
+    """Attempts to Flatten JSON and dump as CSV"""
+
+    ngjson = json.dumps(ngtree, sort_keys=True)
+
+    fdict = tocsv(ngjson)
+
+    for key in fdict.keys():
+        print(key)
 
 def _tocsv(obj, base=''):
-    """Borrowed, still considering value"""
+    """Borrowed"""
 
     flat_dict = {}
     for k in obj:
         value = obj[k]
+        if value is None:
+            value = "None"
         if isinstance(value, dict):
             flat_dict.update(_tocsv(value, base + k + '.'))
         elif isinstance(value, (int, str, float, bool)):
             flat_dict[base + k] = value
+        #elif value is None:
+        #    print("None Value CSV", k, obj[k])
         else:
             raise ValueError("Can't serialize value of type "+ type(value).__name__)
     return flat_dict

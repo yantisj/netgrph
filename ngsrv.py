@@ -30,13 +30,15 @@
 #
 #
 """
-NetGrph API Server
+NetGrph API Server (work in progress)
 """
 import os
 import re
 import logging
 from flask import Flask, jsonify, request, g, make_response
 from flask_httpauth import HTTPBasicAuth
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 import nglib
@@ -46,6 +48,12 @@ import nglib.api.user
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
 auth = HTTPBasicAuth()
+
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    global_limits=["1000 per day", "100 per hour", "5 per minute"]
+)
 
 verbose = 1
 
@@ -71,8 +79,6 @@ def app_test():
 @app.route('/netgrph/api/v1.0/path', methods=['GET'])
 @auth.login_required
 def get_full_path():
-    # Initialize Library
-    nglib.init_nglib(config_file)
     onepath = False
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
@@ -80,6 +86,18 @@ def get_full_path():
     return jsonify(nglib.query.path.get_full_path(request.args['src'], \
         request.args['dst'], {"onepath": onepath}))
 
+
+@app.route('/netgrph/api/v1.0/net', methods=['GET'])
+@auth.login_required
+def get_net():
+
+    return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
+
+@app.route('/netgrph/api/v1.0/nlist', methods=['GET'])
+@auth.login_required
+def get_nlist():
+
+    return jsonify(nglib.query.net.get_networks_on_filter(request.args['group'], rtype="NGTREE"))
 
 @app.errorhandler(404)
 def not_found(error=None):
@@ -91,6 +109,13 @@ def not_found(error=None):
     resp.status_code = 404
 
     return resp
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return make_response(
+            jsonify(error="ratelimit exceeded %s" % e.description)
+            , 429
+    )
 
 @auth.error_handler
 def auth_failed(error=None):
