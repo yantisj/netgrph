@@ -124,7 +124,6 @@ def get_device_info(device):
         else:
             dentry['Model'] = "Unknown"
             dentry['Version'] = "Unknown"
-            print(dentry)
         device_list.append(dentry)
 
 def parse_model(dentry):
