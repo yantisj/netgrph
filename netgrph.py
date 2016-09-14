@@ -56,6 +56,9 @@ api = dict()
 config_file = '/etc/netgrph.ini'
 alt_config = './docs/netgrph.ini'
 
+# Default Depth (must be str)
+depth = "20"
+
 # Test/Dev Config
 dirname = os.path.dirname(os.path.realpath(__file__))
 if re.search(r'\/dev$', dirname):
@@ -107,6 +110,9 @@ parser.add_argument("-allpaths",
 parser.add_argument("-singlepath",
                     help="Return a single path",
                     action="store_true")
+parser.add_argument("-depth", metavar="20",
+                    help="Path Depth (default 20)",
+                    type=int)
 parser.add_argument("-group", help="Get VLANs for a Management Group",
                     action="store_true")
 parser.add_argument("-vrange", metavar='1[-4096]', help="VLAN Range (default 1-1999)",
@@ -175,6 +181,10 @@ if args.output:
 if not args.vrf:
     args.vrf = 'default'
 
+# Depth
+if args.depth:
+    depth = str(args.depth)
+
 # API Client Check
 config = configparser.ConfigParser()
 config.read(config_file)
@@ -201,20 +211,20 @@ else:
 
 ## Pathfinding
 if args.fpath:
-    nglib.query.path.get_fw_path(args.fpath, args.search, dict())
+    nglib.query.path.get_fw_path(args.fpath, args.search, {"depth": depth})
 
 # Quick Path
 elif args.qpath:
     rtype = "QTREE"
     if use_api:
         call = 'path?src=' + args.search + '&dst=' +  args.qpath \
-            + '&onepath=' + str(check_path(False))
+            + '&onepath=' + str(check_path(False) + '&depth=' + depth)
         api_call(call, rtype)
     else:
         if args.output:
             rtype = args.output
         nglib.query.path.get_full_path(args.search, args.qpath, \
-            {"onepath": check_path(False)}, rtype=rtype)
+            {"onepath": check_path(False), "depth": depth}, rtype=rtype)
 
 elif args.spath:
     rtype = "TREE"
@@ -222,14 +232,14 @@ elif args.spath:
     if args.output:
         rtype = args.output
     nglib.query.path.get_switched_path(args.spath, args.search, \
-        {"onepath": check_path(False)}, rtype=rtype)
+        {"onepath": check_path(False), "depth": depth}, rtype=rtype)
 
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
     nglib.query.path.get_routed_path(args.rpath, args.search, \
-        {"onepath":check_path(False), "VRF": args.vrf}, rtype=rtype)
+        {"onepath":check_path(False), "VRF": args.vrf, "depth": depth}, rtype=rtype)
 
 elif args.path:
     rtype = "TREE"
@@ -237,11 +247,11 @@ elif args.path:
         rtype = args.output
     if use_api:
         call = 'path?src=' + args.path + '&dst=' +  args.search \
-        + '&onepath=' + str(check_path(True))
+        + '&onepath=' + str(check_path(True) + '&depth=' + depth)
         api_call(call, rtype)
     else:
         nglib.query.path.get_full_path(args.path, args.search, \
-            {"onepath": check_path(True)}, rtype=rtype)
+            {"onepath": check_path(True), "depth": depth}, rtype=rtype)
 
 ## Individual Queries
 elif args.dev:

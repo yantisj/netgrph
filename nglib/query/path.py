@@ -60,6 +60,8 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             popt['verbose'] = False
         if nglib.verbose:
             popt['verbose'] = True
+        if 'depth' not in popt:
+            popt['depth'] = '20'
 
         logger.info("Query: Finding Full Path (%s --> %s) for %s",
                     src, dst, nglib.user)
@@ -309,6 +311,8 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
             popt['VRF'] = "default"
         if 'verbose' not in popt:
             popt['verbose'] = True
+        if 'depth' not in popt:
+            popt['depth'] = '20'
 
         if popt['verbose']:
             logger.info("Query: Finding Routed Paths (%s --> %s) for %s",
@@ -478,6 +482,8 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
             popt['onepath'] = False
         if 'verbose' not in popt:
             popt['verbose'] = True
+        if 'depth' not in popt:
+            popt['depth'] = '20'
 
         if popt['verbose']:
             logger.info("Query: Finding Switched Paths (%s --> %s) for %s",
@@ -490,7 +496,7 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
 
         swp = nglib.py2neo_ses.cypher.execute(
             'MATCH (ss:Switch), (ds:Switch), '
-            + 'sp = allShortestPaths((ss)-[:NEI|NEI_EQ*0..9]-(ds)) '
+            + 'sp = allShortestPaths((ss)-[:NEI|NEI_EQ*0..' + popt['depth'] + ']-(ds)) '
             + 'WHERE ss.name =~ {switch1} AND ds.name =~ {switch2}'
             + 'UNWIND nodes(sp) as s1 UNWIND nodes(sp) as s2 '
             + 'MATCH (s1)<-[nei:NEI|NEI_EQ]-(s2), plen = shortestPath((ss)-[:NEI*0..9]-(s1)) '
@@ -499,7 +505,7 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
             + 'nei.cPc as cPc, nei.pPc AS pPc, nei.vlans AS vlans, nei.rvlans as rvlans, '
             + 'nei._rvlans AS p_rvlans, '
             + 'LENGTH(plen) as distance ORDER BY distance, s1.name, s2.name',
-            {"switch1": switch1, "switch2": switch2})
+            {"switch1": switch1, "switch2": switch2, "depth": str(popt['depth'])})
 
         # Process records
         last = 0
@@ -636,6 +642,8 @@ def get_fw_path(src, dst, popt, rtype="TEXT"):
             popt['onepath'] = False
         if 'verbose' not in popt:
             popt['verbose'] = True
+        if 'depth' not in popt:
+            popt['depth'] = '20'
 
         if popt['verbose']:
             logger.info("Query: Security Path %s -> %s for %s", src, dst, nglib.user)
@@ -654,7 +662,8 @@ def get_fw_path(src, dst, popt, rtype="TEXT"):
         path = nglib.py2neo_ses.cypher.execute(
             'MATCH (s:Network { cidr:{src} })-[e1:VRF_IN]->(sv:VRF), '
             + '(d:Network {cidr:{dst}})-[e2:VRF_IN]->(dv:VRF), '
-            + 'p = shortestPath((sv)-[:VRF_IN|ROUTED_FW|:SWITCHED_FW*0..20]-(dv)) RETURN s,d,p',
+            + 'p = shortestPath((sv)-[:VRF_IN|ROUTED_FW|:SWITCHED_FW*0..'
+            + popt['depth'] + ']-(dv)) RETURN s,d,p',
             src=srcnet, dst=dstnet)
 
         fwsearch = dict()
