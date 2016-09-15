@@ -54,7 +54,7 @@ parser.add_argument("-vr", metavar='vlans',
 parser.add_argument("-ivr", metavar='vlans',
                     help="Vlan range to generate Routed VLANs on (eg. 1-1005)", type=str)
 parser.add_argument("-df", metavar='devicelist', help="Devicelist CSV file from NetGrph", type=str)
-parser.add_argument("-mf", metavar='model file', help='Device Model Info', type=str)
+parser.add_argument("-mf", metavar='model_file', help='Device Model Info', type=str)
 parser.add_argument("-vfile", metavar='outfile', help="VLAN CSV Output File", type=str)
 parser.add_argument("-ifile", metavar='outfile', help="Interface CSV Output File", type=str)
 parser.add_argument("-dfile", metavar='outfile', help="Device Output File (SNMP etc)", type=str)
