@@ -501,6 +501,7 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
             + 'UNWIND nodes(sp) as s1 UNWIND nodes(sp) as s2 '
             + 'MATCH (s1)<-[nei:NEI|NEI_EQ]-(s2), plen = shortestPath((ss)-[:NEI*0..9]-(s1)) '
             + 'RETURN DISTINCT s1.name AS csw, s2.name AS psw, '
+            + 's1.model AS cmodel, s1.version AS cver, s2.model AS pmodel, s2.version AS pver, '
             + 'nei.pPort AS pport, nei.cPort as cport, nei.native AS native, '
             + 'nei.cPc as cPc, nei.pPc AS pPc, nei.vlans AS vlans, nei.rvlans as rvlans, '
             + 'nei._rvlans AS p_rvlans, '
@@ -534,8 +535,12 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
                 swptree['_reverse'] = 0
 
             swptree['Child Switch'] = rec.csw
+            swptree['Child Model'] = rec.cmodel
+            swptree['_cversion'] = rec.cver
             swptree['Child Port'] = rec.cport
             swptree['Parent Switch'] = rec.psw
+            swptree['Parent Model'] = rec.pmodel
+            swptree['_pversion'] = rec.pver
             swptree['Parent Port'] = rec.pport
 
             if rec.cPc:
