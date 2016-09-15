@@ -54,6 +54,7 @@ parser.add_argument("-vr", metavar='vlans',
 parser.add_argument("-ivr", metavar='vlans',
                     help="Vlan range to generate Routed VLANs on (eg. 1-1005)", type=str)
 parser.add_argument("-df", metavar='devicelist', help="Devicelist CSV file from NetGrph", type=str)
+parser.add_argument("-mf", metavar='model_file', help='Device Model Info', type=str)
 parser.add_argument("-vfile", metavar='outfile', help="VLAN CSV Output File", type=str)
 parser.add_argument("-ifile", metavar='outfile', help="Interface CSV Output File", type=str)
 parser.add_argument("-dfile", metavar='outfile', help="Device Output File (SNMP etc)", type=str)
@@ -117,8 +118,28 @@ def get_device_info(device):
         return
     else:
         dentry = parse_snmp(parse, device['Device'])
+
+        if args.mf:
+            dentry = parse_model(dentry)
+        else:
+            dentry['Model'] = "Unknown"
+            dentry['Version'] = "Unknown"
         device_list.append(dentry)
 
+def parse_model(dentry):
+    """Get the model from a custom file"""
+
+    mf = open(args.mf, 'r')
+
+    for line in mf:
+        if re.search(dentry['Device'], line):
+            e = line.split(',')
+            dentry['Model'] = e[1]
+            dentry['Version'] = e[3]
+    if 'Model' not in dentry:
+        dentry['Model'] = "Unknown"
+        dentry['Version'] = "Unknown"
+    return dentry
 
 def parse_snmp(parse, device):
     """Get the SNMP Info from a device"""
@@ -630,10 +651,11 @@ def save_int_file(out_file):
 
 def save_device_file(out_file):
     save = open(out_file, "w")
-    print("Device,Location", file=save)
+    print("Device,Location,Model,Version", file=save)
 
     for d in device_list:
-        entry = d['Device'] + ',' + d['Location']
+        entry = d['Device'] + ',' + d['Location'] + ',' \
+                + d['Model'] + ',' + d['Version']
         print(entry, sep='\n', file=save)
 
 ## Process Arguments to generate output

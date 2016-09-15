@@ -37,13 +37,27 @@
 import os
 import re
 import argparse
-import nglib
-import nglib.query
+import configparser
+import requests
+import nglib.ngtree
 
+# API client can fail these imports
+try:
+    import nglib
+    import nglib.query
+except ImportError:
+    pass
+
+# API Variables
+use_api = False
+api = dict()
 
 # Default Config File Location
 config_file = '/etc/netgrph.ini'
 alt_config = './docs/netgrph.ini'
+
+# Default Depth (must be str)
+depth = "20"
 
 # Test/Dev Config
 dirname = os.path.dirname(os.path.realpath(__file__))
@@ -96,6 +110,9 @@ parser.add_argument("-allpaths",
 parser.add_argument("-singlepath",
                     help="Return a single path",
                     action="store_true")
+parser.add_argument("-depth", metavar="20",
+                    help="Path Depth (default 20)",
+                    type=int)
 parser.add_argument("-group", help="Get VLANs for a Management Group",
                     action="store_true")
 parser.add_argument("-vrange", metavar='1[-4096]', help="VLAN Range (default 1-1999)",
@@ -122,6 +139,16 @@ def check_path(singlepath):
         singlepath = True
     return singlepath
 
+def api_call(apicall, lrtype):
+    """ Uses the API for queries instead of the nglib library """
+    r = requests.get(api['url'] + apicall, \
+        auth=(api['user'], api['pass']), verify=api['verify'])
+
+    if r.status_code == 200:
+        response = r.json()
+        nglib.ngtree.export.exp_ngtree(response, lrtype)
+    else:
+        print("API Request Error:", r.status_code, r.text)
 
 # Alternate Config File
 if args.conf:
@@ -154,23 +181,50 @@ if args.output:
 if not args.vrf:
     args.vrf = 'default'
 
-# Setup Globals for Debugging
-nglib.verbose = verbose
+# Depth
+if args.depth:
+    depth = str(args.depth)
 
-# Initialize Library
-nglib.init_nglib(config_file)
+# API Client Check
+config = configparser.ConfigParser()
+config.read(config_file)
+if 'apiX' in config:
+    use_api = True
+    print("Using API")
+    try:
+        api['url'] = config['api']['url']
+        api['user'] = config['api']['user']
+        api['pass'] = config['api']['pass']
+        api['verify'] = config['api']['verify']
+    except KeyError:
+        raise Exception("Please configure the API url, user and pass")
+    if api['verify'] == 'False':
+        api['verify'] = False
+    else:
+        api['verify'] = True
+else:
+    # Setup Globals for Debugging
+    nglib.verbose = verbose
+
+    # Initialize Library
+    nglib.init_nglib(config_file)
 
 ## Pathfinding
 if args.fpath:
-    nglib.query.path.get_fw_path(args.fpath, args.search, dict())
+    nglib.query.path.get_fw_path(args.fpath, args.search, {"depth": depth})
 
 # Quick Path
 elif args.qpath:
     rtype = "QTREE"
-    if args.output:
-        rtype = args.output
-    nglib.query.path.get_full_path(args.search, args.qpath, \
-        {"onepath": check_path(False)}, rtype=rtype)
+    if use_api:
+        call = 'path?src=' + args.search + '&dst=' +  args.qpath \
+            + '&onepath=' + str(check_path(False) + '&depth=' + depth)
+        api_call(call, rtype)
+    else:
+        if args.output:
+            rtype = args.output
+        nglib.query.path.get_full_path(args.search, args.qpath, \
+            {"onepath": check_path(False), "depth": depth}, rtype=rtype)
 
 elif args.spath:
     rtype = "TREE"
@@ -178,21 +232,26 @@ elif args.spath:
     if args.output:
         rtype = args.output
     nglib.query.path.get_switched_path(args.spath, args.search, \
-        {"onepath": check_path(False)}, rtype=rtype)
+        {"onepath": check_path(False), "depth": depth}, rtype=rtype)
 
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
     nglib.query.path.get_routed_path(args.rpath, args.search, \
-        {"onepath":check_path(False), "VRF": args.vrf}, rtype=rtype)
+        {"onepath":check_path(False), "VRF": args.vrf, "depth": depth}, rtype=rtype)
 
 elif args.path:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_full_path(args.path, args.search, \
-        {"onepath": check_path(False)}, rtype=rtype)
+    if use_api:
+        call = 'path?src=' + args.path + '&dst=' +  args.search \
+        + '&onepath=' + str(check_path(True) + '&depth=' + depth)
+        api_call(call, rtype)
+    else:
+        nglib.query.path.get_full_path(args.path, args.search, \
+            {"onepath": check_path(True), "depth": depth}, rtype=rtype)
 
 ## Individual Queries
 elif args.dev:
@@ -205,11 +264,14 @@ elif args.ip:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-
-    nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
+    if use_api:
+        call = 'net?ip=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
 
 elif args.net:
-    rtype = "CSV"
+    rtype = "TREE"
     if args.output:
         rtype = args.output
     nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
@@ -218,7 +280,11 @@ elif args.nlist:
     rtype = "CSV"
     if args.output:
         rtype = args.output
-    nglib.query.net.get_networks_on_filter(args.search, rtype=rtype)
+    if use_api:
+        call = 'nlist?group=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.net.get_networks_on_filter(args.search, rtype=rtype)
 
 elif args.nfilter:
     rtype = "CSV"
@@ -244,15 +310,6 @@ elif args.vid:
 # Universal Search
 elif args.search:
 
-    # Try VLAN ID First
-    # try:
-    #     #vid = int(args.search)
-    #
-    #     if vid >= 0 and vid <= 4096:
-    #         rtype = "TREE"
-    #         if args.output: rtype = args.output
-    #         nglib.query.searchVLANID(args.search,rtype=rtype)
-    # except:
     vid = re.search(r'^(\d+)$', args.search)
     vname = re.search(r'^(\w+\-\d+)$', args.search)
     ip = re.search(r'^(\d+\.\d+\.\d+\.\d+)$', args.search)
@@ -274,7 +331,7 @@ elif args.search:
             rtype = args.output
         nglib.query.vlan.get_vtree(args.search, rtype=rtype)
     elif net:
-        rtype = "CSV"
+        rtype = "TREE"
         if args.output:
             rtype = args.output
         nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)

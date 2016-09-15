@@ -45,7 +45,7 @@ ngtrees are nested dicts that convert to JSON/YAML
 import re
 import datetime
 import logging
-import nglib
+#import nglib
 from . import export
 
 logger = logging.getLogger(__name__)

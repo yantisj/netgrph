@@ -39,8 +39,9 @@ import re
 import os
 import sys
 import logging
-import nglib
 import pymysql
+import nglib
+
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +86,7 @@ def get_lastseen(hours=168):
 def get_mac_and_port_counts(switch, vlan):
     """Get the number of mac addresses and ports on a VLAN for a switch"""
 
-    if not netdb_ses:
-        connect_netdb()
+    connect_netdb()
 
     lastseen = get_lastseen()
 

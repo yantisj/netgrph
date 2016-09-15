@@ -30,14 +30,15 @@
 #
 #
 """
-NetGrph API Server
+NetGrph API Server (work in progress)
 """
 import os
 import re
-import json
 import logging
 from flask import Flask, jsonify, request, g, make_response
 from flask_httpauth import HTTPBasicAuth
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 import nglib
@@ -47,6 +48,12 @@ import nglib.api.user
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
 auth = HTTPBasicAuth()
+
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    global_limits=["1000 per day", "100 per hour", "5 per minute"]
+)
 
 verbose = 1
 
@@ -61,6 +68,37 @@ if re.search(r'\/dev$', dirname):
 elif re.search(r'\/test$', dirname):
     config_file = "netgrphdev.ini"
 
+
+@app.route('/test')
+@auth.login_required
+def app_test():
+
+    return jsonify(nglib.query.net.get_net('128.23.1.1', \
+        rtype="NGTREE", verbose=False))
+
+@app.route('/netgrph/api/v1.0/path', methods=['GET'])
+@auth.login_required
+def get_full_path():
+    onepath = False
+    if 'onepath' in request.args:
+        if request.args['onepath'] == "True":
+            onepath = True
+    return jsonify(nglib.query.path.get_full_path(request.args['src'], \
+        request.args['dst'], {"onepath": onepath}))
+
+
+@app.route('/netgrph/api/v1.0/net', methods=['GET'])
+@auth.login_required
+def get_net():
+
+    return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
+
+@app.route('/netgrph/api/v1.0/nlist', methods=['GET'])
+@auth.login_required
+def get_nlist():
+
+    return jsonify(nglib.query.net.get_networks_on_filter(request.args['group'], rtype="NGTREE"))
+
 @app.errorhandler(404)
 def not_found(error=None):
     message = {
@@ -71,6 +109,13 @@ def not_found(error=None):
     resp.status_code = 404
 
     return resp
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return make_response(
+            jsonify(error="ratelimit exceeded %s" % e.description)
+            , 429
+    )
 
 @auth.error_handler
 def auth_failed(error=None):
@@ -87,21 +132,6 @@ def auth_failed(error=None):
 def bad_request(error):
     return make_response(jsonify({'error': 'Bad request'}), 400)
 
-@app.route('/test')
-@auth.login_required
-def app_test():
-
-    return jsonify(nglib.query.net.get_net('128.23.1.1', \
-        rtype="NGTREE", verbose=False))
-
-@app.route('/netgrph/api/v1.0/path', methods=['GET'])
-@auth.login_required
-def get_full_path():
-    # Initialize Library
-    return jsonify(nglib.query.path.get_full_path(request.args['src'], \
-        request.args['dst'], {}))
-
-
 @app.teardown_appcontext
 def close_db(error):
     if hasattr(g, 'nglib'):
@@ -111,6 +141,7 @@ def close_db(error):
 def verify_password(username, password):
 
     # Initialize Library On Authentication
+
     nglib.verbose = verbose
     nglib.init_nglib(config_file)
 
@@ -118,3 +149,9 @@ def verify_password(username, password):
         return False
     g.user = username
     return True
+
+
+if __name__ == "__main__":
+    context = ('/Users/yantisj/netgrph/newhal.crt', '/Users/yantisj/netgrph/newhal.key')
+
+    app.run(host='0.0.0.0', port=5000, ssl_context=context, threaded=True, debug=True)
