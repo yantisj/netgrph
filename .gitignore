@@ -11,3 +11,5 @@ ngtest.py.bak
 .cache/
 .DS_Store
 venv/
+api.log
+api.db

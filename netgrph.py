@@ -145,8 +145,12 @@ def api_call(apicall, lrtype):
     requrl = api['url'] + apicall
     if nglib.verbose:
         print("API Request", requrl)
-    r = requests.get(requrl, \
-        auth=(api['user'], api['pass']), verify=api['verify'])
+    try:
+        r = requests.get(requrl, \
+            auth=(api['user'], api['pass']), verify=api['verify'])
+    except requests.exceptions.ConnectionError:
+        print("Failed to Connect to API Server:", requrl)
+        sys.exit(1)
 
     if r.status_code == 200:
         response = r.json()
@@ -212,8 +216,15 @@ else:
     # Initialize Library
     nglib.init_nglib(config_file)
 
+###########
+# Queries #
+###########
+
 ## Pathfinding
 if args.fpath:
+    if use_api:
+        print("Error: API Currently Not Supported for this call, use quick path", file=sys.stderr)
+        sys.exit(1)
     nglib.query.path.get_fw_path(args.fpath, args.search, {"depth": depth})
 
 # Quick Path
@@ -271,14 +282,18 @@ elif args.dev:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.dev.get_device(args.search, rtype=rtype, vrange=args.vrange)
+    if use_api:
+        call = 'dev?dev=' +  args.search + '&vrange=' + args.vrange
+        api_call(call, rtype)
+    else:
+        nglib.query.dev.get_device(args.search, rtype=rtype, vrange=args.vrange)
 
 elif args.ip:
     rtype = "TREE"
     if args.output:
         rtype = args.output
     if use_api:
-        call = 'net?ip=' + args.search
+        call = 'ip?ip=' + args.search
         api_call(call, rtype)
     else:
         nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
@@ -287,7 +302,11 @@ elif args.net:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
+    if use_api:
+        call = 'net?cidr=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
 
 elif args.nlist:
     rtype = "CSV"
@@ -303,7 +322,11 @@ elif args.nfilter:
     rtype = "CSV"
     if args.output:
         rtype = args.output
-    nglib.query.net.get_networks_on_filter(nFilter=args.search, rtype=rtype)
+    if use_api:
+        call = 'nfilter?filter=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.net.get_networks_on_filter(nFilter=args.search, rtype=rtype)
 
 elif args.group:
     nglib.query.vlan.get_vlans_on_group(args.search, args.vrange)

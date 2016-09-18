@@ -88,6 +88,11 @@ def get_switched_path():
 @app.route('/netgrph/api/v1.0/net', methods=['GET'])
 @auth.login_required
 def get_net():
+    return jsonify(nglib.query.net.get_networks_on_cidr(request.args['cidr'], rtype="NGTREE"))
+
+@app.route('/netgrph/api/v1.0/ip', methods=['GET'])
+@auth.login_required
+def get_ip():
 
     return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
 
@@ -97,6 +102,16 @@ def get_nlist():
 
     return jsonify(nglib.query.net.get_networks_on_filter(request.args['group'], rtype="NGTREE"))
 
+@app.route('/netgrph/api/v1.0/nfilter', methods=['GET'])
+@auth.login_required
+def get_nfilter():
+    """ Networks on a filter """
+    return jsonify(nglib.query.net.get_networks_on_filter(nFilter=request.args['filter'], rtype="NGTREE"))
+
+@app.route('/netgrph/api/v1.0/dev', methods=['GET'])
+@auth.login_required
+def get_dev():
+    return jsonify(nglib.query.dev.get_device(request.args['dev'], rtype="NGTREE"))
 
 # Info method, Return Request Data back to client as JSON
 @app.route('/' + app_name + '/api/v1.0/info', methods=['POST', 'GET'])

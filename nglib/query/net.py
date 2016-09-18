@@ -226,7 +226,7 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
     Notes: Need to convert to get_net_extended_tree but ran in to bugs
     """
 
-    rtypes = ('CSV', 'TREE', 'JSON', 'YAML')
+    rtypes = ('CSV', 'TREE', 'JSON', 'YAML', "NGTREE")
 
     if rtype in rtypes:
 
