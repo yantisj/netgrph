@@ -142,6 +142,10 @@ def check_path(singlepath):
 
 def api_call(apicall, lrtype):
     """ Uses the API for queries instead of the nglib library """
+
+    if rtype == 'TREE':
+        apicall = apicall + '&allSwitches=False'
+
     requrl = api['url'] + apicall
     if nglib.verbose:
         print("API Request", requrl)
@@ -223,7 +227,8 @@ else:
 ## Pathfinding
 if args.fpath:
     if use_api:
-        print("Error: API Currently Not Supported for this call, use quick path", file=sys.stderr)
+        print("Error: API Currently Not Supported for this call, " \
+              "use quick path: netgrph src dst", file=sys.stderr)
         sys.exit(1)
     nglib.query.path.get_fw_path(args.fpath, args.search, {"depth": depth})
 
@@ -259,7 +264,7 @@ elif args.rpath:
         rtype = args.output
     if use_api:
         call = 'rpath?src=' + args.rpath + '&dst=' +  args.search \
-        + '&depth=' + depth
+        + '&vrf=' + args.vrf + '&depth=' + depth
         api_call(call, rtype)
     else:
         nglib.query.path.get_routed_path(args.rpath, args.search, \
@@ -329,27 +334,33 @@ elif args.nfilter:
         nglib.query.net.get_networks_on_filter(nFilter=args.search, rtype=rtype)
 
 elif args.group:
+    if use_api:
+        print("Error: API Currently Not Supported for this call", file=sys.stderr)
+        sys.exit(1)
     nglib.query.vlan.get_vlans_on_group(args.search, args.vrange)
 
 elif args.vtree:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.vlan.get_vtree(args.search, rtype=rtype)
+    if use_api:
+        call = 'vtree?name=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.vlan.get_vtree(args.search, rtype=rtype)
 
 elif args.vid:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
+    if use_api:
+        call = 'vid?id=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
 
 # Universal Search
 elif args.search:
-
-    if use_api:
-        print("Error: Universal Search currently not available via the API, use -options instead", \
-              file=sys.stderr)
-        sys.exit(1)
 
     vid = re.search(r'^(\d+)$', args.search)
     vname = re.search(r'^(\w+\-\d+)$', args.search)
@@ -363,25 +374,47 @@ elif args.search:
                 rtype = "TREE"
                 if args.output:
                     rtype = args.output
-                nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
+                if use_api:
+                    call = 'vid?id=' + args.search
+                    api_call(call, rtype)
+                else:
+                    nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
         except:
             pass
     elif vname:
         rtype = "TREE"
         if args.output:
             rtype = args.output
-        nglib.query.vlan.get_vtree(args.search, rtype=rtype)
+        if use_api:
+            call = 'vtree?name=' + args.search
+            api_call(call, rtype)
+        else:
+            nglib.query.vlan.get_vtree(args.search, rtype=rtype)
     elif net:
         rtype = "TREE"
         if args.output:
             rtype = args.output
-        nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
+        if use_api:
+            call = 'net?cidr=' + args.search
+            api_call(call, rtype)
+        else:
+            nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
     elif ip:
         rtype = "TREE"
         if args.output:
             rtype = args.output
-        nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
+        if use_api:
+            call = 'ip?ip=' + args.search
+            api_call(call, rtype)
+        else:
+            nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
     elif text:
+        if use_api:
+            print("ERROR: Universal Search not fully supported via API, use -options instead", \
+                file=sys.stderr)
+            print()
+            parser.print_help()
+            sys.exit(1)
         rtype = "TREE"
         if args.output:
             rtype = args.output

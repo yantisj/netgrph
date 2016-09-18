@@ -312,7 +312,9 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
         if 'verbose' not in popt:
             popt['verbose'] = True
         if 'depth' not in popt:
-            popt['depth'] = '20'
+            popt['depth'] = '10'
+        
+
 
         if popt['verbose']:
             logger.info("Query: Finding Routed Paths (%s --> %s) for %s",
@@ -331,31 +333,21 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
                 net2 = n2tree['_child001']['Name']
 
         ngtree = nglib.ngtree.get_ngtree("Path", tree_type="L3-PATH")
+        ngtree['Search Depth'] = popt['depth']
         ngtree["Path"] = net1 + " -> " + net2
         ngtree['Name'] = ngtree['Path']
+
+        # Fixup Depth (double routed paths)
+        popt['depth'] = str(int(popt['depth']) * 2)
 
         pathList = []
         pathRec = []
 
         # Finds all paths, then finds the relationships
-        # rtrp = nglib.py2neo_ses.cypher.execute(
-        #     'MATCH (sn:Network), (dn:Network), rp = allShortestPaths '
-        #     + '((sn)-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]-(dn)) '
-        #     + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = {vrf}) '
-        #     + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
-        #     + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
-        #     + 'MATCH (r1)<-[l1:ROUTED]-(n:Network {vrf:{vrf}})-[l2:ROUTED]->(r2) '
-        #     + 'OPTIONAL MATCH (n)-[:L3toL2]->(v:VLAN) '
-        #     + 'RETURN DISTINCT r1.name AS r1name, l1.gateway AS r1ip, '
-        #     + 'r2.name AS r2name, l2.gateway as r2ip, v.vid AS vid, '
-        #     + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
-        #     + 'AS distance ORDER BY distance',
-        #     {"net1": net1, "net2": net2, "vrf": vrf})
-        # Finds all paths, then finds the relationships
         rtrp = nglib.py2neo_ses.cypher.execute(
             'MATCH (sn:Network)-[:ROUTED_BY|ROUTED_STANDBY]-(sr), '
             + '(dn:Network)-[:ROUTED_BY|ROUTED_STANDBY]-(dr), rp = allShortestPaths '
-            + '((sr)-[:ROUTED*0..12]-(dr)) '
+            + '((sr)-[:ROUTED*0..' + popt['depth'] + ']-(dr)) '
             + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = {vrf}) '
             + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
             + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
@@ -366,6 +358,10 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
             + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
             + 'AS distance ORDER BY distance',
             {"net1": net1, "net2": net2, "vrf": popt['VRF']})
+
+        # Empty Query
+        if len(rtrp) == 0:
+            return ngtree
 
         allpaths = dict()
         # Load all paths into tuples with distance value
@@ -493,6 +489,7 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
         hopSet = set()
         ngtree = nglib.ngtree.get_ngtree("Switched Paths", tree_type="L2-PATH")
         ngtree["Name"] = str(switch1) + " -> " + str(switch2)
+        ngtree['Search Depth'] = popt['depth']
 
         swp = nglib.py2neo_ses.cypher.execute(
             'MATCH (ss:Switch), (ds:Switch), '
@@ -507,6 +504,10 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
             + 'nei._rvlans AS p_rvlans, '
             + 'LENGTH(plen) as distance ORDER BY distance, s1.name, s2.name',
             {"switch1": switch1, "switch2": switch2, "depth": str(popt['depth'])})
+
+        # Empty Query Check
+        if len(swp) == 0:
+            return ngtree
 
         # Process records
         last = 0

@@ -36,6 +36,7 @@ from passlib.hash import sha256_crypt
 import sqlite3
 from flask_sqlalchemy import SQLAlchemy
 from apisrv import auth, config, db
+from sqlalchemy.exc import OperationalError
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,12 @@ def verify_password(username, password):
 def authenticate_user(username, passwd):
     """ Authenticate a user """
 
-    user = User.query.filter_by(username=username).first()
+    try:
+        user = User.query.filter_by(username=username).first()
+    except OperationalError:
+        db.create_all()
+        user = User.query.filter_by(username=username).first()
+
 
     authenticated = False
 

@@ -62,28 +62,23 @@ def get_full_path():
 def get_routed_path():
     """ Routed Path """
     onepath = False
-    depth = "20"
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
             onepath = True
-    if 'depth' in request.args:
-        depth = request.args['depth']
     return jsonify(nglib.query.path.get_routed_path(request.args['src'], \
-        request.args['dst'], {"onepath": onepath, "depth": depth}))
+        request.args['dst'], {"onepath": onepath, "depth": request.args['depth'], \
+        "VRF": request.args['vrf']}))
 
 @app.route('/netgrph/api/v1.0/spath', methods=['GET'])
 @auth.login_required
 def get_switched_path():
     """ Switched Path """
     onepath = False
-    depth = "20"
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
             onepath = True
-    if 'depth' in request.args:
-        depth = request.args['depth']
     return jsonify(nglib.query.path.get_switched_path(request.args['src'], \
-        request.args['dst'], {"onepath": onepath, "depth": depth}))
+        request.args['dst'], {"onepath": onepath, "depth": request.args['depth']}))
 
 @app.route('/netgrph/api/v1.0/net', methods=['GET'])
 @auth.login_required
@@ -107,6 +102,20 @@ def get_nlist():
 def get_nfilter():
     """ Networks on a filter """
     return jsonify(nglib.query.net.get_networks_on_filter(nFilter=request.args['filter'], rtype="NGTREE"))
+
+@app.route('/netgrph/api/v1.0/vid', methods=['GET'])
+@auth.login_required
+def get_vid():
+    allSwitches = True
+    if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
+        allSwitches = False
+    return jsonify(nglib.query.vlan.search_vlan_id(request.args['id'], \
+                   rtype="NGTREE", allSwitches=allSwitches))
+
+@app.route('/netgrph/api/v1.0/vtree', methods=['GET'])
+@auth.login_required
+def get_vtree():
+    return jsonify(nglib.query.vlan.get_vtree(request.args['name'], rtype="NGTREE"))
 
 @app.route('/netgrph/api/v1.0/dev', methods=['GET'])
 @auth.login_required
