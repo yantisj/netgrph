@@ -63,7 +63,13 @@ def verify_password(username, password):
         return True
     return False
 
-def authenticate_user(username, passwd):
+def get_hash(password):
+    """ Returns a new SHA256 Hash for a password (lower rounds for speed)"""
+
+    phash = sha256_crypt.encrypt(password, rounds=100000)
+    return phash
+
+def authenticate_user(username, password):
     """ Authenticate a user """
 
     try:
@@ -76,7 +82,7 @@ def authenticate_user(username, passwd):
     authenticated = False
 
     if user:
-        authenticated = sha256_crypt.verify(passwd, user.password)
+        authenticated = sha256_crypt.verify(password, user.password)
     else:
         time.sleep(1)
         logger.info("Authentication Error: User not found in DB: %s", username)
@@ -90,7 +96,7 @@ def authenticate_user(username, passwd):
     return authenticated
 
 
-def add_user(username, passwd):
+def add_user(username, password):
     """
     Add a new user to the database
     """
@@ -100,13 +106,13 @@ def add_user(username, passwd):
     if user:
         #print("Error: User already exists in DB", file=sys.stderr)
         raise Exception("Error: User already exists in DB")
-    elif len(passwd) < 6:
+    elif len(password) < 6:
         print("Error: Password must be 6 or more characters", file=sys.stderr)
         exit(1)       
     else:
         logger.info("Adding new user to the database: %s", username)
 
-        phash = sha256_crypt.encrypt(passwd)
+        phash = get_hash(password)
         
         newuser = User(username, phash)
         db.session.add(newuser)
@@ -114,18 +120,18 @@ def add_user(username, passwd):
 
         return phash
 
-def update_password(username, passwd):
+def update_password(username, password):
     """ Update password for user """
 
     user = User.query.filter_by(username=username).first()
 
-    if len(passwd) < 6:
+    if len(password) < 6:
         print("Error: Password must be 6 or more characters", file=sys.stderr)
         exit(1)
     elif user:
         logger.info("Updating password for user: %s", username)
 
-        phash = sha256_crypt.encrypt(passwd)
+        phash = get_hash(password)
 
         user.password = phash
         db.session.commit()
