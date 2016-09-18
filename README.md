@@ -16,6 +16,9 @@ Visualizations can be created by querying the Neo4j webapp as shown below. The
 data model should translate for use with tools such as D3.js, vis.js or Graphwiz
 via both the native Neo4j API as well as NetGrph's tree data structure.
 
+All data is accessible via an API, and the netgrph client can be distributed
+with a fraction of the PIP requirements (requests and YAML only)
+
 ## Data Model
 ### Discovering the Routed SVI Paths from Vlan 110 to 200
 ![vlan110](https://dl.dropboxusercontent.com/u/73454/svipath2.svg)
