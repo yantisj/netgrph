@@ -31,6 +31,9 @@
  NetGrph Query Network data
 """
 import sys
+import re
+import socket
+from operator import itemgetter, attrgetter
 import ipaddress
 import logging
 import nglib
@@ -50,6 +53,7 @@ def get_net(ip, rtype="TREE", days=7, verbose=True):
         logger.info("Query: Looking up %s for %s", ip, nglib.user)
 
     if rtype in rtypes:
+
         net = nglib.query.net.find_cidr(ip)
         ngtree = get_net_extended_tree(net, ip=ip, ngname="IP Object")
 
@@ -179,8 +183,13 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
             + 'v.name as VRF, n.vrfcidr AS vrfcidr, '
             + 'v.seczone AS SecurityLevel ORDER BY CIDR')
 
-        # Check to see if networks match group
-        for net in networks:
+
+        # Sort results by gateway IP
+        sort_nets = {}
+        for n in networks:
+            sort_nets[ipaddress.IPv4Address(n['Gateway'])] = n
+        for net in sorted(sort_nets.keys(), key=ipaddress.get_mixed_type_key):
+            net = sort_nets[net]
 
             # Build a proper dict
             netDict = dict()
@@ -226,7 +235,7 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
     Notes: Need to convert to get_net_extended_tree but ran in to bugs
     """
 
-    rtypes = ('CSV', 'TREE', 'JSON', 'YAML')
+    rtypes = ('CSV', 'TREE', 'JSON', 'YAML', "NGTREE")
 
     if rtype in rtypes:
 
@@ -237,9 +246,14 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
         ngtree['CIDR'] = cidr
 
         networks = nglib.bolt_ses.run(
-            'MATCH (n:Network) RETURN n.gateway AS gateway, n.name AS vrfcidr')
+            'MATCH (n:Network) RETURN n.gateway AS gateway, n.name AS vrfcidr ORDER BY gateway')
 
-        for net in networks:
+        # Sort results by gateway IP
+        sort_nets = {}
+        for n in networks:
+            sort_nets[ipaddress.IPv4Address(n['gateway'])] = n
+        for net in sorted(sort_nets.keys(), key=ipaddress.get_mixed_type_key):
+            net = sort_nets[net]
 
             # Check to see if gateway IP within CIDR (subnet boundary won't match)
             if net['gateway']:
@@ -285,6 +299,13 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
 
 def find_cidr(ip):
     """Finds most specific CIDR in Networks"""
+
+    # Check for non-ip, try DNS
+    if not re.search(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', ip):
+        try:
+            ip = socket.gethostbyname(ip)
+        except socket.gaierror:
+            raise Exception("Hostname Lookup Failure on: " + ip)
 
     # Always start with default route
     mostSpecific = "0.0.0.0/0"

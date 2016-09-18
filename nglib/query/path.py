@@ -70,15 +70,19 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
         n1tree, n2tree = None, None
 
         # Translate IPs to CIDRs
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net1):
-            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
-            if n1tree:
-                net1 = n1tree['_child001']['Name']
+        n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
+        if n1tree:
+            net1 = n1tree['_child001']['Name']
 
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net2):
-            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
-            if n2tree:
-                net2 = n2tree['_child001']['Name']
+        n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
+        if n2tree:
+            net2 = n2tree['_child001']['Name']
+
+        if not n1tree or not n2tree:
+            errort = nglib.ngtree.get_ngtree("Path Error", tree_type="L3-PATH")
+            errort['Error'] = 'Network Lookup Error'
+            errort["Lx Path"] = src + " -> " + dst
+            return errort
 
         srctree, dsttree, srcswp, dstswp = None, None, None, None
 
@@ -238,11 +242,9 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
         srct, dstt, ngtree = None, None, None
 
         # Translate IPs to CIDRs
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', src):
-            srct = nglib.query.net.get_net(src, rtype="NGTREE", verbose=popt['verbose'])
+        srct = nglib.query.net.get_net(src, rtype="NGTREE", verbose=popt['verbose'])
 
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', dst):
-            dstt = nglib.query.net.get_net(dst, rtype="NGTREE", verbose=popt['verbose'])
+        dstt = nglib.query.net.get_net(dst, rtype="NGTREE", verbose=popt['verbose'])
 
         # Intra VRF
         if srct['_child001']['VRF'] == dstt['_child001']['VRF']:
@@ -312,7 +314,9 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
         if 'verbose' not in popt:
             popt['verbose'] = True
         if 'depth' not in popt:
-            popt['depth'] = '20'
+            popt['depth'] = '10'
+        
+
 
         if popt['verbose']:
             logger.info("Query: Finding Routed Paths (%s --> %s) for %s",
@@ -321,41 +325,31 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
         hopSet = set()
 
         # Translate IPs to CIDRs
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net1):
-            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
-            net1 = n1tree['_child001']['Name']
+        n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
+        net1 = n1tree['_child001']['Name']
+        if n1tree:
+            net1 = n1tree['_child001']['Name']     
 
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net2):
-            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
-            if n2tree:
-                net2 = n2tree['_child001']['Name']
+        n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
+        if n2tree:
+            net2 = n2tree['_child001']['Name']
 
         ngtree = nglib.ngtree.get_ngtree("Path", tree_type="L3-PATH")
+        ngtree['Search Depth'] = popt['depth']
         ngtree["Path"] = net1 + " -> " + net2
         ngtree['Name'] = ngtree['Path']
+
+        # Fixup Depth (double routed paths)
+        popt['depth'] = str(int(popt['depth']) * 2)
 
         pathList = []
         pathRec = []
 
         # Finds all paths, then finds the relationships
-        # rtrp = nglib.py2neo_ses.cypher.execute(
-        #     'MATCH (sn:Network), (dn:Network), rp = allShortestPaths '
-        #     + '((sn)-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]-(dn)) '
-        #     + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = {vrf}) '
-        #     + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
-        #     + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
-        #     + 'MATCH (r1)<-[l1:ROUTED]-(n:Network {vrf:{vrf}})-[l2:ROUTED]->(r2) '
-        #     + 'OPTIONAL MATCH (n)-[:L3toL2]->(v:VLAN) '
-        #     + 'RETURN DISTINCT r1.name AS r1name, l1.gateway AS r1ip, '
-        #     + 'r2.name AS r2name, l2.gateway as r2ip, v.vid AS vid, '
-        #     + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
-        #     + 'AS distance ORDER BY distance',
-        #     {"net1": net1, "net2": net2, "vrf": vrf})
-        # Finds all paths, then finds the relationships
         rtrp = nglib.py2neo_ses.cypher.execute(
             'MATCH (sn:Network)-[:ROUTED_BY|ROUTED_STANDBY]-(sr), '
             + '(dn:Network)-[:ROUTED_BY|ROUTED_STANDBY]-(dr), rp = allShortestPaths '
-            + '((sr)-[:ROUTED*0..12]-(dr)) '
+            + '((sr)-[:ROUTED*0..' + popt['depth'] + ']-(dr)) '
             + 'WHERE ALL(v IN rels(rp) WHERE v.vrf = {vrf}) '
             + 'AND sn.cidr =~ {net1} AND dn.cidr =~ {net2}'
             + 'UNWIND nodes(rp) as r1 UNWIND nodes(rp) as r2 '
@@ -366,6 +360,10 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
             + 'LENGTH(shortestPath((sn)<-[:ROUTED|ROUTED_BY|ROUTED_STANDBY*0..12]->(r1))) '
             + 'AS distance ORDER BY distance',
             {"net1": net1, "net2": net2, "vrf": popt['VRF']})
+
+        # Empty Query
+        if len(rtrp) == 0:
+            return ngtree
 
         allpaths = dict()
         # Load all paths into tuples with distance value
@@ -493,19 +491,25 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
         hopSet = set()
         ngtree = nglib.ngtree.get_ngtree("Switched Paths", tree_type="L2-PATH")
         ngtree["Name"] = str(switch1) + " -> " + str(switch2)
+        ngtree['Search Depth'] = popt['depth']
 
         swp = nglib.py2neo_ses.cypher.execute(
             'MATCH (ss:Switch), (ds:Switch), '
             + 'sp = allShortestPaths((ss)-[:NEI|NEI_EQ*0..' + popt['depth'] + ']-(ds)) '
             + 'WHERE ss.name =~ {switch1} AND ds.name =~ {switch2}'
             + 'UNWIND nodes(sp) as s1 UNWIND nodes(sp) as s2 '
-            + 'MATCH (s1)<-[nei:NEI|NEI_EQ]-(s2), plen = shortestPath((ss)-[:NEI*0..9]-(s1)) '
+            + 'MATCH (s1)<-[nei:NEI|NEI_EQ]-(s2), plen = shortestPath((ss)-[:NEI*0..20]-(s1)) '
             + 'RETURN DISTINCT s1.name AS csw, s2.name AS psw, '
+            + 's1.model AS cmodel, s1.version AS cver, s2.model AS pmodel, s2.version AS pver, '
             + 'nei.pPort AS pport, nei.cPort as cport, nei.native AS native, '
             + 'nei.cPc as cPc, nei.pPc AS pPc, nei.vlans AS vlans, nei.rvlans as rvlans, '
             + 'nei._rvlans AS p_rvlans, '
             + 'LENGTH(plen) as distance ORDER BY distance, s1.name, s2.name',
             {"switch1": switch1, "switch2": switch2, "depth": str(popt['depth'])})
+
+        # Empty Query Check
+        if len(swp) == 0:
+            return ngtree
 
         # Process records
         last = 0
@@ -534,8 +538,12 @@ def get_switched_path(switch1, switch2, popt, rtype="NGTREE"):
                 swptree['_reverse'] = 0
 
             swptree['Child Switch'] = rec.csw
+            swptree['Child Model'] = rec.cmodel
+            swptree['_cversion'] = rec.cver
             swptree['Child Port'] = rec.cport
             swptree['Parent Switch'] = rec.psw
+            swptree['Parent Model'] = rec.pmodel
+            swptree['_pversion'] = rec.pver
             swptree['Parent Port'] = rec.pport
 
             if rec.cPc:

@@ -34,6 +34,7 @@
 """netgrph is the primary CLI query too for NetGrph
    Also see ngreport
 """
+import sys
 import os
 import re
 import argparse
@@ -73,15 +74,18 @@ parser = argparse.ArgumentParser(prog='netgrph',
                                  epilog="""
                                  Examples:
                                  netgrph 10.1.1.1 (Free Search for IP),
-                                 netgrph -net 10.1.1.0/24 (Search for CIDR),
-                                 netgrph -group MDC (VLAN Database Search),
-                                 netgrph -fp 10.1.1.1 10.2.2.1 (Firewall Path Search)
+                                 netgrph 10.1.0.0/16 (Search for results in CIDR),
+                                 netgrph 999 (VLAN Database Search),
+                                 netgrph 10.1.1.1 10.2.2.1 (Path Analysis),
+                                 netgrph -allpaths -p 10.1.1.1 10.2.2.1 (Full Path Analysis)
                                  """)
 
 parser.add_argument("search", help="Search the NetGrph Database (Wildcard Default)",
                     type=str)
-parser.add_argument("qpath", help="Combine with search for Path Analysis (optional)",
+parser.add_argument("qpath", help="Quick Path Analysis (netgrph src dst)",
                     nargs='?', default=None, type=str)
+parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
+                    action="store_true")
 parser.add_argument("-ip", help="Network Details for an IP",
                     action="store_true")
 parser.add_argument("-net", help="All networks within a CIDR (eg. 10.0.0.0/8)",
@@ -90,40 +94,38 @@ parser.add_argument("-nlist", help="Get all networks in an alert group",
                     action="store_true")
 parser.add_argument("-nfilter", help="Get all networks on a filter (see netgrph.ini)",
                     action="store_true")
-parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
+parser.add_argument("-group", help="Get VLANs for a Management Group",
+                    action="store_true")
+parser.add_argument("-vid", help="VLAN ID Search", action="store_true")
+parser.add_argument("-vtree", help="Get the VLAN Tree for a VNAME",
                     action="store_true")
 parser.add_argument("-path", metavar="src",
-                    help="L2-L4 Path Between -p src dst (ip/cidr), defaults to a single path.",
+                    help="L2-L4 Path Between -p src dst [ip/cidr] (single-path default)",
                     type=str)
-parser.add_argument("-fpath", metavar="src",
-                    help="Security Path between -fp src dst",
+parser.add_argument("-spath", metavar="src_dev",
+                    help="Switched Path between -sp src_dev dst_dev (Java Regex)",
                     type=str)
 parser.add_argument("-rpath", metavar="src",
-                    help="Routed Path between -rp IP/CIDR1 IP/CIDR2 ",
+                    help="Routed Path between -rp IP/CIDR1 IP/CIDR2 [--vrf x]",
                     type=str)
-parser.add_argument("-spath", metavar="src",
-                    help="Switched Path between -sp sw1 sw2 (Neo4j Regex)",
+parser.add_argument("-fpath", metavar="src",
+                    help="Security Path between -fp src_ip dst_ip (inter-VRF)",
                     type=str)
-parser.add_argument("-allpaths",
-                    help="Return all Paths",
-                    action="store_true")
 parser.add_argument("-singlepath",
-                    help="Return a single path",
+                    help="Return a Single Path on Path Queries",
+                    action="store_true")
+parser.add_argument("-allpaths",
+                    help="Return all Paths on Path Queries",
                     action="store_true")
 parser.add_argument("-depth", metavar="20",
                     help="Path Depth (default 20)",
                     type=int)
-parser.add_argument("-group", help="Get VLANs for a Management Group",
-                    action="store_true")
-parser.add_argument("-vrange", metavar='1[-4096]', help="VLAN Range (default 1-1999)",
-                    type=str)
-parser.add_argument("-vrf", metavar='name', help="Specific VRF",
-                    type=str)
-parser.add_argument("-vid", help="VLAN ID Search", action="store_true")
-parser.add_argument("-vtree", help="Get the VLAN Tree for a VNAME",
-                    action="store_true")
 parser.add_argument("-output", metavar='TREE',
                     help="Return Format: TREE, TABLE, CSV, JSON, YAML", type=str)
+parser.add_argument("-vrange", metavar='1[-4096]', help="VLAN Range (default 1-1999)",
+                    type=str)
+parser.add_argument("-vrf", metavar='name', help="Specify VRF",
+                    type=str)
 parser.add_argument("--days", metavar='int', help="Days in Past (NetDB Specific)", type=int)
 parser.add_argument("--conf", metavar='file', help="Alternate Config File", type=str)
 parser.add_argument("--debug", help="Set debugging level", type=int)
@@ -141,8 +143,19 @@ def check_path(singlepath):
 
 def api_call(apicall, lrtype):
     """ Uses the API for queries instead of the nglib library """
-    r = requests.get(api['url'] + apicall, \
-        auth=(api['user'], api['pass']), verify=api['verify'])
+
+    if rtype == 'TREE':
+        apicall = apicall + '&allSwitches=False'
+
+    requrl = api['url'] + apicall
+    if nglib.verbose:
+        print("API Request", requrl)
+    try:
+        r = requests.get(requrl, \
+            auth=(api['user'], api['pass']), verify=api['verify'])
+    except requests.exceptions.ConnectionError:
+        print("Failed to Connect to API Server:", requrl)
+        sys.exit(1)
 
     if r.status_code == 200:
         response = r.json()
@@ -167,6 +180,9 @@ if args.verbose:
 if args.debug:
     verbose = args.debug
 
+# Setup Globals for Debugging
+nglib.verbose = verbose
+
 # 7 day default for NetDB
 if not args.days:
     args.days = 7
@@ -188,9 +204,8 @@ if args.depth:
 # API Client Check
 config = configparser.ConfigParser()
 config.read(config_file)
-if 'apiX' in config:
+if 'api' in config:
     use_api = True
-    print("Using API")
     try:
         api['url'] = config['api']['url']
         api['user'] = config['api']['user']
@@ -203,43 +218,45 @@ if 'apiX' in config:
     else:
         api['verify'] = True
 else:
-    # Setup Globals for Debugging
-    nglib.verbose = verbose
-
     # Initialize Library
     nglib.init_nglib(config_file)
 
-## Pathfinding
-if args.fpath:
-    nglib.query.path.get_fw_path(args.fpath, args.search, {"depth": depth})
+###########
+# Queries #
+###########
 
-# Quick Path
-elif args.qpath:
-    rtype = "QTREE"
+## Firewall Path
+if args.fpath:
     if use_api:
-        call = 'path?src=' + args.search + '&dst=' +  args.qpath \
-            + '&onepath=' + str(check_path(False) + '&depth=' + depth)
-        api_call(call, rtype)
-    else:
-        if args.output:
-            rtype = args.output
-        nglib.query.path.get_full_path(args.search, args.qpath, \
-            {"onepath": check_path(False), "depth": depth}, rtype=rtype)
+        print("Error: API Currently Not Supported for this call, " \
+              "use quick path: netgrph src dst", file=sys.stderr)
+        sys.exit(1)
+    nglib.query.path.get_fw_path(args.fpath, args.search, {"depth": depth})
 
 elif args.spath:
     rtype = "TREE"
 
     if args.output:
         rtype = args.output
-    nglib.query.path.get_switched_path(args.spath, args.search, \
-        {"onepath": check_path(False), "depth": depth}, rtype=rtype)
+    if use_api:
+        call = 'spath?src=' + args.spath + '&dst=' +  args.search \
+        + '&onepath=' + str(check_path(False)) + '&depth=' + depth
+        api_call(call, rtype)
+    else:
+        nglib.query.path.get_switched_path(args.spath, args.search, \
+            {"onepath": check_path(False), "depth": depth}, rtype=rtype)
 
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_routed_path(args.rpath, args.search, \
-        {"onepath":check_path(False), "VRF": args.vrf, "depth": depth}, rtype=rtype)
+    if use_api:
+        call = 'rpath?src=' + args.rpath + '&dst=' +  args.search \
+        + '&vrf=' + args.vrf + '&depth=' + depth
+        api_call(call, rtype)
+    else:
+        nglib.query.path.get_routed_path(args.rpath, args.search, \
+            {"onepath":check_path(False), "VRF": args.vrf, "depth": depth}, rtype=rtype)
 
 elif args.path:
     rtype = "TREE"
@@ -247,7 +264,7 @@ elif args.path:
         rtype = args.output
     if use_api:
         call = 'path?src=' + args.path + '&dst=' +  args.search \
-        + '&onepath=' + str(check_path(True) + '&depth=' + depth)
+        + '&onepath=' + str(check_path(True)) + '&depth=' + depth
         api_call(call, rtype)
     else:
         nglib.query.path.get_full_path(args.path, args.search, \
@@ -258,14 +275,18 @@ elif args.dev:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.dev.get_device(args.search, rtype=rtype, vrange=args.vrange)
+    if use_api:
+        call = 'dev?dev=' +  args.search + '&vrange=' + args.vrange
+        api_call(call, rtype)
+    else:
+        nglib.query.dev.get_device(args.search, rtype=rtype, vrange=args.vrange)
 
 elif args.ip:
     rtype = "TREE"
     if args.output:
         rtype = args.output
     if use_api:
-        call = 'net?ip=' + args.search
+        call = 'ip?ip=' + args.search
         api_call(call, rtype)
     else:
         nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
@@ -274,7 +295,11 @@ elif args.net:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
+    if use_api:
+        call = 'net?cidr=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
 
 elif args.nlist:
     rtype = "CSV"
@@ -290,22 +315,50 @@ elif args.nfilter:
     rtype = "CSV"
     if args.output:
         rtype = args.output
-    nglib.query.net.get_networks_on_filter(nFilter=args.search, rtype=rtype)
+    if use_api:
+        call = 'nfilter?filter=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.net.get_networks_on_filter(nFilter=args.search, rtype=rtype)
 
 elif args.group:
+    if use_api:
+        print("Error: API Currently Not Supported for this call", file=sys.stderr)
+        sys.exit(1)
     nglib.query.vlan.get_vlans_on_group(args.search, args.vrange)
 
 elif args.vtree:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.vlan.get_vtree(args.search, rtype=rtype)
+    if use_api:
+        call = 'vtree?name=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.vlan.get_vtree(args.search, rtype=rtype)
 
 elif args.vid:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
+    if use_api:
+        call = 'vid?id=' + args.search
+        api_call(call, rtype)
+    else:
+        nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
+
+## Quick Path
+elif args.qpath:
+    rtype = "QTREE"
+    if use_api:
+        call = 'path?src=' + args.search + '&dst=' +  args.qpath \
+            + '&onepath=' + str(check_path(False)) + '&depth=' + depth
+        api_call(call, rtype)
+    else:
+        if args.output:
+            rtype = args.output
+        nglib.query.path.get_full_path(args.search, args.qpath, \
+            {"onepath": check_path(False), "depth": depth}, rtype=rtype)
 
 # Universal Search
 elif args.search:
@@ -322,25 +375,48 @@ elif args.search:
                 rtype = "TREE"
                 if args.output:
                     rtype = args.output
-                nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
+                if use_api:
+                    call = 'vid?id=' + args.search
+                    api_call(call, rtype)
+                else:
+                    nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
         except:
             pass
     elif vname:
         rtype = "TREE"
         if args.output:
             rtype = args.output
-        nglib.query.vlan.get_vtree(args.search, rtype=rtype)
+        if use_api:
+            call = 'vtree?name=' + args.search
+            api_call(call, rtype)
+        else:
+            nglib.query.vlan.get_vtree(args.search, rtype=rtype)
     elif net:
         rtype = "TREE"
         if args.output:
             rtype = args.output
-        nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
+        if use_api:
+            call = 'net?cidr=' + args.search
+            api_call(call, rtype)
+        else:
+            nglib.query.net.get_networks_on_cidr(args.search, rtype=rtype)
     elif ip:
         rtype = "TREE"
         if args.output:
             rtype = args.output
-        nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
+        if use_api:
+            call = 'ip?ip=' + args.search
+            api_call(call, rtype)
+        else:
+            nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
     elif text:
+        if use_api:
+            parser.print_help()
+            print()
+            print("Error: Universal Search not fully supported via API, try using -options instead", \
+                file=sys.stderr)
+            print()
+            sys.exit(1)
         rtype = "TREE"
         if args.output:
             rtype = args.output

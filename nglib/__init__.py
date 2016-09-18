@@ -44,10 +44,14 @@ import pwd
 import datetime
 import configparser
 import logging
-from neo4j.v1 import TRUST_ON_FIRST_USE, TRUST_SIGNED_CERTIFICATES, SSL_AVAILABLE
-from neo4j.v1.exceptions import CypherError, ProtocolError
-from neo4j.v1 import GraphDatabase, basic_auth
-from py2neo import Node, Relationship, Graph
+
+try:
+    from neo4j.v1 import TRUST_ON_FIRST_USE, TRUST_SIGNED_CERTIFICATES, SSL_AVAILABLE
+    from neo4j.v1.exceptions import CypherError, ProtocolError
+    from neo4j.v1 import GraphDatabase, basic_auth
+    from py2neo import Node, Relationship, Graph
+except ImportError:
+    pass
 
 
 logger = logging.getLogger(__name__)

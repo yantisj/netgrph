@@ -31,6 +31,8 @@
 """
 NetGrph NetDB IP Interface
 """
+import re
+import socket
 import logging
 import pymysql
 import nglib.netdb
@@ -42,6 +44,13 @@ logger = logging.getLogger(__name__)
 
 def get_netdb_ip(ip, hours=720):
     """Get All Details for an IP"""
+
+    # Check for non-ip, try DNS
+    if not re.search(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', ip):
+        try:
+            ip = socket.gethostbyname(ip)
+        except socket.gaierror:
+            raise Exception("Hostname Lookup Failure on: " + ip)
 
     netdb_ses = nglib.netdb.connect_netdb()
 

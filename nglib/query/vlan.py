@@ -98,10 +98,10 @@ def search_vlan_id(vid, rtype="NGTREE", allSwitches=True):
         raise Exception("RType Not Supported, use:" + str(rtypes))
 
 
-def get_vtree(vname, rtype="TREE"):
+def get_vtree(vname, rtype="NGTREE"):
     """Get a VTree on a Vlan Name"""
 
-    rtypes = ('TREE', 'JSON', 'YAML')
+    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
 
     # Truncate Switches when Tree
     allSwitches = True
@@ -110,14 +110,10 @@ def get_vtree(vname, rtype="TREE"):
 
     if rtype in rtypes:
 
-        print()
         ngtree = load_bridge_tree(vname, getSW=allSwitches)
-        if rtype == "TREE":
-            nglib.ngtree.print_ngtree(ngtree, dict())
-        elif rtype == "JSON":
-            nglib.ngtree.export.exp_JSON(ngtree)
-        elif rtype == "YAML":
-            nglib.ngtree.export.exp_YAML(ngtree)
+        # Export Results
+        nglib.query.exp_ngtree(ngtree, rtype)
+        return ngtree
 
     else:
         raise Exception("RType Not Supported, use:" + str(rtypes))

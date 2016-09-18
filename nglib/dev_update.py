@@ -58,12 +58,20 @@ def import_devicelist(fileName, infoFile):
 
     # Import Location Info
     df = open(infoFile)
-    infodb = csv.DictReader(df)
+    devcsv = csv.DictReader(df)
+    devinfodb = dict()
 
-    locdb = dict()
-
-    for en in infodb:
-        locdb[en['Device']] = en['Location']
+    for en in devcsv:
+        devinfodb[en['Device']] = dict()
+        devinfodb[en['Device']]['Location'] = 'Unknown'
+        devinfodb[en['Device']]['Model'] = 'Unknown'
+        devinfodb[en['Device']]['Version'] = 'Unknown'
+        if 'Location' in en:
+            devinfodb[en['Device']]['Location'] = en['Location']
+        if 'Model' in en:
+            devinfodb[en['Device']]['Model'] = en['Model']
+        if 'Version' in en:
+            devinfodb[en['Device']]['Version'] = en['Version']
 
     for en in devdb:
 
@@ -73,28 +81,26 @@ def import_devicelist(fileName, infoFile):
             group = None
         rType = en['Type']
 
-        # Location Data
-        location = 'Unknown'
-        if device in locdb.keys():
-            location = locdb[device]
-
+        if device not in devinfodb:
+            devinfodb[device] = {"Location": "Unknown", "Model": "Unknown", \
+                                 "Version": "Unknown"}
 
         if rType == "Primary":
             if nglib.verbose > 3:
                 print("R: " + device)
-            import_router(device, group, time, seed, rType, location)
+            import_router(device, group, time, seed, rType, devinfodb[device])
 
         elif rType == "Standby":
             if nglib.verbose > 3:
                 print("Rs: " + device)
-            import_router(device, group, time, seed, rType, location)
+            import_router(device, group, time, seed, rType, devinfodb[device])
         else:
             if nglib.verbose > 3:
                 print("S: " + device)
-            import_switch(device, group, time, seed, location)
+            import_switch(device, group, time, seed, devinfodb[device])
 
 
-def import_switch(switch, group, time, seed, location):
+def import_switch(switch, group, time, seed, devinfo):
     """ Import single switch (ignores switches without MGMT Group)"""
 
     distance = nglib.max_distance
@@ -118,16 +124,20 @@ def import_switch(switch, group, time, seed, location):
 
             nglib.py2neo_ses.cypher.execute(
                 'CREATE (s:Switch {name:{switch}, distance:{distance}, seed:{seed}, '
-                + 'mgmt:{group}, loation:{location}, time:{time}}) return s',
+                + 'mgmt:{group}, location:{location}, time:{time}, model:{model}, version:{version}})'
+                + ' RETURN s',
                 switch=switch, seed=isSeed, distance=distance, group=group,
-                location=location, time=time)
+                location=devinfo['Location'], model=devinfo['Model'], version=devinfo['Version'],
+                time=time)
         else:
             logger.debug("Switch Exists %s", switch)
 
             nglib.py2neo_ses.cypher.execute(
                 'MATCH (s:Switch {name:{switch}}) SET s += '
-                + '{time:{time}, seed:{seed}, mgmt:{group}, location:{location}} RETURN s',
-                switch=switch, seed=isSeed, group=group, location=location, time=time)
+                + '{time:{time}, seed:{seed}, mgmt:{group}, location:{location},'
+                + 'model:{model}, version:{version}} RETURN s',
+                switch=switch, seed=isSeed, group=group, location=devinfo['Location'],
+                model=devinfo['Model'], version=devinfo['Version'], time=time)
 
         # Update Distance on Node from Seed
         update_distance(switch)
@@ -136,7 +146,7 @@ def import_switch(switch, group, time, seed, location):
         logger.debug("Skipping: No Management Group for Switch: " + switch)
 
 
-def import_router(router, group, time, seed, rType, location):
+def import_router(router, group, time, seed, rType, devinfo):
     """ Import routers from devlicelist.csv format"""
 
     distance = nglib.max_distance
@@ -165,18 +175,21 @@ def import_router(router, group, time, seed, rType, location):
 
         nglib.py2neo_ses.cypher.execute(
             'CREATE (r:Switch:Router {name:{router}, seed:{seed}, distance:{distance}, '
-            + 'standby:{standby}, mgmt:{group}, location:{location}, time:{time}})',
-            router=router, seed=isSeed, distance=distance, location=location,
-            standby=standby, group=group, time=time)
+            + 'standby:{standby}, mgmt:{group}, location:{location}, '
+            + 'model:{model}, version:{version}, time:{time}})',
+            router=router, seed=isSeed, distance=distance, location=devinfo['Location'],
+            model=devinfo['Model'], version=devinfo['Version'], standby=standby,
+            group=group, time=time)
 
     else:
         logger.debug("Router Exists %s, updating timestamp", router)
         nglib.py2neo_ses.cypher.execute(
             'MATCH (s:Switch:Router {name:{router}}) SET s += '
             + '{time:{time},seed:{seed},standby:{standby}, '
-            + 'location:{location}, mgmt:{group}} RETURN s',
+            + 'location:{location}, model:{model}, version:{version}, mgmt:{group}} RETURN s',
             router=router, seed=isSeed, standby=standby, group=group,
-            location=location, time=time)
+            location=devinfo['Location'], model=devinfo['Model'], version=devinfo['Version'],
+            time=time)
 
     # Map all routers to default VRF
     link_router_to_vrf(router, "default")
