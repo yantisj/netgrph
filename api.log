@@ -1,0 +1,294 @@
+2016-09-18 10:06:40,446 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:06:40,462 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:06:58,850 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:06:58,854 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:06:58,875 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:06:58,876 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:06:59,128 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:06:59,132 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:06:59,150 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:06:59,157 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:14:30,648 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:14:45,019 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:14:48,768 apisrv.user:INFO: Adding new user to the database: testuser
+2016-09-18 10:16:59,471 werkzeug:INFO:  * Detected change in '/Users/yantisj/netgrph/dev/runsrv.py', reloading
+2016-09-18 10:16:59,514 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:16:59,781 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:16:59,785 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:16:59,803 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:16:59,810 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:17:06,708 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:17:06,712 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:17:06,731 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:17:06,732 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:17:06,976 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:17:06,981 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:17:06,999 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:17:07,006 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:21:43,888 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:21:43] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 404 -
+2016-09-18 10:22:47,864 werkzeug:INFO:  * Detected change in '/Users/yantisj/netgrph/dev/apisrv/views.py', reloading
+2016-09-18 10:22:47,912 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:22:48,179 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:22:48,183 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:22:48,201 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:22:48,208 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:23:00,279 werkzeug:INFO:  * Detected change in '/Users/yantisj/netgrph/dev/apisrv/views.py', reloading
+2016-09-18 10:23:00,320 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:23:00,672 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:23:00,675 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:23:00,684 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:23:00,693 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:23:05,695 apisrv.user:DEBUG: Successfully Authenticated user: testuser
+2016-09-18 10:23:05,701 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:23:05] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 500 -
+2016-09-18 10:23:31,268 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:23:31,271 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:23:31,280 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:23:31,281 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:23:31,612 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:23:31,615 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:23:31,624 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:23:31,631 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:23:33,776 apisrv.user:DEBUG: Successfully Authenticated user: testuser
+2016-09-18 10:23:33,784 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:23:33] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 500 -
+2016-09-18 10:24:08,983 werkzeug:INFO:  * Detected change in '/Users/yantisj/netgrph/dev/apisrv/views.py', reloading
+2016-09-18 10:24:09,054 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:24:09,427 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:24:09,431 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:24:09,439 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:24:09,448 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:29:13,301 werkzeug:INFO:  * Detected change in '/Users/yantisj/netgrph/dev/apisrv/__init__.py', reloading
+2016-09-18 10:29:13,364 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:29:13,726 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:29:49,353 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:30:13,107 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:30:13,110 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:30:13,119 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:30:13,119 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:30:13,468 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:30:13,471 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:30:13,479 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:30:13,486 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:30:18,281 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:31:00,229 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:31:00,232 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:31:00,240 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:31:00,241 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:31:00,592 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:31:00,595 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:31:00,604 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:31:00,612 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:31:02,166 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:31:02,246 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:31:02,257 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:31:02] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 500 -
+2016-09-18 10:32:22,379 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:32:22,394 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:32:22,399 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:22] "GET / HTTP/1.1" 500 -
+2016-09-18 10:32:22,409 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:22] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2016-09-18 10:32:22,411 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:22] "GET /?__debugger__=yes&cmd=resource&f=jquery.js HTTP/1.1" 200 -
+2016-09-18 10:32:22,411 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:22] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2016-09-18 10:32:22,457 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:22] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2016-09-18 10:32:22,470 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:22] "GET /?__debugger__=yes&cmd=resource&f=ubuntu.ttf HTTP/1.1" 200 -
+2016-09-18 10:32:22,479 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:22] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2016-09-18 10:32:24,635 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:32:24,649 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:32:24,653 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:24] "GET /test HTTP/1.1" 500 -
+2016-09-18 10:32:24,662 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:24] "GET /test?__debugger__=yes&cmd=resource&f=jquery.js HTTP/1.1" 200 -
+2016-09-18 10:32:24,663 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:24] "GET /test?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2016-09-18 10:32:24,664 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:24] "GET /test?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2016-09-18 10:32:24,708 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:24] "GET /test?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2016-09-18 10:32:24,720 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:24] "GET /test?__debugger__=yes&cmd=resource&f=ubuntu.ttf HTTP/1.1" 200 -
+2016-09-18 10:32:24,729 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:24] "GET /test?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2016-09-18 10:32:35,952 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:32:35,957 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:32:35,965 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:32:35,965 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:32:36,322 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:32:36,325 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:32:36,334 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:32:36,340 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:32:38,169 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:32:38,184 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:32:38,194 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:38] "GET /test HTTP/1.1" 500 -
+2016-09-18 10:32:38,201 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:38] "GET /test?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2016-09-18 10:32:38,202 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:38] "GET /test?__debugger__=yes&cmd=resource&f=jquery.js HTTP/1.1" 200 -
+2016-09-18 10:32:38,203 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:38] "GET /test?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2016-09-18 10:32:38,214 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:38] "GET /test?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2016-09-18 10:32:38,239 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:38] "GET /test?__debugger__=yes&cmd=resource&f=ubuntu.ttf HTTP/1.1" 200 -
+2016-09-18 10:32:46,407 werkzeug:INFO:  * Detected change in '/Users/yantisj/netgrph/dev/apisrv/__init__.py', reloading
+2016-09-18 10:32:46,471 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:32:46,861 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:32:46,865 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:32:46,874 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:32:46,881 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:32:49,534 apisrv.views:INFO: Hello World Requested
+2016-09-18 10:32:49,534 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:32:49] "GET /test HTTP/1.1" 200 -
+2016-09-18 10:32:59,968 werkzeug:INFO:  * Detected change in '/Users/yantisj/netgrph/dev/apisrv/__init__.py', reloading
+2016-09-18 10:33:00,033 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:33:00,399 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:33:00,403 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:33:00,411 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:33:00,418 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:33:03,164 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:33:03,175 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:33:03,186 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:33:03] "GET /test HTTP/1.1" 500 -
+2016-09-18 10:33:03,191 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:33:03] "GET /test?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2016-09-18 10:33:03,192 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:33:03] "GET /test?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2016-09-18 10:33:03,193 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:33:03] "GET /test?__debugger__=yes&cmd=resource&f=jquery.js HTTP/1.1" 200 -
+2016-09-18 10:33:03,202 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:33:03] "GET /test?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2016-09-18 10:33:03,213 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:33:03] "GET /test?__debugger__=yes&cmd=resource&f=ubuntu.ttf HTTP/1.1" 200 -
+2016-09-18 10:33:03,225 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:33:03] "GET /test?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2016-09-18 10:33:50,734 werkzeug:INFO:  * Detected change in '/Users/yantisj/netgrph/dev/apisrv/__init__.py', reloading
+2016-09-18 10:33:50,799 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:34:35,116 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:34:35,120 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:34:35,128 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:34:35,129 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:34:35,481 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:34:35,484 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:34:35,492 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:34:35,499 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:34:38,436 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:34:38,444 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:34:38,444 apisrv.views:INFO: Hello World Requested
+2016-09-18 10:34:38,444 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:34:38] "GET /test HTTP/1.1" 200 -
+2016-09-18 10:34:41,505 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:34:41,512 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:34:42,115 apisrv.user:DEBUG: Successfully Authenticated user: testuser
+2016-09-18 10:34:42,116 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 10:34:42,116 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 10:34:43,010 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:34:43] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 500 -
+2016-09-18 10:34:57,813 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:34:57,821 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:34:58,416 apisrv.user:DEBUG: Successfully Authenticated user: testuser
+2016-09-18 10:34:58,416 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 10:34:58,416 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 10:34:58,503 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:34:58] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 500 -
+2016-09-18 10:35:05,770 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:35:05,779 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:35:06,365 apisrv.user:DEBUG: Successfully Authenticated user: testuser
+2016-09-18 10:35:06,366 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 10:35:06,366 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 10:35:06,433 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:35:06] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 500 -
+2016-09-18 10:35:22,764 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:35:22,767 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:35:22,777 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:35:22,778 werkzeug:INFO:  * Restarting with stat
+2016-09-18 10:35:23,131 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 10:35:23,134 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:35:23,142 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 10:35:23,149 werkzeug:INFO:  * Debugger pin code: 264-153-116
+2016-09-18 10:35:24,917 nglib:INFO: Enabled STDOUT Logging
+2016-09-18 10:35:24,925 nglib:DEBUG: Initialized Configuration Successfully
+2016-09-18 10:35:25,521 apisrv.user:DEBUG: Successfully Authenticated user: testuser
+2016-09-18 10:35:25,522 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 10:35:25,522 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 10:35:25,585 nglib.query.net:INFO: Query: Looking up 128.23.200.1 for yantisj
+2016-09-18 10:35:25,640 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 10:35:25,696 nglib.query.net:INFO: Query: Looking up 128.23.200.1 for yantisj
+2016-09-18 10:35:25,747 nglib.query.path:INFO: Query: Finding Routed Paths (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 10:35:25,747 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 10:35:25,801 nglib.query.net:INFO: Query: Looking up 128.23.200.1 for yantisj
+2016-09-18 10:35:26,195 nglib.query.path:INFO: Query: Finding Switched Paths (mdcsf1 --> core1) for yantisj
+2016-09-18 10:35:26,265 nglib.query.path:INFO: Query: Finding Switched Paths (mdcsf1 --> core2) for yantisj
+2016-09-18 10:35:26,283 nglib.query.path:INFO: Query: Finding Switched Paths (mdcsf2 --> core1) for yantisj
+2016-09-18 10:35:26,290 nglib.query.path:INFO: Query: Finding Switched Paths (mdcsf2 --> core2) for yantisj
+2016-09-18 10:35:26,317 nglib.query.path:INFO: Query: Finding Switched Paths (mdcsfold1 --> core1) for yantisj
+2016-09-18 10:35:26,325 nglib.query.path:INFO: Query: Finding Switched Paths (mdcsfold1 --> core2) for yantisj
+2016-09-18 10:35:26,331 nglib.query.path:INFO: Query: Finding Switched Paths (mdcsfold2 --> core1) for yantisj
+2016-09-18 10:35:26,336 nglib.query.path:INFO: Query: Finding Switched Paths (mdcsfold2 --> core2) for yantisj
+2016-09-18 10:35:26,341 nglib.query.path:INFO: Query: Finding Switched Paths (core1 --> mdcmdf) for yantisj
+2016-09-18 10:35:26,347 nglib.query.path:INFO: Query: Finding Switched Paths (core2 --> mdcmdf) for yantisj
+2016-09-18 10:35:26,353 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:35:26] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 200 -
+2016-09-18 10:36:08,991 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 10:36:08,999 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 10:36:12,798 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 10:36:13,192 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:36:13] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 200 -
+2016-09-18 10:36:33,757 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 10:36:34,128 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:36:34] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=True&depth=20 HTTP/1.1" 200 -
+2016-09-18 10:36:49,956 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:36:49] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:41:55,704 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:41:55] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:42:06,565 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:42:06] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:43:18,047 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:43:18] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:45:13,811 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:45:13] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:48:26,757 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:48:26] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:48:39,149 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:48:39] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:51:01,767 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:51:01] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:51:48,416 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:51:48] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:52:27,754 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:52:27] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:52:29,760 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:52:29] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:57:37,224 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:57:37] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:57:57,482 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:57:57] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:57:59,296 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:57:59] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:58:00,955 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:58:00] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:58:34,847 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:58:34] "GET /netgrph/api/v1.0/nlist?group=pci HTTP/1.1" 200 -
+2016-09-18 10:59:03,565 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 10:59:03,899 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:59:03] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 10:59:34,583 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 10:59:34,921 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:59:34] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 10:59:41,907 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 10:59:42,245 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:59:42] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 10:59:49,769 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 10:59:50,097 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:59:50] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 10:59:59,055 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 10:59:59,371 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 10:59:59] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:00:01,519 flask-limiter:WARNING: ratelimit 5 per 1 minute (127.0.0.1) exceeded at endpoint: get_full_path
+2016-09-18 11:00:01,519 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:01] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 429 -
+2016-09-18 11:00:05,137 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:00:05,472 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:05] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:00:08,631 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:00:08,945 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:08] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:00:10,467 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:00:10,799 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:10] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:00:12,439 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:00:12,748 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:12] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:00:14,294 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:00:14,614 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:14] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:00:15,433 flask-limiter:WARNING: ratelimit 5 per 1 minute (127.0.0.1) exceeded at endpoint: get_full_path
+2016-09-18 11:00:15,434 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:15] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 429 -
+2016-09-18 11:00:18,624 flask-limiter:WARNING: ratelimit 5 per 1 minute (127.0.0.1) exceeded at endpoint: get_full_path
+2016-09-18 11:00:18,625 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:18] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 429 -
+2016-09-18 11:00:23,561 flask-limiter:WARNING: ratelimit 5 per 1 minute (127.0.0.1) exceeded at endpoint: get_full_path
+2016-09-18 11:00:23,561 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:00:23] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 429 -
+2016-09-18 11:01:35,567 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:01:35,878 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:01:35] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:02:33,288 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:02:33,608 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:02:33] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=True&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:05:40,471 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:05:40,778 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:05:40] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:05:54,913 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:05:55,234 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:05:55] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=True&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:06:13,142 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.19) for yantisj
+2016-09-18 11:06:13,448 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:06:13] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.19&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:10:16,760 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:10:16] "GET /netgrph/api/v1.0/rpath?src=128.23.1.1&dst=128.23.200.1&depth=20 HTTP/1.1" 404 -
+2016-09-18 11:10:35,225 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:10:35] "GET /netgrph/api/v1.0/rpath?src=128.23.1.1&dst=128.23.200.1&depth=20 HTTP/1.1" 404 -
+2016-09-18 11:10:37,918 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:10:37] "GET /netgrph/api/v1.0/rpath?src=128.23.1.1&dst=128.23.200.1&depth=20 HTTP/1.1" 404 -
+2016-09-18 11:10:41,755 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 11:10:41,762 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 11:10:43,753 nglib.query.path:INFO: Query: Finding Routed Paths (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 11:10:43,753 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 11:10:43,800 nglib.query.net:INFO: Query: Looking up 128.23.200.1 for yantisj
+2016-09-18 11:10:43,866 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:10:43] "GET /netgrph/api/v1.0/rpath?src=128.23.1.1&dst=128.23.200.1&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:13:07,684 nglib.query.path:INFO: Query: Finding Routed Paths (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 11:13:07,684 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 11:13:07,728 nglib.query.net:INFO: Query: Looking up 128.23.200.1 for yantisj
+2016-09-18 11:13:07,800 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:13:07] "GET /netgrph/api/v1.0/rpath?src=128.23.1.1&dst=128.23.200.1&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:15:01,148 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 11:15:01,155 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 11:15:15,147 nglib.query.path:INFO: Query: Finding Switched Paths (usb6sw2 --> core1) for yantisj
+2016-09-18 11:15:15,155 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:15:15] "GET /netgrph/api/v1.0/spath?src=usb6sw2&dst=core1&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:15:19,520 nglib.query.path:INFO: Query: Finding Switched Paths (usb6sw2 --> core.) for yantisj
+2016-09-18 11:15:19,524 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:15:19] "GET /netgrph/api/v1.0/spath?src=usb6sw2&dst=core.&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:15:52,611 nglib.query.path:INFO: Query: Finding Full Path (128.23.1.1 --> 128.23.200.1) for yantisj
+2016-09-18 11:15:52,916 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:15:52] "GET /netgrph/api/v1.0/path?src=128.23.1.1&dst=128.23.200.1&onepath=False&depth=20 HTTP/1.1" 200 -
+2016-09-18 11:16:55,643 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 11:16:55,688 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:16:55] "GET /netgrph/api/v1.0/net?ip=128.23.1.1 HTTP/1.1" 200 -
+2016-09-18 11:17:02,691 nglib.query.net:INFO: Query: Looking up 128.23.1.1 for yantisj
+2016-09-18 11:17:02,733 werkzeug:INFO: 127.0.0.1 - - [18/Sep/2016 11:17:02] "GET /netgrph/api/v1.0/net?ip=128.23.1.1 HTTP/1.1" 200 -
+2016-09-18 11:17:16,390 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 11:17:16,393 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 11:17:16,401 werkzeug:INFO:  * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+2016-09-18 11:17:16,402 werkzeug:INFO:  * Restarting with stat
+2016-09-18 11:17:16,751 passlib.registry:DEBUG: registered 'sha256_crypt' handler: <class 'passlib.handlers.sha2_crypt.sha256_crypt'>
+2016-09-18 11:17:16,754 runsrv:WARNING: HTTPS is not configured, defaulting to localhost only
+2016-09-18 11:17:16,762 werkzeug:WARNING:  * Debugger is active!
+2016-09-18 11:17:16,769 werkzeug:INFO:  * Debugger pin code: 264-153-116

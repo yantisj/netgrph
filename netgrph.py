@@ -34,6 +34,7 @@
 """netgrph is the primary CLI query too for NetGrph
    Also see ngreport
 """
+import sys
 import os
 import re
 import argparse
@@ -141,7 +142,10 @@ def check_path(singlepath):
 
 def api_call(apicall, lrtype):
     """ Uses the API for queries instead of the nglib library """
-    r = requests.get(api['url'] + apicall, \
+    requrl = api['url'] + apicall
+    if nglib.verbose:
+        print("API Request", requrl)
+    r = requests.get(requrl, \
         auth=(api['user'], api['pass']), verify=api['verify'])
 
     if r.status_code == 200:
@@ -167,6 +171,9 @@ if args.verbose:
 if args.debug:
     verbose = args.debug
 
+# Setup Globals for Debugging
+nglib.verbose = verbose
+
 # 7 day default for NetDB
 if not args.days:
     args.days = 7
@@ -188,9 +195,8 @@ if args.depth:
 # API Client Check
 config = configparser.ConfigParser()
 config.read(config_file)
-if 'apiX' in config:
+if 'api' in config:
     use_api = True
-    print("Using API")
     try:
         api['url'] = config['api']['url']
         api['user'] = config['api']['user']
@@ -203,9 +209,6 @@ if 'apiX' in config:
     else:
         api['verify'] = True
 else:
-    # Setup Globals for Debugging
-    nglib.verbose = verbose
-
     # Initialize Library
     nglib.init_nglib(config_file)
 
@@ -218,7 +221,7 @@ elif args.qpath:
     rtype = "QTREE"
     if use_api:
         call = 'path?src=' + args.search + '&dst=' +  args.qpath \
-            + '&onepath=' + str(check_path(False) + '&depth=' + depth)
+            + '&onepath=' + str(check_path(False)) + '&depth=' + depth
         api_call(call, rtype)
     else:
         if args.output:
@@ -231,15 +234,25 @@ elif args.spath:
 
     if args.output:
         rtype = args.output
-    nglib.query.path.get_switched_path(args.spath, args.search, \
-        {"onepath": check_path(False), "depth": depth}, rtype=rtype)
+    if use_api:
+        call = 'spath?src=' + args.spath + '&dst=' +  args.search \
+        + '&onepath=' + str(check_path(False)) + '&depth=' + depth
+        api_call(call, rtype)
+    else:
+        nglib.query.path.get_switched_path(args.spath, args.search, \
+            {"onepath": check_path(False), "depth": depth}, rtype=rtype)
 
 elif args.rpath:
     rtype = "TREE"
     if args.output:
         rtype = args.output
-    nglib.query.path.get_routed_path(args.rpath, args.search, \
-        {"onepath":check_path(False), "VRF": args.vrf, "depth": depth}, rtype=rtype)
+    if use_api:
+        call = 'rpath?src=' + args.rpath + '&dst=' +  args.search \
+        + '&depth=' + depth
+        api_call(call, rtype)
+    else:
+        nglib.query.path.get_routed_path(args.rpath, args.search, \
+            {"onepath":check_path(False), "VRF": args.vrf, "depth": depth}, rtype=rtype)
 
 elif args.path:
     rtype = "TREE"
@@ -247,7 +260,7 @@ elif args.path:
         rtype = args.output
     if use_api:
         call = 'path?src=' + args.path + '&dst=' +  args.search \
-        + '&onepath=' + str(check_path(True) + '&depth=' + depth)
+        + '&onepath=' + str(check_path(True)) + '&depth=' + depth
         api_call(call, rtype)
     else:
         nglib.query.path.get_full_path(args.path, args.search, \
@@ -309,6 +322,11 @@ elif args.vid:
 
 # Universal Search
 elif args.search:
+
+    if use_api:
+        print("Error: Universal Search currently not available via the API, use -options instead", \
+              file=sys.stderr)
+        sys.exit(1)
 
     vid = re.search(r'^(\d+)$', args.search)
     vname = re.search(r'^(\w+\-\d+)$', args.search)

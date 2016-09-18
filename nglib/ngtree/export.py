@@ -34,6 +34,7 @@
 """
 Helper functions to export ngtrees in the right format
 """
+import re
 import logging
 import json
 import yaml
@@ -97,40 +98,26 @@ def cleanNGTree(ngtree):
     return cleanND
 
 def exp_CSV(ngtree):
-    """Attempts to Flatten JSON and dump as CSV"""
+    """Flatten NGTREE and dump as CSV, only dumps one level deep"""
 
-    ngjson = json.dumps(ngtree, sort_keys=True)
+    fieldnames = []
 
-    fdict = tocsv(ngjson)
+    for child in sorted(ngtree.keys()):
+        if re.search('_child', child):
+            for en in sorted(ngtree[child].keys()):
+                if isinstance(en, (int, str)) and en not in fieldnames:
+                    fieldnames.append(en)
 
-    for key in fdict.keys():
-        print(key)
+    excsv = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
+    excsv.writeheader()
 
-def _tocsv(obj, base=''):
-    """Borrowed"""
-
-    flat_dict = {}
-    for k in obj:
-        value = obj[k]
-        if value is None:
-            value = "None"
-        if isinstance(value, dict):
-            flat_dict.update(_tocsv(value, base + k + '.'))
-        elif isinstance(value, (int, str, float, bool)):
-            flat_dict[base + k] = value
-        #elif value is None:
-        #    print("None Value CSV", k, obj[k])
-        else:
-            raise ValueError("Can't serialize value of type "+ type(value).__name__)
-    return flat_dict
-
-def tocsv(json_content):
-    """Dump JSON to CSV"""
-    value = json.loads(json_content)
-    if isinstance(value, dict):
-        return _tocsv(value)
-    else:
-        raise ValueError("JSON root object must be a hash")
+    for child in sorted(ngtree.keys()):
+        if re.search('_child', child):
+            entry = dict()
+            for en in sorted(ngtree[child].keys()):
+                if isinstance(en, (int, str)):
+                    entry[en] = ngtree[child][en]
+            excsv.writerow(entry)
 
 def strip_ngtree(ngtree, top=True):
     """Strips everything but headers from ngtree"""

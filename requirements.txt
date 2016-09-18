@@ -1,8 +1,13 @@
 # Python Requirements
+pylint
 pyyaml
 pymysql
 py2neo==2.0.8
 neo4j-driver
 Flask
 Flask-HTTPAuth
+flask_limiter
+passlib
+sqlalchemy
+flask_sqlalchemy
 requests
