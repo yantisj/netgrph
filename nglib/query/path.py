@@ -325,14 +325,14 @@ def get_routed_path(net1, net2, popt, rtype="NGTREE"):
         hopSet = set()
 
         # Translate IPs to CIDRs
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net1):
-            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
-            net1 = n1tree['_child001']['Name']
+        n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
+        net1 = n1tree['_child001']['Name']
+        if n1tree:
+            net1 = n1tree['_child001']['Name']     
 
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net2):
-            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
-            if n2tree:
-                net2 = n2tree['_child001']['Name']
+        n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
+        if n2tree:
+            net2 = n2tree['_child001']['Name']
 
         ngtree = nglib.ngtree.get_ngtree("Path", tree_type="L3-PATH")
         ngtree['Search Depth'] = popt['depth']

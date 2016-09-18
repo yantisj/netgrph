@@ -13,3 +13,5 @@ ngtest.py.bak
 venv/
 api.log
 api.db
+newhal.crt
+newhal.key

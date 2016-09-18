@@ -33,6 +33,7 @@
 import sys
 import re
 import socket
+from operator import itemgetter, attrgetter
 import ipaddress
 import logging
 import nglib
@@ -182,8 +183,13 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
             + 'v.name as VRF, n.vrfcidr AS vrfcidr, '
             + 'v.seczone AS SecurityLevel ORDER BY CIDR')
 
-        # Check to see if networks match group
-        for net in networks:
+
+        # Sort results by gateway IP
+        sort_nets = {}
+        for n in networks:
+            sort_nets[ipaddress.IPv4Address(n['Gateway'])] = n
+        for net in sorted(sort_nets.keys(), key=ipaddress.get_mixed_type_key):
+            net = sort_nets[net]
 
             # Build a proper dict
             netDict = dict()
@@ -240,9 +246,14 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
         ngtree['CIDR'] = cidr
 
         networks = nglib.bolt_ses.run(
-            'MATCH (n:Network) RETURN n.gateway AS gateway, n.name AS vrfcidr')
+            'MATCH (n:Network) RETURN n.gateway AS gateway, n.name AS vrfcidr ORDER BY gateway')
 
-        for net in networks:
+        # Sort results by gateway IP
+        sort_nets = {}
+        for n in networks:
+            sort_nets[ipaddress.IPv4Address(n['gateway'])] = n
+        for net in sorted(sort_nets.keys(), key=ipaddress.get_mixed_type_key):
+            net = sort_nets[net]
 
             # Check to see if gateway IP within CIDR (subnet boundary won't match)
             if net['gateway']:
