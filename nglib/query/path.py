@@ -70,15 +70,19 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
         n1tree, n2tree = None, None
 
         # Translate IPs to CIDRs
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net1):
-            n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
-            if n1tree:
-                net1 = n1tree['_child001']['Name']
+        n1tree = nglib.query.net.get_net(net1, rtype="NGTREE", verbose=popt['verbose'])
+        if n1tree:
+            net1 = n1tree['_child001']['Name']
 
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', net2):
-            n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
-            if n2tree:
-                net2 = n2tree['_child001']['Name']
+        n2tree = nglib.query.net.get_net(net2, rtype="NGTREE", verbose=popt['verbose'])
+        if n2tree:
+            net2 = n2tree['_child001']['Name']
+
+        if not n1tree or not n2tree:
+            errort = nglib.ngtree.get_ngtree("Path Error", tree_type="L3-PATH")
+            errort['Error'] = 'Network Lookup Error'
+            errort["Lx Path"] = src + " -> " + dst
+            return errort
 
         srctree, dsttree, srcswp, dstswp = None, None, None, None
 
@@ -238,11 +242,9 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
         srct, dstt, ngtree = None, None, None
 
         # Translate IPs to CIDRs
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', src):
-            srct = nglib.query.net.get_net(src, rtype="NGTREE", verbose=popt['verbose'])
+        srct = nglib.query.net.get_net(src, rtype="NGTREE", verbose=popt['verbose'])
 
-        if re.search(r'^\d+\.\d+\.\d+\.\d+$', dst):
-            dstt = nglib.query.net.get_net(dst, rtype="NGTREE", verbose=popt['verbose'])
+        dstt = nglib.query.net.get_net(dst, rtype="NGTREE", verbose=popt['verbose'])
 
         # Intra VRF
         if srct['_child001']['VRF'] == dstt['_child001']['VRF']:

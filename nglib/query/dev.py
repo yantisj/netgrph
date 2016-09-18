@@ -137,6 +137,8 @@ def get_device(dev, rtype="NGTREE", vrange=None):
         return ngtree
 
     print("No results found for device:", dev, file=sys.stderr)
+    ngtree['Error'] = "No results for " + dev
+    return ngtree
 
 def get_neighbors(dev):
     """

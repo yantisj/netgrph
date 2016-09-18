@@ -31,6 +31,8 @@
  NetGrph Query Network data
 """
 import sys
+import re
+import socket
 import ipaddress
 import logging
 import nglib
@@ -50,6 +52,7 @@ def get_net(ip, rtype="TREE", days=7, verbose=True):
         logger.info("Query: Looking up %s for %s", ip, nglib.user)
 
     if rtype in rtypes:
+
         net = nglib.query.net.find_cidr(ip)
         ngtree = get_net_extended_tree(net, ip=ip, ngname="IP Object")
 
@@ -285,6 +288,13 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
 
 def find_cidr(ip):
     """Finds most specific CIDR in Networks"""
+
+    # Check for non-ip, try DNS
+    if not re.search(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', ip):
+        try:
+            ip = socket.gethostbyname(ip)
+        except socket.gaierror:
+            raise Exception("Hostname Lookup Failure on: " + ip)
 
     # Always start with default route
     mostSpecific = "0.0.0.0/0"

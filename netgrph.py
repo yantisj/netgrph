@@ -74,15 +74,18 @@ parser = argparse.ArgumentParser(prog='netgrph',
                                  epilog="""
                                  Examples:
                                  netgrph 10.1.1.1 (Free Search for IP),
-                                 netgrph -net 10.1.1.0/24 (Search for CIDR),
-                                 netgrph -group MDC (VLAN Database Search),
-                                 netgrph -fp 10.1.1.1 10.2.2.1 (Firewall Path Search)
+                                 netgrph 10.1.0.0/16 (Search for results in CIDR),
+                                 netgrph 999 (VLAN Database Search),
+                                 netgrph 10.1.1.1 10.2.2.1 (Path Analysis),
+                                 netgrph -allpaths -p 10.1.1.1 10.2.2.1 (Full Path Analysis)
                                  """)
 
 parser.add_argument("search", help="Search the NetGrph Database (Wildcard Default)",
                     type=str)
-parser.add_argument("qpath", help="Combine with search for Path Analysis (optional)",
+parser.add_argument("qpath", help="Quick Path Analysis (netgrph src dst)",
                     nargs='?', default=None, type=str)
+parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
+                    action="store_true")
 parser.add_argument("-ip", help="Network Details for an IP",
                     action="store_true")
 parser.add_argument("-net", help="All networks within a CIDR (eg. 10.0.0.0/8)",
@@ -91,40 +94,38 @@ parser.add_argument("-nlist", help="Get all networks in an alert group",
                     action="store_true")
 parser.add_argument("-nfilter", help="Get all networks on a filter (see netgrph.ini)",
                     action="store_true")
-parser.add_argument("-dev", help="Get the Details for a Device (Switch/Router/FW)",
+parser.add_argument("-group", help="Get VLANs for a Management Group",
+                    action="store_true")
+parser.add_argument("-vid", help="VLAN ID Search", action="store_true")
+parser.add_argument("-vtree", help="Get the VLAN Tree for a VNAME",
                     action="store_true")
 parser.add_argument("-path", metavar="src",
-                    help="L2-L4 Path Between -p src dst (ip/cidr), defaults to a single path.",
+                    help="L2-L4 Path Between -p src dst [ip/cidr] (single-path default)",
                     type=str)
-parser.add_argument("-fpath", metavar="src",
-                    help="Security Path between -fp src dst",
+parser.add_argument("-spath", metavar="src_dev",
+                    help="Switched Path between -sp src_dev dst_dev (Java Regex)",
                     type=str)
 parser.add_argument("-rpath", metavar="src",
-                    help="Routed Path between -rp IP/CIDR1 IP/CIDR2 ",
+                    help="Routed Path between -rp IP/CIDR1 IP/CIDR2 [--vrf x]",
                     type=str)
-parser.add_argument("-spath", metavar="src",
-                    help="Switched Path between -sp sw1 sw2 (Neo4j Regex)",
+parser.add_argument("-fpath", metavar="src",
+                    help="Security Path between -fp src_ip dst_ip (inter-VRF)",
                     type=str)
-parser.add_argument("-allpaths",
-                    help="Return all Paths",
-                    action="store_true")
 parser.add_argument("-singlepath",
-                    help="Return a single path",
+                    help="Return a Single Path on Path Queries",
+                    action="store_true")
+parser.add_argument("-allpaths",
+                    help="Return all Paths on Path Queries",
                     action="store_true")
 parser.add_argument("-depth", metavar="20",
                     help="Path Depth (default 20)",
                     type=int)
-parser.add_argument("-group", help="Get VLANs for a Management Group",
-                    action="store_true")
-parser.add_argument("-vrange", metavar='1[-4096]', help="VLAN Range (default 1-1999)",
-                    type=str)
-parser.add_argument("-vrf", metavar='name', help="Specific VRF",
-                    type=str)
-parser.add_argument("-vid", help="VLAN ID Search", action="store_true")
-parser.add_argument("-vtree", help="Get the VLAN Tree for a VNAME",
-                    action="store_true")
 parser.add_argument("-output", metavar='TREE',
                     help="Return Format: TREE, TABLE, CSV, JSON, YAML", type=str)
+parser.add_argument("-vrange", metavar='1[-4096]', help="VLAN Range (default 1-1999)",
+                    type=str)
+parser.add_argument("-vrf", metavar='name', help="Specify VRF",
+                    type=str)
 parser.add_argument("--days", metavar='int', help="Days in Past (NetDB Specific)", type=int)
 parser.add_argument("--conf", metavar='file', help="Alternate Config File", type=str)
 parser.add_argument("--debug", help="Set debugging level", type=int)
@@ -224,26 +225,13 @@ else:
 # Queries #
 ###########
 
-## Pathfinding
+## Firewall Path
 if args.fpath:
     if use_api:
         print("Error: API Currently Not Supported for this call, " \
               "use quick path: netgrph src dst", file=sys.stderr)
         sys.exit(1)
     nglib.query.path.get_fw_path(args.fpath, args.search, {"depth": depth})
-
-# Quick Path
-elif args.qpath:
-    rtype = "QTREE"
-    if use_api:
-        call = 'path?src=' + args.search + '&dst=' +  args.qpath \
-            + '&onepath=' + str(check_path(False)) + '&depth=' + depth
-        api_call(call, rtype)
-    else:
-        if args.output:
-            rtype = args.output
-        nglib.query.path.get_full_path(args.search, args.qpath, \
-            {"onepath": check_path(False), "depth": depth}, rtype=rtype)
 
 elif args.spath:
     rtype = "TREE"
@@ -359,6 +347,19 @@ elif args.vid:
     else:
         nglib.query.vlan.search_vlan_id(args.search, rtype=rtype)
 
+## Quick Path
+elif args.qpath:
+    rtype = "QTREE"
+    if use_api:
+        call = 'path?src=' + args.search + '&dst=' +  args.qpath \
+            + '&onepath=' + str(check_path(False)) + '&depth=' + depth
+        api_call(call, rtype)
+    else:
+        if args.output:
+            rtype = args.output
+        nglib.query.path.get_full_path(args.search, args.qpath, \
+            {"onepath": check_path(False), "depth": depth}, rtype=rtype)
+
 # Universal Search
 elif args.search:
 
@@ -410,10 +411,11 @@ elif args.search:
             nglib.query.net.get_net(args.search, rtype=rtype, days=args.days)
     elif text:
         if use_api:
-            print("ERROR: Universal Search not fully supported via API, use -options instead", \
+            parser.print_help()
+            print()
+            print("Error: Universal Search not fully supported via API, try using -options instead", \
                 file=sys.stderr)
             print()
-            parser.print_help()
             sys.exit(1)
         rtype = "TREE"
         if args.output:
