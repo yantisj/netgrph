@@ -1,13 +1,14 @@
 ## Synopsis
 
-NetGrph models ethernet networks in the [Neo4j](http://neo4j.com) Graph
-Database. The model enables you to navigate your LAN/WAN as paths of
-interconnected nodes and relationships in software, enabling automation and
-troubleshooting across the network instead of box by box.
+NetGrph models ethernet networks in the [Neo4j Graph
+Database](http://neo4j.com). This enables you to navigate your traditional
+LAN/WAN and/or mixed SDN networks as interconnected nodes and relationships
+in software, enabling automation and troubleshooting across the network instead
+of box by box.
 
 NetGrph can perform universal L2/L3/L4 path traversals, providing context for
-each layer along the path. It also serves as a VLAN and subnet database, showing
-how everything is related. It should scale well on even the largest networks,
+each layer along the path. It also serves as a VLAN and CIDR database, showing
+how everything is related. It scales well on even the largest networks,
 allowing sub-second queries across thousands of network devices. This enables
 the mapping of complex network relationships for discovery and automation.
 
@@ -16,8 +17,31 @@ Visualizations can be created by querying the Neo4j webapp as shown below. The
 data model should translate for use with tools such as D3.js, vis.js or Graphwiz
 via both the native Neo4j API as well as NetGrph's tree data structure.
 
-All data is accessible via an API, and the netgrph client can be distributed
-with a fraction of the PIP requirements (requests and YAML only)
+All data is accessible via an API, and the lightweight netgrph client can be
+distributed to multiple machines.
+
+## Features
+* Universal Layer2 - Layer4 pathfinding between any two network devices (Full L2 path completion requires NetDB)
+* Path Queries can display a single path, or all ECMPs
+* L3 Network Database of all networks (Automated, VRF aware, and searchable)
+* Search for networks via CIDR or VRF/Role based filters (eg. perim:printers|thinclient, all printers and thin clients in the perim VRF)
+* VLAN Inventory of all VLAN instances across the network, segmented by switch domain
+* Maps L2 VLAN bridges across switch domains, and calculates local/global STP roots
+* Maps L2 paths between devices (regexs supported, eg. dc.* -> dc.* for all datacenter links)
+* Reports both the configured VLANs and actual VLANs existing on each link for all L2 paths
+* Optional Secure REST API Server and Client
+* High performance, low latency queries (All queries are sub-second)
+* Easily extendable to support mixed-vendor environnments via configuration parsing to CSV input format
+* Ansible playbooks for a five minute install on Ubuntu 14.04/16.04
+
+## Requirements
+* Python 3.4+ (recommend running via virtualenv)
+* Ubuntu or MacOS (should run on any Python compatible platform, but I only support these)
+* [Neo4j Graph Database](https://neo4j.com) and Java8
+* For Cisco devices, must provide stored configurations (See [Rancid](http://www.shrubbery.net/rancid/) / [Oxidized](https://github.com/ytti/oxidized))
+* Requires CDP/LLDP Discovery Data via [NetDB](http://netdbtracking.sourceforge.net) or [NetCrawl](https://github.com/ytti/netcrawl)
+* Third-party network devices need to be parsed into the [NetGrph CSV format](test/csv/)
+* Please send me any parsers you create to include here!
 
 ## Data Model
 ### Discovering the Routed SVI Paths from Vlan 110 to 200
@@ -121,11 +145,11 @@ $ ./netgrph.py -p 10.26.72.142 10.34.72.24
 └─────[ DST 10.34.72.24 000a.b004.xxxx abc7t1sw1(Gi1/38) [vid:340] ]
 ```
 
-### More Universal Path Examples
+### Extended Universal Path Examples
 
 See [Traversal Details](docs/PathSample.md)
 
-### Query Options
+### Program Query Options
 ```
 
 usage: netgrph [-h] [-ip] [-net] [-nlist] [-dev] [-fpath src] [-rpath src]
@@ -393,27 +417,22 @@ contribute back any useful additions.
 * Import all Network ACL's for L4 analysis
 * Improve NetDB integration with universal search
 * Implement Dijkstra's Algorithm for cost-based path traversals (database plugin)
-* REST API for nglib queries (Flask Based)
 * Simple Web Interface for Path Traversals and report generation
 * Statseeker integration for including graphs/errors in reports
 
 ## Future
 
-NetGrph will be rapidly evolving at first to meet the needs of network and
-security automation in large switched networks. I am open to expanding it for
-the needs of MPLS networks and other network/security domains where appropriate.
-The application was written to be generic and approachable for use with both SDN
-and existing networks.
+I am open to expanding NetGrph for the needs of MPLS networks and other
+network/security domains where appropriate. The application was written to be
+generic and approachable for use with both SDN and existing networks.
 
 I have also added some lightweight integration with my existing [NetDB
 application](http://netdbtracking.sourceforge.net), but that will be both
 focused and optional. If you manage to create any new parsers or integrate with
 other vendor APIs, please contribute your code back.
 
-I plan to create a REST API in Flask to return NGTree data-structures for all
-queries and reports. I would like to eventually add a GUI as well, but at this
-time I'm focussed on using the application to automate tasks. In theory, it
-should be easy to create [D3
+I would like to eventually add a GUI, but at this time I'm focussed on using the
+application to automate tasks. In theory, it should be easy to create [D3
 visualizations](https://github.com/d3/d3/wiki/Gallery) from the NGTree
 data-structures. If anyone manages to create a simple GUI or use this
 application to create some interesting visualizations, I'd be happy to help and
