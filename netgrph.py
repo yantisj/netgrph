@@ -39,6 +39,7 @@ import os
 import re
 import argparse
 import configparser
+from ssl import CertificateError
 import requests
 import nglib.ngtree
 
@@ -150,11 +151,22 @@ def api_call(apicall, lrtype):
     requrl = api['url'] + apicall
     if nglib.verbose:
         print("API Request", requrl)
+
+    verify = api['verify']
+    if verify == ('0' or 'False'):
+        verify = 0
+
     try:
         r = requests.get(requrl, \
-            auth=(api['user'], api['pass']), verify=api['verify'])
-    except requests.exceptions.ConnectionError:
-        print("Failed to Connect to API Server:", requrl)
+            auth=(api['user'], api['pass']), verify=verify)
+    except CertificateError as e:
+        print("SSL Certificate Error:", e)
+        sys.exit(1)
+    except requests.exceptions.SSLError as e:
+        print("SSL Certificate Error:", e)
+        sys.exit(1)
+    except requests.exceptions.ConnectionError as e:
+        print("Failed to Connect to API Server:", requrl, e)
         sys.exit(1)
 
     if r.status_code == 200:
