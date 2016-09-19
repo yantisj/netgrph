@@ -152,13 +152,9 @@ def api_call(apicall, lrtype):
     if nglib.verbose:
         print("API Request", requrl)
 
-    verify = api['verify']
-    if verify == ('0' or 'False'):
-        verify = 0
-
     try:
         r = requests.get(requrl, \
-            auth=(api['user'], api['pass']), verify=verify)
+            auth=(api['user'], api['pass']), verify=api['verify'])
     except CertificateError as e:
         print("SSL Certificate Error:", e)
         sys.exit(1)
@@ -225,7 +221,7 @@ if 'api' in config:
         api['verify'] = config['api']['verify']
     except KeyError:
         raise Exception("Please configure the API url, user and pass")
-    if api['verify'] == 'False':
+    if api['verify'] == 'False' or api['verify'] == '0':
         api['verify'] = False
     else:
         api['verify'] = True
