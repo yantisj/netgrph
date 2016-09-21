@@ -1,4 +1,5 @@
 # Python Requirements
+ciscoconfparse
 pylint
 pyyaml
 pymysql
