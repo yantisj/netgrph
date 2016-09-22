@@ -82,7 +82,8 @@ def get_int(switch, interface):
     if args.match:
         m = parse.find_objects_w_child(parentspec=search_int,
             childspec=args.match)
-        print(args.switch + ',' + args.int + ',' + args.match)
+        if m:
+            print(args.switch + ',' + args.int + ',' + args.match)
 
     else:
         iface = parse.find_all_children(search_int)
@@ -126,7 +127,6 @@ def expand_port(port):
 if args.switch and args.int:
 
     get_int(args.switch, args.int)
-
 
 # Print Help
 else:
