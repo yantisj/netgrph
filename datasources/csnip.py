@@ -38,7 +38,7 @@ import csv
 from ciscoconfparse import CiscoConfParse
 
 # Config Options
-conf_dir = "/scripts/sendjob/configs/"
+conf_dir = "/tftpboot/"
 extension = "-confg"
 
 # Argument Parser
@@ -48,6 +48,9 @@ parser.add_argument("switch", help="Switch to get snippet from",
                     type=str)
 parser.add_argument("-int", metavar="interface",
                     help="Interface (switchport or VLAN) to pull config from",
+                    type=str)
+parser.add_argument('-match', metavar='string',
+                    help='Match a string on an interface',
                     type=str)
 parser.add_argument("-debug", help="Set debugging level", type=int)
 
@@ -74,14 +77,21 @@ def get_int(switch, interface):
 
     search_int = "^interface " + interface + "$"
 
-    iface = parse.find_all_children(search_int)
 
-    if iface:
-        print('!' + switch + ' ' + interface)
-    for line in iface:
-        print(line)
-    if iface:
-        print('!')
+
+    if args.match:
+        m = parse.find_objects_w_child(parentspec=search_int,
+            childspec=args.match)
+        print(args.switch + ',' + args.int + ',' + args.match)
+
+    else:
+        iface = parse.find_all_children(search_int)
+        if iface:
+            print('!' + switch + ' ' + interface)
+        for line in iface:
+            print(line)
+        if iface:
+            print('!')
 
 
 def normalize_port(port):
@@ -107,6 +117,7 @@ def expand_port(port):
     port = re.sub(r'^Fa(\d+)', r'FastEthernet\1', port)
     port = re.sub(r'^Eth(\d+)', r'Ethernet\1', port)
     port = re.sub(r'^E(\d+)', r'Ethernet\1', port)
+    port = re.sub(r'^Po(\d+)', r'Port-channel\1', port)
 
     return port
 
