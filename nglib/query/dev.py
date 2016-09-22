@@ -57,7 +57,8 @@ def get_device(dev, rtype="NGTREE", vrange=None):
 
     switch = nglib.bolt_ses.run(
         'MATCH (s:Switch {name:{dev}})'
-        + 'RETURN s.name as name, s.distance as distance,s.mgmt as mgmt',
+        + 'RETURN s.name as name, s.distance as distance, s.mgmt as mgmt, '
+        + 's.model as model, s.version as version',
         {"dev": dev})
 
     for sw in switch:
@@ -69,6 +70,8 @@ def get_device(dev, rtype="NGTREE", vrange=None):
             return
 
         ngtree['MGMT Group'] = sw['mgmt']
+        ngtree['Model'] = sw['model']
+        ngtree['Version'] = sw['version']
         if vrange:
             ngtree['VLAN Range'] = vrange
 
@@ -151,7 +154,9 @@ def get_neighbors(dev):
         'MATCH (s:Switch {name:{dev}})-[e:NEI|:NEI_EQ]-(rs:Switch) '
         + 'RETURN rs.name AS name, rs.distance AS distance, rs.mgmt as mgmt,'
         + 'e.pSwitch AS pSwitch, e.pPort as pPort, e.cSwitch as cSwitch, e.cPort as cPort, '
-        + 's.distance as pdistance ORDER BY distance,name',
+        + 'e.native AS native, e.cPc as cPc, e.pPc AS pPc, e.vlans AS vlans, '
+        + 'e.rvlans as rvlans, e._rvlans AS p_rvlans, s.distance as pdistance '
+        + 'ORDER BY distance,name',
         {"dev": dev})
 
     # Parent tree
@@ -184,10 +189,21 @@ def get_neighbors(dev):
 
         cngt['Distance'] = nei['distance']
         cngt['MGMT Group'] = nei['mgmt']
-        cngt['parent_switch'] = nei['pSwitch']
-        cngt['parent_port'] = nei['pPort']
-        cngt['child_switch'] = nei['cSwitch']
-        cngt['child_port'] = nei['cPort']
+        cngt['Parent Switch'] = nei['pSwitch']
+        cngt['Parent Port'] = nei['pPort']
+        cngt['Child Switch'] = nei['cSwitch']
+        cngt['Child Port'] = nei['cPort']
+
+        if nei['pPc'] and nei['pPc'] != '0':
+            cngt['Parent Channel'] = nei['pPc']
+        if nei['cPc'] and nei['cPc'] != '0':
+            cngt['Child Channel'] = nei['cPc']
+        
+        if nei['native'] and nei['native'] != '0':
+            cngt['Native VLAN'] = nei['native']
+            cngt['Link VLANs'] = nei['vlans']
+            cngt['Link rVLANs'] = nei['vlans']
+
 
     if neicount:
         ngtree['Total Neighbors'] = neicount

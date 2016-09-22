@@ -79,7 +79,7 @@ ptest['10.26.72.142 10.34.72.24'] = 'L4FW FwutilFW'
 rtest = dict()
 #rtest['-vlans -empty -vrange 200'] = 'v6test'
 rtest['-vlans -vrange 120 -o yaml'] = 'Root: abc4mdf'
-rtest['-v -dev "xyz.*" -o json'] = '"parent_switch": "core1"'
+rtest['-v -dev "xyz.*" -o json'] = '"Parent Switch": "core1"'
 
 prtest = dict()
 prtest['-vlans -empty -vrange 200'] = 'v6test'

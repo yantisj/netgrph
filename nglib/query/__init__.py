@@ -145,22 +145,25 @@ def check_net_filter(netDict, group=None, nFilter=None):
             #print("VRF MATCH", vrf, netDict['VRF'])
             for role in vDict[vrf]:
                 if netDict['NetRole'] == role or role == "all":
-                    logger.debug("VRF and Role MATCH: %s, %s, %s, %s, %s",
-                                 group, vrf, netDict['VRF'], netDict['NetRole'], netDict['CIDR'])
+                    if nglib.verbose > 1:
+                        logger.debug("VRF and Role MATCH: %s, %s, %s, %s, %s",
+                                    group, vrf, netDict['VRF'], netDict['NetRole'], netDict['CIDR'])
                     return True
 
                 # No supernet role associated (none=None)
                 elif role == "none" and not netDict['NetRole']:
-                    logger.debug("VRF and Role MATCH on Null Role: %s, %s, %s, %s, %s",
-                                 group, vrf, netDict['VRF'], netDict['NetRole'], netDict['CIDR'])
+                    if nglib.verbose > 1:
+                        logger.debug("VRF and Role MATCH on Null Role: %s, %s, %s, %s, %s",
+                                    group, vrf, netDict['VRF'], netDict['NetRole'], netDict['CIDR'])
                     return True
 
                 # No Match
-                else:
+                elif nglib.verbose > 3:
                     logger.debug("NOMATCH VRF and Role: %s, %s, %s, %s, %s",
                                  group, vrf, netDict['VRF'], netDict['NetRole'], netDict['CIDR'])
 
-    logger.debug("No Network Match for %s on %s", netDict['CIDR'], group)
+    if nglib.verbose > 2:
+        logger.debug("No Network Match for %s on %s", netDict['CIDR'], group)
     return False
 
 
