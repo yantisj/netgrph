@@ -58,7 +58,7 @@ def get_device(dev, rtype="NGTREE", vrange=None):
     switch = nglib.bolt_ses.run(
         'MATCH (s:Switch {name:{dev}})'
         + 'RETURN s.name as name, s.distance as distance, s.mgmt as mgmt, '
-        + 's.model as model, s.version as version',
+        + 's.location as location, s.model as model, s.version as version',
         {"dev": dev})
 
     for sw in switch:
@@ -69,6 +69,7 @@ def get_device(dev, rtype="NGTREE", vrange=None):
             print("Error, device not part of the topology:", dev, file=sys.stderr)
             return
 
+        ngtree['Location'] = sw['location']
         ngtree['MGMT Group'] = sw['mgmt']
         ngtree['Model'] = sw['model']
         ngtree['Version'] = sw['version']
