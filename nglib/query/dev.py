@@ -203,7 +203,7 @@ def get_neighbors(dev):
         if nei['native'] and nei['native'] != '0':
             cngt['Native VLAN'] = nei['native']
             cngt['Link VLANs'] = nei['vlans']
-            cngt['Link rVLANs'] = nei['vlans']
+            cngt['Link rVLANs'] = nei['rvlans']
 
 
     if neicount:
