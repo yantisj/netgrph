@@ -41,7 +41,7 @@ distributed to multiple machines.
 * For Cisco devices, must provide stored configurations (See [Rancid](http://www.shrubbery.net/rancid/) / [Oxidized](https://github.com/ytti/oxidized))
 * Requires CDP/LLDP Discovery Data via [NetDB](http://netdbtracking.sourceforge.net) or [NetCrawl](https://github.com/ytti/netcrawl)
 * Third-party network devices need to be parsed into the [NetGrph CSV format](test/csv/)
-* Please send me any parsers you create to include here!
+* Please send me any parsers you create
 
 ## Data Model
 ### Discovering the Routed SVI Paths from Vlan 110 to 200

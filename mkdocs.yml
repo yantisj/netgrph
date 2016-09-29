@@ -1,6 +1,13 @@
 site_name: NetGrph
 pages:
 - Home: index.md
+- About: About.md
 - Install: 
     - Installation: INSTALL.md
     - Ansible Install: playbooks/README.md
+- Using:
+    - Overview: Tutorials.md
+    - CLI: CLI.md
+    - API: API.md
+
+
