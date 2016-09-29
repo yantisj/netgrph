@@ -1,0 +1,6 @@
+
+edit docs/VERSION
+git tag v0.7.x
+git merge --no-ff --log origin/dev
+git push origin master
+
