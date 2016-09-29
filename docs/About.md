@@ -4,40 +4,30 @@ NetGrph was written to explore the potential of graph databases for networks,
 and is being shared to help others with network discovery and automation. Please
 contribute back any useful additions.
 
+## Data Model
+### Routed SVI Paths from Vlan 110 to 200
+![vlan110](https://dl.dropboxusercontent.com/u/73454/svipath2.svg)
 
-## Planned Features
 
-* Add configuration snippets for each hop on traverals
-* Import all Network ACL's for L4 analysis
-* Improve NetDB integration with universal search
-* Implement Dijkstra's Algorithm for cost-based path traversals (database plugin)
-* Simple Web Interface for Path Traversals and report generation
-* Statseeker integration for including graphs/errors in reports
+[L3 SVIs: Yellow] [L2 VLANs: Green] [Switches/Routers: Blue]
+<br>
+<br>
 
-## Future
+### Security Path from Vlan 696 --> 641 across multiple L2/L3 Firewalls
+![fwpath](https://dl.dropboxusercontent.com/u/73454/security-path2.svg)
 
-I am open to expanding NetGrph for the needs of MPLS networks and other
-network/security domains where appropriate. The application was written to be
-generic and approachable for use with both SDN and existing networks.
 
-I have also added some lightweight integration with my existing [NetDB
-application](http://netdbtracking.sourceforge.net), but that will be both
-focused and optional. If you manage to create any new parsers or integrate with
-other vendor APIs, please contribute your code back.
+[Networks: Yellow] [VRFs: Green] [Firewalls: Blue]
 
-I would like to eventually add a GUI, but at this time I'm focussed on using the
-application to automate tasks. In theory, it should be easy to create [D3
-visualizations](https://github.com/d3/d3/wiki/Gallery) from the NGTree
-data-structures. If anyone manages to create a simple GUI or use this
-application to create some interesting visualizations, I'd be happy to help and
-would love to see the results.
+<br>
 
-I will not be expanding the application to be a full-blown NMS, but you are free
-to fork this code and turn it into anything you like. If you manage to expand
-the core modeling functionality and think it should be included in the main
-codebase, I'd like to consider including it here.
+### Neighbor Tree from the Core out to a distance of 3
 
-See the [CONTRIBUTING](CONTRIBUTING.md) document for more information.
+<img src="https://dl.dropboxusercontent.com/u/73454/network-graph.svg" alt="NEI Tree" width="800" height="800">
+
+
+
+<br>
 
 ## Performance
 
@@ -75,3 +65,54 @@ compatible with other versions of linux. I highly recommend using Ubuntu at this
 early stage for better support. I also plan to create an ansible build script in
 the next few months. It also works just find on MacOS but there are no Ansible or
 install instructions for that OS.
+
+## Planned Features
+
+* Add configuration snippets for each hop on traverals
+* Import all Network ACL's for L4 analysis
+* Improve NetDB integration with universal search
+* Implement Dijkstra's Algorithm for cost-based path traversals (database plugin)
+* Simple Web Interface for Path Traversals and report generation
+* Statseeker integration for including graphs/errors in reports
+
+## Future
+
+I am open to expanding NetGrph for the needs of MPLS networks and other
+network/security domains where appropriate. The application was written to be
+generic and approachable for use with both SDN and existing networks.
+
+I have also added some lightweight integration with my existing [NetDB
+application](http://netdbtracking.sourceforge.net), but that will be both
+focused and optional. If you manage to create any new parsers or integrate with
+other vendor APIs, please contribute your code back.
+
+I would like to eventually add a GUI, but at this time I'm focussed on using the
+application to automate tasks. In theory, it should be easy to create [D3
+visualizations](https://github.com/d3/d3/wiki/Gallery) from the NGTree
+data-structures. If anyone manages to create a simple GUI or use this
+application to create some interesting visualizations, I'd be happy to help and
+would love to see the results.
+
+I will not be expanding the application to be a full-blown NMS, but you are free
+to fork this code and turn it into anything you like. If you manage to expand
+the core modeling functionality and think it should be included in the main
+codebase, I'd like to consider including it here.
+
+See the [CONTRIBUTING](CONTRIBUTING.md) document for more information.
+
+## Support
+
+I will be monitoring the #netgrph channel the [networktocode slack
+group](https://networktocode.herokuapp.com/) for now. Please try and contact me
+there for any serious support questions.
+
+## Contributions
+
+Please see the [Contributions](CONTRIBUTING.md) document in docs for
+information about how you can contribute back to NetGrph.
+
+## Contributors
+* Jonathan Yantis ([yantisj](https://github.com/yantisj))
+
+## License
+NetGrph is licensed under the GNU AGPLv3 License.
