@@ -1,0 +1,6 @@
+site_name: NetGrph
+pages:
+- Home: index.md
+- Install: 
+    - Installation: INSTALL.md
+    - Ansible Install: playbooks/README.md
