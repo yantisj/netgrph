@@ -2,11 +2,10 @@
 
 NetGrph is designed to be a platform for automation, providing a unified network
 model across diverse network components in order to manage them as a single
-system, leveraging the Neo4j Graph Database](http://neo4j.com). This enables
+system by leveraging the Neo4j Graph Database](http://neo4j.com). This enables
 you to navigate your traditional LAN/WAN and/or mixed SDN networks as
 interconnected nodes and relationships in software, and is being shared to help
-others with network discovery, and automation. Please contribute back any useful
-additions.
+others with network discovery, and automation.
 
 NetGrph can perform universal L2/L3/L4 path traversals, providing context for
 each layer along the path. It also serves as a VLAN and CIDR database, showing
@@ -22,10 +21,18 @@ via both the native Neo4j API as well as NetGrph's tree data structure.
 All data is accessible via an API, and the lightweight netgrph client can be
 distributed to multiple machines.
 
+## Graph Data Model Example: Vlan 110 -> 200 Traversal
+![vlan110](https://dl.dropboxusercontent.com/u/73454/svipath2.svg)
+
+
+[L3 SVIs: Yellow] [L2 VLANs: Green] [Switches/Routers: Blue]
+<br>
+<br>
+
 ## Features
 
 * Universal Layer2 - Layer4 pathfinding between any two network devices (Full L2 path completion requires NetDB)
-* Path Queries can display a single path, or all ECMPs
+* Path Queries can return a single path, or all ECMPs
 * L3 Network Database of all networks (Automated, VRF aware, and searchable)
 * Search for networks via CIDR or VRF/Role based filters (eg. perim:printers|thinclient, all printers and thin clients in the perim VRF)
 * VLAN Inventory of all VLAN instances across the network, segmented by switch domain

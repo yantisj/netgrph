@@ -1,3 +1,3 @@
 # API Documentation
 
-* To be completed
+* The API is currently under development and in flux, coming soon.
