@@ -1,6 +1,6 @@
 # CLI Documentation
 
-NetGrph has two CLI query options, netgrph.py and ngreport.py. The first is for
+NetGrph has two CLI query programs, netgrph.py and ngreport.py. The first is for
 queries such as networks, paths etc. The second is for network-wide reporting on
 devices, VRFs etc.
 

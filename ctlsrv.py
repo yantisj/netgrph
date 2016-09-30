@@ -33,12 +33,16 @@ import os
 import re
 import getpass
 import argparse
+import logging
+
+logger = logging.getLogger('ctlsrv')
 
 parser = argparse.ArgumentParser()
 
 parser = argparse.ArgumentParser(prog='ctlsrv.py',
                                  description='Manage the API Server')
 
+parser.add_argument('--run', help='Run the API Server', action="store_true")
 parser.add_argument("--adduser", metavar="user", help="Add API User to DB", type=str)
 parser.add_argument("--newpass", metavar="user", help="Update Password", type=str)
 parser.add_argument("--testuser", metavar="user", help="Test Authentication", type=str)
@@ -82,6 +86,23 @@ if args.debug:
 if args.initdb:
     apisrv.db.create_all()
     apisrv.db.session.commit()
+
+# Run the API Server
+elif args.run:
+
+    builtins.apisrv_CONFIG = config_file
+    from apisrv import app, debug, config
+
+    # Production server in HTTPS Mode
+    if config['apisrv']['https'] != '0':
+        context = (config['apisrv']['ssl_crt'], config['apisrv']['ssl_key'])
+        app.run(host='0.0.0.0', port=int(config['apisrv']['port']), \
+                ssl_context=context, threaded=True, debug=debug)
+
+    # Localhost development server
+    else:
+        logger.warning("HTTPS is not configured, defaulting to localhost only")
+        app.run(debug=debug, port=int(config['apisrv']['port']))
 
 # Add user to DB
 elif args.adduser:

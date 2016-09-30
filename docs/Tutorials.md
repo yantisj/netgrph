@@ -1,11 +1,11 @@
 
 # Use Cases
 
-NetGrph is already being used for several types of automation within our
+NetGrph is currently being used for several types of automation within our
 environment, with many more capabilities planned as we expand the application.
-The pathfinding has proved extremely useful for troubleshooting A -> B problems
-across complex network topologies, in addition to making complex network changes
-on a large scale.
+The pathfinding has proved useful for troubleshooting A -> B problems across
+complex network topologies, in addition to making network changes on a large
+scale.
 
 Some examples of automation used in production are the modifications to specific
 SVIs, such as deploying new IP helper addresses and updating ACLs. It is also

@@ -15,3 +15,5 @@ api.log
 api.db
 newhal.crt
 newhal.key
+prod.ini
+test.ini
