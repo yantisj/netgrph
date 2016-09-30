@@ -1,10 +1,26 @@
 # Welcome to the NetGrph Documentation
 
-NetGrph models ethernet networks in the [Neo4j Graph
-Database](http://neo4j.com). This enables you to navigate your traditional
-LAN/WAN and/or mixed SDN networks as interconnected nodes and relationships
-in software, enabling automation and troubleshooting across the network instead
-of box by box.
+NetGrph is designed to be a platform for automation, providing a unified network
+model across diverse network components in order to manage them as a single
+system, leveraging the Neo4j Graph Database](http://neo4j.com). This enables
+you to navigate your traditional LAN/WAN and/or mixed SDN networks as
+interconnected nodes and relationships in software, and is being shared to help
+others with network discovery, and automation. Please contribute back any useful
+additions.
+
+NetGrph can perform universal L2/L3/L4 path traversals, providing context for
+each layer along the path. It also serves as a VLAN and CIDR database, showing
+how everything is related. It scales well on even the largest networks,
+allowing sub-second queries across thousands of network devices. This enables
+the mapping of complex network relationships for discovery and automation.
+
+Data from queries can be returned as CSV, JSON, YAML, or Ascii tree-art. Network
+Visualizations can be created by querying the Neo4j webapp as shown below. The
+data model should translate for use with tools such as D3.js, vis.js or Graphwiz
+via both the native Neo4j API as well as NetGrph's tree data structure.
+
+All data is accessible via an API, and the lightweight netgrph client can be
+distributed to multiple machines.
 
 ## Features
 

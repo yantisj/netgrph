@@ -1,10 +1,12 @@
 ## Synopsis
 
-NetGrph models ethernet networks in the [Neo4j Graph
-Database](http://neo4j.com). This enables you to navigate your traditional
-LAN/WAN and/or mixed SDN networks as interconnected nodes and relationships
-in software, enabling automation and troubleshooting across the network instead
-of box by box.
+NetGrph is designed to be a platform for automation, providing a unified network
+model across diverse network components in order to manage them as a single
+system, leveraging the Neo4j Graph Database](http://neo4j.com). This enables
+you to navigate your traditional LAN/WAN and/or mixed SDN networks as
+interconnected nodes and relationships in software, and is being shared to help
+others with network discovery, and automation. Please contribute back any useful
+additions.
 
 NetGrph can perform universal L2/L3/L4 path traversals, providing context for
 each layer along the path. It also serves as a VLAN and CIDR database, showing
@@ -45,9 +47,9 @@ distributed to multiple machines.
 
 ## Documentation
 
-* See the [NetGrph Read The Docs](http://netgrph.readthedocs.io/en/latest/)
+* [NetGrph Read The Docs](http://netgrph.readthedocs.io/)
 
-## Data Model Example (Vlan 110 to Vlan 200)
+## Graph Data Model Example (Vlan 110 to Vlan 200)
 ![vlan110](https://dl.dropboxusercontent.com/u/73454/svipath2.svg)
 
 
@@ -55,7 +57,7 @@ distributed to multiple machines.
 <br>
 <br>
 
-## Traversal Example
+## Path Traversal Example
 ```
 $ ./netgrph.py -p 10.26.72.142 10.34.72.24
 
@@ -136,13 +138,17 @@ See the [Install Instructions](docs/INSTALL.md)
 
 ## Support
 
-I will be monitoring the #netgrph channel the [networktocode slack
-group](https://networktocode.herokuapp.com/) for now. Please try and contact me
-there for any serious support questions.
+See refer to the documentation first: [NetGrph Read The
+Docs](http://netgrph.readthedocs.io/)
+
+You can open an issue via GitHub, or if you would like to speak with me
+directly, I monitor the #netgrph channel the [networktocode slack
+group](https://networktocode.herokuapp.com/). Please try and contact me there
+for any interactive support.
 
 ## Contributions
 
-Please see the [Contributions](CONTRIBUTING.md) document in docs for
+Please see the [Contributions](docs/CONTRIBUTING.md) document in docs for
 information about how you can contribute back to NetGrph.
 
 ## Contributors

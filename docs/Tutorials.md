@@ -1,4 +1,28 @@
 
+# Use Cases
+
+NetGrph is already being used for several types of automation within our
+environment, with many more capabilities planned as we expand the application.
+The pathfinding has proved extremely useful for troubleshooting A -> B problems
+across complex network topologies, in addition to making complex network changes
+on a large scale.
+
+Some examples of automation used in production are the modifications to specific
+SVIs, such as deploying new IP helper addresses and updating ACLs. It is also
+being used to modify QoS policies, VLAN trunks, as well as both discovering and
+safely cleaning up network topologies such as unused VLANs and networks. These
+efforts have allowed us to make changes as scale in minutes that used to take
+days or more of careful planning and ad-hoc scripting.
+
+We are currently developing a firewall automation application on top of NetGrph
+to both profile devices and insert/update their firewall rules across  all
+firewalls and ACLs in the path. This is accomplished via the pathfinding
+functionality, and will allow us to scale our security automation and
+micro-segmentation efforts. L4 pathfinding queries can return all the L4 network
+policies between any two points in under 150ms in our environment, allowing
+automated security incident response, as well as rapid provisioning of new
+security policies.
+
 # Pathfinding Examples
 
 ### L2-L4 Traversal on the same switch, different VRF (details omitted)

@@ -1,8 +1,9 @@
-## Motivation
+## About
 
-NetGrph was written to explore the potential of graph databases for networks,
-and is being shared to help others with network discovery and automation. Please
-contribute back any useful additions.
+NetGrph was created to serve as a singular network model for automation to
+replace the patchwork inherent to our current automation solutions. The API is
+developing to provide strong automation capabilities for our network team,
+as well as our server, security, and desktop teams.
 
 ## Data Model
 ### Routed SVI Paths from Vlan 110 to 200
@@ -86,25 +87,26 @@ application](http://netdbtracking.sourceforge.net), but that will be both
 focused and optional. If you manage to create any new parsers or integrate with
 other vendor APIs, please contribute your code back.
 
-I would like to eventually add a GUI, but at this time I'm focussed on using the
+I would like to add a GUI, but at this time I'm focussed on using the
 application to automate tasks. In theory, it should be easy to create [D3
 visualizations](https://github.com/d3/d3/wiki/Gallery) from the NGTree
 data-structures. If anyone manages to create a simple GUI or use this
 application to create some interesting visualizations, I'd be happy to help and
 would love to see the results.
 
-I will not be expanding the application to be a full-blown NMS, but you are free
-to fork this code and turn it into anything you like. If you manage to expand
-the core modeling functionality and think it should be included in the main
-codebase, I'd like to consider including it here.
+I will not be expanding the application to be a full-blown NMS, since there are
+many tools that accomplish this. If you manage to expand the core modeling
+functionality and think it should be included in the main codebase, I'd like to
+consider including it here.
 
 See the [CONTRIBUTING](CONTRIBUTING.md) document for more information.
 
 ## Support
 
-I will be monitoring the #netgrph channel the [networktocode slack
-group](https://networktocode.herokuapp.com/) for now. Please try and contact me
-there for any serious support questions.
+You can open an issue via GitHub, or if you would like to speak with me
+directly, I monitor the #netgrph channel the [networktocode slack
+group](https://networktocode.herokuapp.com/). Please try and contact me there
+for any interactive support.
 
 ## Contributions
 
