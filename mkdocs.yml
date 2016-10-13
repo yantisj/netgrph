@@ -8,6 +8,5 @@ pages:
 - Using:
     - Overview: Tutorials.md
     - CLI: CLI.md
+    - Path Finding: PathSample.md
     - API: API.md
-
-
