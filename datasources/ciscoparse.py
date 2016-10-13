@@ -118,6 +118,7 @@ def get_device_info(device):
         return
     else:
         dentry = parse_snmp(parse, device['Device'])
+        dentry['FQDN'] = device['FQDN']
 
         if args.mf:
             dentry = parse_model(dentry)
@@ -651,10 +652,10 @@ def save_int_file(out_file):
 
 def save_device_file(out_file):
     save = open(out_file, "w")
-    print("Device,Location,Model,Version", file=save)
+    print("Device,FQDN,Location,Model,Version", file=save)
 
     for d in device_list:
-        entry = d['Device'] + ',' + d['Location'] + ',' \
+        entry = d['Device'] + ',' + d['FQDN'] + ',' + d['Location'] + ',' \
                 + d['Model'] + ',' + d['Version']
         print(entry, sep='\n', file=save)
 
