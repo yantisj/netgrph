@@ -345,6 +345,7 @@ def update_vlan_desc():
         for v in results:
             vname = v.vname
             descdb = dict()
+            topDesc = 'Unknown'
 
             # Get vlan desc properties for each switch from relationship
             results = nglib.py2neo_ses.cypher.execute(
