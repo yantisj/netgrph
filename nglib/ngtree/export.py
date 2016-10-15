@@ -124,11 +124,12 @@ def strip_ngtree(ngtree, top=True):
 
     newtree = nglib.ngtree.get_ngtree(ngtree['Name'], tree_type=ngtree['_type'])
 
-    for en in ngtree:
-        if '_child' in en:
-            newtree[en] = strip_ngtree(ngtree[en], top=False)
-        elif top:
-            newtree[en] = ngtree[en]
+    for en in ngtree['data']:
+        newtree['data'].append(strip_ngtree(en, top=False))
+    if top:
+        for en in ngtree:
+            if en != 'data':
+                newtree[en] = ngtree[en]
 
     return newtree
     

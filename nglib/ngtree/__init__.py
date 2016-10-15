@@ -58,38 +58,18 @@ def get_ngtree(name, tree_type="VLAN"):
     ngtree = dict()
     ngtree['Name'] = name
     ngtree['_type'] = tree_type
+    ngtree['_ccount'] = 0
+    ngtree['data'] = []
 
     return ngtree
 
 def add_child_ngtree(ngtree, cngtree):
     """
-    Nest a child ngtree under an ngtree
-
-    Notes: Keeps track of child counts for easier parsing. Keys are named
-           childXX where XX is the child number entry.
-
+    Nest a child ngtree under data list in ngtree
     """
 
-    if '_ccount' not in ngtree.keys():
-        ngtree['_ccount'] = 0
-
     ngtree['_ccount'] = ngtree['_ccount'] + 1
-    ccount = ngtree['_ccount']
-    if ccount < 10:
-        cname = "_child00" + str(ccount)
-    elif ccount < 100:
-        cname = "_child0" + str(ccount)
-    else:
-        cname = "_child" + str(ccount)
-
-    ngtree[cname] = cngtree
-
-
-def add_parent_ngtree(ngtree, pngtree):
-    """Add a special type parent ngtree existing ngtree"""
-
-    ngtree['_parent'] = pngtree
-
+    ngtree['data'].append(cngtree)
 
 def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
     """
@@ -110,73 +90,54 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
     The close out section needs to be better understood, but when closing out a
     child tree, you need to keep pipes from connecting sections below.
 
-    There is a concept of Parent nodes, such as when you are doing a VID search,
-    and want to build the tree from the current location, but also add in the
-    Parent VID for context. Normally, Parent trees are not used.
     """
-
-    hasParent = False
 
     dtree = dtree.copy()
 
     # Get indentation spaces variable based on depth
     spaces, indent = get_space_indent(depth, dtree)
 
-
-    # Find Parent node if exists
-    if '_parent' in ngtree.keys():
-        dtree[0] = 1
-        print_ngtree(ngtree['_parent'], dtree, parent=True)
-        hasParent = True
-
     # Get indentation spaces variable based on depth
     spaces, indent = get_space_indent(depth, dtree)
 
-    # Parent Nodes Print up top at the same level (see VID output)
-    if parent:
-        print("[Parent {:} {:}]".format(ngtree['_type'], ngtree['Name']))
+    # Print Header
 
-    # Standard Node, Print Header
+    if depth == 0:
+        indent = ""
+
+    # Last tree terminates with └
+    if lasttree:
+        indent = indent.replace('├', '└')
+
+    # Abbreviate certain types for shorter headers
+    ngtype = ngtree['_type']
+    if ngtype == "VLAN":
+        ngtype = ""
+    elif ngtree['_type'] == "Neighbor":
+        ngtype = ""
     else:
-        if depth == 0 and not hasParent:
-            indent = ""
+        ngtype = " " + ngtype
+    header = " "
+    header = header.join([ngtype, ngtree['Name']])
 
-        # Last tree terminates with └
-        if lasttree:
-            indent = indent.replace('├', '└')
-
-        # Abbreviate certain types for shorter headers
-        ngtype = ngtree['_type']
-        if ngtype == "VLAN":
-            ngtype = ""
-        elif ngtree['_type'] == "Neighbor":
-            ngtype = ""
+    # Print section header -[header]
+    if depth == 0:
+        print("{:}┌─[{:} ]".format(indent, header))
+        print("│")
+    else:
+        # Headonly for QPATH Results
+        headonly = True
+        for en in ngtree:
+            if not re.search(r'Name|_type|_ccount|data', en):
+                headonly = False
+                break
+        if headonly:
+            print("{:}──[{:} ]".format(indent, header))
         else:
-            ngtype = " " + ngtype
-        header = " "
-        header = header.join([ngtype, ngtree['Name']])
+            print("{:}┬─[{:} ]".format(indent, header))
 
-        # Print section header -[header]
-        if depth == 0:
-            print("{:}┌─[{:} ]".format(indent, header))
-            print("│")
-        else:
-            headonly = True
-            for en in ngtree:
-                if not re.search(r'Name|_type', en):
-                    headonly = False
-                    break
-            if headonly:
-                print("{:}──[{:} ]".format(indent, header))
-            else:
-                print("{:}┬─[{:} ]".format(indent, header))
-
-
-    # Store Children as a list to be able to locate final child for indentation
-    clist = []
-    for key in sorted(ngtree.keys()):
-        if re.search(r'^_child\d+', key):
-            clist.append(key)
+    # Store Children list from data
+    clist = ngtree['data']
 
     # If there are no children, do not indent tree structure
     if len(clist) == 0:
@@ -194,26 +155,23 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
     for key in sorted(ftree.keys()):
         lastcount = lastcount - 1
 
-        # No structural data
-        if not re.search('(^_)|(^Name$)', key):
-
-            # If there are children of current tree, then continue tree.
-            # Otherwise terminate tree with └
-            if lastcount or len(clist) > 0:
-                print("{:}├── {:} : {:}".format(spaces, key, ftree[key]))
-            else:
-                print("{:}└── {:} : {:}".format(spaces, key, ftree[key]))
+        # If there are children of current tree, then continue tree.
+        # Otherwise terminate tree with └
+        if lastcount or len(clist) > 0:
+            print("{:}├── {:} : {:}".format(spaces, key, ftree[key]))
+        else:
+            print("{:}└── {:} : {:}".format(spaces, key, ftree[key]))
 
 
     # Close out a section with empty line for visual separation
-    if len(clist) > 0 or parent:
+    if len(clist) > 0:
         spaces = spaces + "│"
     print(spaces)
 
     # Print child trees with recursive call to this function
     while len(clist) > 0:
 
-        key = clist.pop(0)
+        ctree = clist.pop(0)
 
         # Continue printing with depth
         if len(clist) != 0:
@@ -228,9 +186,8 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
         spaces, indent = get_space_indent(depth, dtree)
 
         # Indent and print child tree recursively
-        if re.search(r'^_child\d+', key):
-            cdepth = depth + 4
-            print_ngtree(ngtree[key], dtree, depth=cdepth, lasttree=lasttree)
+        cdepth = depth + 4
+        print_ngtree(ctree, dtree, depth=cdepth, lasttree=lasttree)
 
         # Ending section, un-indent
         if len(clist) == 0:
@@ -268,7 +225,7 @@ def filter_tree(ngtree):
     newtree = dict()
 
     for key in keys:
-        if not re.search('(^_)|(^Name$)', key):
+        if not re.search('(^_)|(^Name$)|(^data$)', key):
             newtree[key] = ngtree[key]
             #ngtree.pop(key)
 

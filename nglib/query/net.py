@@ -262,8 +262,6 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
                     netDict = get_net_props(net['vrfcidr'])
 
                     # # Get extended net tree for subnet and pull out child element
-                    # netDict = get_net_extended_tree(net['cidr'])
-                    # netDict = netDict['_child001']
 
                     logging.debug(netDict['CIDR'] + " in Supernet " + cidr)
                     netList.append(netDict)
@@ -271,6 +269,8 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
                     # NGTree
                     netDict['_type'] = "CIDR"
                     netDict['Name'] = netDict['CIDR']
+                    netDict['data'] = []
+                    netDict['_ccount'] = 0
 
                     cleanND = netDict.copy()
                     cleanND.pop('__values__', None)

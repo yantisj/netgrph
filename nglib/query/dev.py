@@ -101,16 +101,16 @@ def get_device(dev, rtype="NGTREE", vrange=None):
         for en in sorted(neitree):
             if en == "Total Neighbors":
                 ngtree['Total Neighbors'] = neitree[en]
-            elif re.search(r'_child\d+', en):
-                if neitree[en]["_type"] == "NEI Parents":
-                    nglib.ngtree.add_child_ngtree(ngtree, neitree[en])
-                    ngtree['Parent Neighbors'] = neitree["Parent Neighbors"]
-                elif neitree[en]["_type"] == "NEI Equals":
-                    nglib.ngtree.add_child_ngtree(ngtree, neitree[en])
-                    ngtree['Equal Neighbors'] = neitree["Equal Neighbors"]
-                elif neitree[en]["_type"] == "NEI Children":
-                    c_nei = neitree[en]
-                    c_count = neitree["Child Neighbors"]
+        for en in neitree['data']:
+            if en["_type"] == "NEI Parents":
+                nglib.ngtree.add_child_ngtree(ngtree, en)
+                ngtree['Parent Neighbors'] = neitree["Parent Neighbors"]
+            elif en["_type"] == "NEI Equals":
+                nglib.ngtree.add_child_ngtree(ngtree, en)
+                ngtree['Equal Neighbors'] = neitree["Equal Neighbors"]
+            elif en["_type"] == "NEI Children":
+                c_nei = en
+                c_count = neitree["Child Neighbors"]
 
         # Optionally add children at end when count > 4
         if 0 < c_count <= 4:
