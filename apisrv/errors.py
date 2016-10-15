@@ -73,4 +73,12 @@ def bad_request(error):
     resp.status_code = 400
     return resp
 
+def json_error(error, message, code=404):
 
+    ngerror = dict()
+    ngerror['Name'] = error
+    ngerror['_type'] = 'Error'
+    ngerror['message'] = error + ': ' + message
+    ngerror['status'] = code
+
+    return ngerror

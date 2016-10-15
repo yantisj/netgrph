@@ -260,7 +260,8 @@ elif args.rpath:
         rtype = args.output
     if use_api:
         call = 'rpath?src=' + args.rpath + '&dst=' +  args.search \
-        + '&vrf=' + args.vrf + '&depth=' + depth
+        + '&vrf=' + args.vrf + '&depth=' + depth \
+        + '&onepath=' + str(check_path(False))
         api_call(call, rtype)
     else:
         nglib.query.path.get_routed_path(args.rpath, args.search, \

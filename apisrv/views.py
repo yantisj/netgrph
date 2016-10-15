@@ -32,20 +32,13 @@ Add your own methods here
 import logging
 import nglib
 import nglib.query
+from nglib.exceptions import ResultError
 from flask import jsonify, request
-from apisrv import app, auth, config
+from apisrv import app, auth, config, errors
 
 # Setup
 logger = logging.getLogger(__name__)
 app_name = config['apisrv']['app_name']
-
-# http://localhost:5000/test unauthenticated response of "Hello World"
-@app.route('/test')
-def app_test():
-    """ Test Method, no authentication required """
-    logger.info("Hello World Requested")
-    response = {"message": "Hello World!", "status": "200"}
-    return jsonify(response)
 
 @app.route('/netgrph/api/v1.0/path', methods=['GET'])
 @auth.login_required
@@ -54,8 +47,11 @@ def get_full_path():
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
             onepath = True
-    return jsonify(nglib.query.path.get_full_path(request.args['src'], \
-        request.args['dst'], {"onepath": onepath}))
+    try:
+        return jsonify(nglib.query.path.get_full_path(request.args['src'], \
+            request.args['dst'], {"onepath": onepath}))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 @app.route('/netgrph/api/v1.0/rpath', methods=['GET'])
 @auth.login_required
@@ -65,9 +61,12 @@ def get_routed_path():
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
             onepath = True
-    return jsonify(nglib.query.path.get_routed_path(request.args['src'], \
-        request.args['dst'], {"onepath": onepath, "depth": request.args['depth'], \
-        "VRF": request.args['vrf']}))
+    try:
+        return jsonify(nglib.query.path.get_routed_path(request.args['src'], \
+            request.args['dst'], {"onepath": onepath, "depth": request.args['depth'], \
+            "VRF": request.args['vrf']}))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 @app.route('/netgrph/api/v1.0/spath', methods=['GET'])
 @auth.login_required
@@ -77,31 +76,47 @@ def get_switched_path():
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
             onepath = True
-    return jsonify(nglib.query.path.get_switched_path(request.args['src'], \
-        request.args['dst'], {"onepath": onepath, "depth": request.args['depth']}))
+    try:
+        return jsonify(nglib.query.path.get_switched_path(request.args['src'], \
+            request.args['dst'], {"onepath": onepath, "depth": request.args['depth']}))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 @app.route('/netgrph/api/v1.0/net', methods=['GET'])
 @auth.login_required
 def get_net():
-    return jsonify(nglib.query.net.get_networks_on_cidr(request.args['cidr'], rtype="NGTREE"))
+
+    try:
+        return jsonify(nglib.query.net.get_networks_on_cidr(request.args['cidr'], rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 @app.route('/netgrph/api/v1.0/ip', methods=['GET'])
 @auth.login_required
 def get_ip():
 
-    return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
+    try:
+        return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 @app.route('/netgrph/api/v1.0/nlist', methods=['GET'])
 @auth.login_required
 def get_nlist():
 
-    return jsonify(nglib.query.net.get_networks_on_filter(request.args['group'], rtype="NGTREE"))
+    try:
+        return jsonify(nglib.query.net.get_networks_on_filter(request.args['group'], rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 @app.route('/netgrph/api/v1.0/nfilter', methods=['GET'])
 @auth.login_required
 def get_nfilter():
     """ Networks on a filter """
-    return jsonify(nglib.query.net.get_networks_on_filter(nFilter=request.args['filter'], rtype="NGTREE"))
+    try:
+        return jsonify(nglib.query.net.get_networks_on_filter(nFilter=request.args['filter'], rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 @app.route('/netgrph/api/v1.0/vid', methods=['GET'])
 @auth.login_required
@@ -109,18 +124,28 @@ def get_vid():
     allSwitches = True
     if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
         allSwitches = False
-    return jsonify(nglib.query.vlan.search_vlan_id(request.args['id'], \
-                   rtype="NGTREE", allSwitches=allSwitches))
+    try:
+        return jsonify(nglib.query.vlan.search_vlan_id(request.args['id'], \
+                    rtype="NGTREE", allSwitches=allSwitches))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
 
 @app.route('/netgrph/api/v1.0/vtree', methods=['GET'])
 @auth.login_required
 def get_vtree():
-    return jsonify(nglib.query.vlan.get_vtree(request.args['name'], rtype="NGTREE"))
+    try:
+        return jsonify(nglib.query.vlan.get_vtree(request.args['name'], rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 @app.route('/netgrph/api/v1.0/dev', methods=['GET'])
 @auth.login_required
 def get_dev():
-    return jsonify(nglib.query.dev.get_device(request.args['dev'], rtype="NGTREE"))
+    try:
+        return jsonify(nglib.query.dev.get_device(request.args['dev'], rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
 
 # Info method, Return Request Data back to client as JSON
 @app.route('/' + app_name + '/api/v1.0/info', methods=['POST', 'GET'])
