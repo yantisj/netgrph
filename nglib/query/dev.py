@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 def get_device(dev, rtype="NGTREE", vrange=None):
     """Get Switch perspective (neighbors, vlans, routed networks)"""
 
-    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
+    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE', 'QTREE')
 
     if rtype not in rtypes:
         raise OutputError("Selected RType not allows for this query", rtype)

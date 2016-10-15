@@ -86,9 +86,7 @@ def exp_qtree(ngtree):
     """Prints an ngtree with headers only"""
 
     stree = strip_ngtree(ngtree)
-
     nglib.ngtree.print_ngtree(stree, dtree=dict())
-
 
 def cleanNGTree(ngtree):
     """Removes counts from output"""

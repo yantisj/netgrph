@@ -63,7 +63,7 @@ def get_vlan_range(vlanRange):
 def search_vlan_id(vid, rtype="NGTREE", allSwitches=True):
     """Search a VLAN ID for all Bridge Groups"""
 
-    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
+    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE', 'QTREE')
 
     # Truncate Switches when Tree
     if rtype == "TREE":
