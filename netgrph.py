@@ -182,6 +182,9 @@ if not os.path.exists(config_file):
     else:
         config_file = alt_config
 
+config = configparser.ConfigParser()
+config.read(config_file)
+
 verbose = 0
 if args.verbose:
     verbose = 1
@@ -197,7 +200,10 @@ if not args.days:
 
 # Default VLAN Range
 if not args.vrange:
-    args.vrange = "1-1999"
+    if 'vrange' in config['nglib']:
+        args.vrange = config['nglib']['vrange']
+    else:
+        args.vrange = "1-1999"
 if args.output:
     args.output = args.output.upper()
 
@@ -210,8 +216,6 @@ if args.depth:
     depth = str(args.depth)
 
 # API Client Check
-config = configparser.ConfigParser()
-config.read(config_file)
 if 'api' in config:
     use_api = True
     try:
