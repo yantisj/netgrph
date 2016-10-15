@@ -38,6 +38,7 @@ import subprocess
 import nglib
 import nglib.query.nNode
 import nglib.netdb.ip
+from nglib.exceptions import OutputError, ResultError
 
 logger = logging.getLogger(__name__)
 
@@ -221,8 +222,11 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             nglib.ngtree.add_child_ngtree(ngtree, n2tree['_child002'])
 
         # Export NGTree
-        ngtree = nglib.query.exp_ngtree(ngtree, rtype)
-        return ngtree
+        if 'Lx Path' in ngtree:
+            ngtree = nglib.query.exp_ngtree(ngtree, rtype)
+            return ngtree
+        else:
+            raise ResultError("No Path Results", "Could not find a path from %s -> %s" % (src, dst))
 
 def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
     """ Gets the full L3 Path between src -> dst IPs including inter-vrf routing

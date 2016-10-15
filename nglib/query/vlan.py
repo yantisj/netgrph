@@ -36,6 +36,7 @@ import os
 import logging
 import nglib
 from nglib.query.nNode import getJSONProperties
+from nglib.exceptions import OutputError, ResultError
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ def search_vlan_id(vid, rtype="NGTREE", allSwitches=True):
         return pngtree
 
     else:
-        raise Exception("RType Not Supported, use:" + str(rtypes))
+        raise OutputError("RType Not Supported", str(rtypes))
 
 
 def get_vtree(vname, rtype="NGTREE"):
@@ -116,7 +117,7 @@ def get_vtree(vname, rtype="NGTREE"):
         return ngtree
 
     else:
-        raise Exception("RType Not Supported, use:" + str(rtypes))
+        raise OutputError("RType Not Supported", str(rtypes))
 
 
 def load_bridge_tree(vname, root=True, getSW=False):
@@ -228,7 +229,7 @@ def load_bridge_tree(vname, root=True, getSW=False):
                     nglib.ngtree.add_child_ngtree(ngtree, cngtree)
 
     else:
-        raise Exception("No VLAN Found (expecting VNAME eg. Core-16): " + vname)
+        raise ResultError("No VLAN Name Found", "Expecting VNAME eg. Core-16: " + vname)
 
     return ngtree
 
@@ -347,7 +348,7 @@ def get_vlan_bridges(vid):
                         vname[vn.name] = vid
 
     else:
-        raise Exception("No VID Found (expecting VLAN id in range 1-4096): " + vid)
+        raise ResultError("No VID Found", "Expecting VLAN id in range 1-4096: " + vid)
 
     return vname
 

@@ -38,6 +38,7 @@ import ipaddress
 import logging
 import nglib
 import nglib.netdb.ip
+from nglib.exceptions import OutputError, ResultError
 
 from nglib.query.nNode import getJSONProperties
 
@@ -45,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_net(ip, rtype="TREE", days=7, verbose=True):
-    """Find a network and return text output"""
+    """Find a network for ip and return text output"""
 
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
 
@@ -68,10 +69,9 @@ def get_net(ip, rtype="TREE", days=7, verbose=True):
             ngtree = nglib.query.exp_ngtree(ngtree, rtype)
             return ngtree
         else:
-            print("No CIDR results for IP search:", ip, file=sys.stderr)
-
+            raise ResultError("No CIDR Results", "IP search failed on %s" % (ip))
     else:
-        print("Unsupport RType, try", str(rtypes), file=sys.stderr)
+        raise OutputError("RType Not Supported", str(rtypes))
 
 
 def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
@@ -225,7 +225,7 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
             print("No results found for filter:", ngtree['Filter'], file=sys.stderr)
 
     else:
-        raise Exception("RType Not Allowed, try: ", str(rtypes))
+        raise OutputError("RType Not Supported", str(rtypes))
 
 
 def get_networks_on_cidr(cidr, rtype="CSV"):
@@ -293,7 +293,7 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
             print("No Results for", cidr)
 
     else:
-        raise Exception("RType Not Allowed, try: ", str(rtypes), file=sys.stderr)
+        raise OutputError("RType Not Supported", str(rtypes))
 
 
 
@@ -319,7 +319,6 @@ def find_cidr(ip):
                 if nglib.verbose>1:
                     print("find_cidr", ip + " in " + r.cidr)
                 mostSpecific = compare_cidr(mostSpecific, r.cidr)
-
 
     return mostSpecific
 

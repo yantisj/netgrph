@@ -38,6 +38,7 @@ import sys
 import nglib
 import nglib.ngtree
 import nglib.ngtree.export
+from nglib.exceptions import OutputError, ResultError
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ def get_device(dev, rtype="NGTREE", vrange=None):
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
 
     if rtype not in rtypes:
-        raise Exception("Selected RType not allows for this query", rtype)
+        raise OutputError("Selected RType not allows for this query", rtype)
 
     ngtree = nglib.ngtree.get_ngtree(dev, tree_type="Device")
 
@@ -140,9 +141,7 @@ def get_device(dev, rtype="NGTREE", vrange=None):
         nglib.query.exp_ngtree(ngtree, rtype)
         return ngtree
 
-    print("No results found for device:", dev, file=sys.stderr)
-    ngtree['Error'] = "No results for " + dev
-    return ngtree
+    raise ResultError("No Results found for device query", dev)
 
 def get_neighbors(dev):
     """
