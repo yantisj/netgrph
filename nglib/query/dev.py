@@ -33,7 +33,6 @@ Device Query Routines
 
 """
 import logging
-import re
 import sys
 import nglib
 import nglib.ngtree

@@ -44,7 +44,7 @@ url = 'http://localhost:4096'
 #qlist = ['/netgrph/api/v1.1/devs?group=MDC', '/netgrph/api/v1.1/devs?group=CON&full=1', \
 #          '/netgrph/api/v1.1/devs/waringsw1']
 
-qlist = ['/netgrph/api/v1.1/nets']
+qlist = ['/netgrph/api/v1.1/vlans']
 
 for q in qlist:
     r = requests.get(url + q, auth=(user, passwd), verify=False)

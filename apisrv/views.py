@@ -41,45 +41,59 @@ from apisrv import app, auth, config, errors
 logger = logging.getLogger(__name__)
 app_name = config['apisrv']['app_name']
 
-@app.route('/netgrph/api/v1.0/path', methods=['GET'])
+@app.route('/netgrph/api/<ver>/path', methods=['GET'])
 @auth.login_required
-def get_full_path():
+def get_full_path(ver):
     onepath = False
+    depth = '20'
+
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
             onepath = True
+    if 'depth' in request.args:
+        depth = request.args['depth']
     try:
         return jsonify(nglib.query.path.get_full_path(request.args['src'], \
-            request.args['dst'], {"onepath": onepath}))
+            request.args['dst'], {"onepath": onepath, "depth": depth}))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
-@app.route('/netgrph/api/v1.0/rpath', methods=['GET'])
+@app.route('/netgrph/api/<ver>/rpath', methods=['GET'])
 @auth.login_required
-def get_routed_path():
+def get_routed_path(ver):
     """ Routed Path """
     onepath = False
+    depth = '20'
+    vrf = 'default'
+
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
             onepath = True
+    if 'depth' in request.args:
+        depth = request.args['depth']
+    if 'vrf' in request.args:
+        vrf = request.args['vrf']
     try:
         return jsonify(nglib.query.path.get_routed_path(request.args['src'], \
-            request.args['dst'], {"onepath": onepath, "depth": request.args['depth'], \
-            "VRF": request.args['vrf']}))
+            request.args['dst'], {"onepath": onepath, "depth": depth, \
+            "VRF": vrf}))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
-@app.route('/netgrph/api/v1.0/spath', methods=['GET'])
+@app.route('/netgrph/api/<ver>/spath', methods=['GET'])
 @auth.login_required
-def get_switched_path():
+def get_switched_path(ver):
     """ Switched Path """
     onepath = False
+    depth = '20'
     if 'onepath' in request.args:
         if request.args['onepath'] == "True":
             onepath = True
+    if 'depth' in request.args:
+        depth = request.args['depth']
     try:
         return jsonify(nglib.query.path.get_switched_path(request.args['src'], \
-            request.args['dst'], {"onepath": onepath, "depth": request.args['depth']}))
+            request.args['dst'], {"onepath": onepath, "depth": depth}))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
@@ -250,12 +264,46 @@ def get_nets():
         except ResultError as e:
             return jsonify(errors.json_error(e.expression, e.message))
 
-# Info method, Return Request Data back to client as JSON
-@app.route('/' + app_name + '/api/v1.0/info', methods=['POST', 'GET'])
+@app.route('/netgrph/api/<ver>/vlans', methods=['GET'])
 @auth.login_required
-def app_getinfo():
+def get_vlans(ver):
+    allSwitches = True
+    vrange = '1-4096'
+    group = '.*'
+    if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
+        allSwitches = False
+    if 'vrange' in request.args:
+        vrange = request.args['vrange']
+    if 'group' in request.args:
+        group = request.args['group']
+
+    try:
+        return jsonify(nglib.report.get_vlan_report(vrange=vrange, group=group, \
+                    rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+
+@app.route('/netgrph/api/<ver>/vlans/<vlan>', methods=['GET'])
+@auth.login_required
+def get_vlan(vlan, ver):
+    allSwitches = True
+
+    if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
+        allSwitches = False
+    try:
+        return jsonify(nglib.query.vlan.get_vlan(vlan, allSwitches=allSwitches, \
+                    rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+# Info method, Return Request Data back to client as JSON
+@app.route('/' + app_name + '/api/<ver>/info', methods=['POST', 'GET'])
+@auth.login_required
+def app_getinfo(ver):
     """ Returns Flask API Info """
     response = dict()
+    response['api_version'] = ver
     response['message'] = "Flask API Data"
     response['status'] = "200"
     response['method'] = request.method

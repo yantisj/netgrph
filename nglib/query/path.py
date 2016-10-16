@@ -163,18 +163,18 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             nglib.ngtree.add_child_ngtree(ngtree, n1tree['data'][1])
 
         # Add L2 path if not switching
-        if not switching and len(n2tree['data']) > 1:
+        if not switching and len(n1tree['data']) > 1:
             nglib.ngtree.add_child_ngtree(n1tree, n2tree['data'][1])
-            n1tree['_type'] = "L2PATH"
+            n1tree['_type'] = "L2-PATH"
             n1tree['Name'] = src + ' -> ' + dst
 
         # If there's src switched data add it
-        if switching and srcswp:
+        if switching and srcswp and srcswp['data']:
             nglib.ngtree.add_child_ngtree(ngtree, srcswp)
 
         # Add L3 Gateway
         if switching and routing:
-            n1tree['data'][0]['_type'] = "L3GW"
+            n1tree['data'][0]['_type'] = "L3-GW"
             n1tree['data'][0]['Name'] = n1tree['data'][0]['Name'] \
                 + ' ' + n1tree['data'][0]['Router']
             if 'StandbyRouter' in n1tree['data'][0]:
@@ -196,9 +196,9 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
                 nglib.ngtree.add_child_ngtree(ngtree, rtree)
 
 
-        # Add the DST L3GW Data
+        # Add the DST L3-GW Data
         if switching and routing:
-            n2tree['data'][0]['_type'] = "L3GW"
+            n2tree['data'][0]['_type'] = "L3-GW"
             n2tree['data'][0]['Name'] = n2tree['data'][0]['Name'] \
                 + ' ' + n2tree['data'][0]['Router']
             if 'StandbyRouter' in n2tree['data'][0]:
@@ -207,7 +207,7 @@ def get_full_path(src, dst, popt, rtype="NGTREE"):
             nglib.ngtree.add_child_ngtree(ngtree, n2tree['data'][0])
 
         # Destination Switch Data
-        if switching and routing and dstswp:
+        if switching and routing and dstswp and dstswp['data']:
             nglib.ngtree.add_child_ngtree(ngtree, dstswp)
 
         # NetDB Destination Data
@@ -269,7 +269,7 @@ def get_full_routed_path(src, dst, popt, rtype="NGTREE"):
                 last = None
 
                 for p in secpath['data']:
-                    if re.search(r'(L4GW|L4FW)', p['_type']):
+                    if re.search(r'(L4-GW|L4-FW)', p['_type']):
 
                         # First Entry gets a route check
                         if first:
@@ -703,12 +703,12 @@ def get_fw_path(src, dst, popt, rtype="TEXT"):
                         path = path + nProp['name'] + " -> "
                         fwsearch[nProp['name']] = nProp['hostname'] + "," + nProp['logIndex']
                         hop['Name'] = nProp['name']
-                        hop['_type'] = "L4FW"
+                        hop['_type'] = "L4-FW"
 
                     # Network Hop
                     elif re.search('Network', label):
                         hop['Name'] = nProp['cidr']
-                        hop['_type'] = "L4GW"
+                        hop['_type'] = "L4-GW"
 
                         # Add properties
                         #router = get_router(nProp)

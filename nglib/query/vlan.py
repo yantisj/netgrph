@@ -33,6 +33,7 @@ NetGrph VLAN Query Routines
 """
 import sys
 import os
+import re
 import logging
 import nglib
 from nglib.query.nNode import getJSONProperties
@@ -59,6 +60,13 @@ def get_vlan_range(vlanRange):
 
     return vlow, vhigh
 
+def get_vlan(vlan, rtype="NGTREE", allSwitches=True):
+    """ Gets a VLAN in VID or VNAME Format """
+
+    if re.search(r'\w+\-\d+', vlan):
+        return get_vtree(vlan, rtype=rtype, allSwitches=allSwitches)
+    else:
+        return search_vlan_id(vlan, rtype=rtype, allSwitches=allSwitches)
 
 def search_vlan_id(vid, rtype="NGTREE", allSwitches=True):
     """Search a VLAN ID for all Bridge Groups"""
@@ -99,7 +107,7 @@ def search_vlan_id(vid, rtype="NGTREE", allSwitches=True):
         raise OutputError("RType Not Supported", str(rtypes))
 
 
-def get_vtree(vname, rtype="NGTREE"):
+def get_vtree(vname, rtype="NGTREE", allSwitches=True):
     """Get a VTree on a Vlan Name"""
 
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
@@ -137,7 +145,7 @@ def load_bridge_tree(vname, root=True, getSW=False):
     ngtree = nglib.ngtree.get_ngtree(vname, tree_type="VNAME")
 
     # Find VLAN
-    vlan = get_vlan(vname)
+    vlan = get_vlan_from_vname(vname)
 
     # Find Switches for VLAN
     swtree = get_sw_from_vlan(vname)
@@ -208,14 +216,12 @@ def load_bridge_tree(vname, root=True, getSW=False):
             ngtree['Switches'] = slist
 
 
-        # Only Find Parent for root vname searches
-        if root:
-            # Find Parent VLAN
-            parent = get_parent_vlan(vname)
-            if len(parent) > 0:
-                pvname = parent.records[0].vname
-                pngtree = get_parent_ngtree(pvname)
-                nglib.ngtree.add_parent_ngtree(ngtree, pngtree)
+        # # Only Find Parent for root vname searches
+        # if root:
+        #     # Find Parent VLAN
+        #     parent = get_parent_vlan(vname)
+        #     if len(parent) > 0:
+        #         ngtree['Not Root']
 
 
         # Find Child VLANs
@@ -239,7 +245,7 @@ def get_parent_ngtree(vname):
     Build a Parent NGTree (only one Parent allowed)
     FixME (Recursively)
     """
-    vlan = get_vlan(vname)
+    vlan = get_vlan_from_vname(vname)
 
     ngtree = nglib.ngtree.get_ngtree(vname, tree_type="Parent")
 
@@ -418,7 +424,7 @@ def get_vlans_on_group(group, vrange):
         print()
         print(" VID             Name           Sw/Macs/Ports  Root       Switches")
 
-        # Header Size
+        # Table Header Size
         try:
             tsize = os.get_terminal_size()
             tsize = tsize.columns
@@ -492,7 +498,7 @@ def get_root_from_vlan(vname):
     return root
 
 
-def get_vlan(vname):
+def get_vlan_from_vname(vname):
     """Get a VNAME"""
 
     vlan = nglib.py2neo_ses.cypher.execute(

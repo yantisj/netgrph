@@ -45,7 +45,7 @@ verbose = 0
 logger = logging.getLogger(__name__)
 
 
-def get_vlan_report(vrange, report="all", rtype="TREE"):
+def get_vlan_report(vrange, group='.*', report="full", rtype="NGTREE"):
     """Generate VLAN Reports"""
 
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
@@ -60,6 +60,7 @@ def get_vlan_report(vrange, report="all", rtype="TREE"):
             ngtree = get_vlan_data(vrange, rtype)
             if '_ccount' in ngtree.keys():
                 nglib.query.exp_ngtree(ngtree, rtype)
+                return ngtree
             else:
                 print("No Vlans in Range", vrange)
 

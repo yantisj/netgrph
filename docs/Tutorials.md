@@ -235,23 +235,31 @@ $ netgrph abc4mdf
 ### L2 VLAN (Includes all bridge domains as a tree from the root)
 ```
 $ netgrph -vid 1246
-
-[VLAN Core-1246]
-|
-|--> Description : SPAN-1246
-|--> Root : core1
-|--> Switch Count : 2
-|--> Switches : ['core2', 'core1']
-|--> VLAN ID : 1246
-|--> localroot : core1
-|--> localstp : 20480
-|
-|-->[VLAN ECL-1246]
-|   |--> Description : SPAN-1246
-|   |--> Switch Count : 2
-|   |--> Switches : ['ecl4mdf', 'ecl2e1sw1']
-|   |--> localstp : 32768
-{...}
+┌─[ VID 1246 ]
+│
+│
+├───┬─[ VNAME Core-1246 ]
+│   ├── Description : SPAN-Net
+│   ├── Root : core1
+│   ├── Switch Count : 2
+│   ├── Switches : ['core2', 'core1']
+│   ├── VLAN ID : 1246
+│   ├── localroot : core1
+│   ├── localstp : 20480
+│   │
+│   └───┬─[ VNAME ABC-1246 ]
+│       ├── Bridge : abc4mdf <-> core1
+│       ├── Description : vendor-span
+│       ├── Switch Count : 2
+│       ├── Switches : ['abc4mdf', 'abc2e1sw1']
+│       └── localstp : 32768
+│
+└───┬─[ VNAME XYZ-1246 ]
+    ├── Description : vendor-span
+    ├── Switch Count : 2
+    ├── Switches : ['xyz4sw1', 'xyz2mdf']
+    ├── VLAN ID : 1246
+    └── localstp : 32768
 ```
 
 ### VLAN Database on a range for a switch group
@@ -273,24 +281,45 @@ VID             Name            Sw/Macs/Ports  Root       Switches
 ```
 netgrph -nlist guest -o JSON
 {
-  "Count": 109,
+  "Count": 2,
   "Filter": "wireless-guest:all guest:all",
   "Group": "guest",
   "Name": "Networks",
-  "_ccount": 109,
-  "_child105": {
-    "CIDR": "10.32.0.0/17",
-    "Description": "wireless-GUEST",
-    "Gateway": "10.32.0.50",
-    "Location": "None",
-    "Name": "10.32.0.0/17",
-    "NetRole": "wireless-guest",
-    "Router": "servchas2",
-    "SecurityLevel": "10",
-    "VLAN": "641",
-    "VRF": "guest",
-    "_type": "CIDR"
-  },
+  "_ccount": 2,
+  "_type": "NET",
+  "data": [
+    {
+      "CIDR": "10.9.8.0/23",
+      "Description": "guest",
+      "Gateway": "10.9.8.1",
+      "Location": null,
+      "Name": "10.9.8.0/23",
+      "NetRole": "nac",
+      "Router": "abc4mdf",
+      "SecurityLevel": "10",
+      "StandbyRouter": null,
+      "VLAN": "270",
+      "VRF": "guest",
+      "_type": "CIDR",
+      "vrfcidr": "guest-10.9.8.0/23"
+    },
+    {
+      "CIDR": "10.9.46.0/23",
+      "Description": "guest",
+      "Gateway": "10.9.46.1",
+      "Location": null,
+      "Name": "10.9.46.0/23",
+      "NetRole": "nac",
+      "Router": "xyz2mdf",
+      "SecurityLevel": "10",
+      "StandbyRouter": null,
+      "VLAN": "270",
+      "VRF": "guest",
+      "_type": "CIDR",
+      "vrfcidr": "guest-10.9.46.0/23"
+    }
+  ]
+}
 ```
 
 ### L4 Security Path

@@ -45,6 +45,7 @@ ngtrees are nested dicts that convert to JSON/YAML
 import re
 import datetime
 import logging
+import nglib
 from . import export
 
 logger = logging.getLogger(__name__)
@@ -128,7 +129,10 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
         # Headonly for QPATH Results
         headonly = True
         for en in ngtree:
-            if not re.search(r'Name|_type|_ccount|data', en):
+            #if not re.search(r'Name|_type|_ccount', en):
+            if not re.search(r'Name|_type|_ccount|data', en) \
+                or len(ngtree['data']):
+
                 headonly = False
                 break
         if headonly:
@@ -148,6 +152,8 @@ def print_ngtree(ngtree, dtree, parent=False, depth=0, lasttree=False):
 
     # Filter tree of structural data (_ccount etc)
     ftree = filter_tree(ngtree)
+    if nglib.verbose > 1:
+        ftree = ngtree
 
     # Print all keys at current depth
     # Last one prints special if terminating section

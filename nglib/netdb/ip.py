@@ -35,6 +35,7 @@ import re
 import socket
 import logging
 import pymysql
+import functools
 import nglib.netdb
 import nglib.ngtree
 
@@ -42,6 +43,7 @@ import nglib.ngtree
 logger = logging.getLogger(__name__)
 
 
+@functools.lru_cache(maxsize=2)
 def get_netdb_ip(ip, hours=720):
     """Get All Details for an IP"""
 
