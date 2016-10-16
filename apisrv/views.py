@@ -215,7 +215,7 @@ def get_device_nets(device):
 @auth.login_required
 def get_nets():
     """
-    nets API method
+    /nets API method
 
     Options:
         none   - return a list of all networks
