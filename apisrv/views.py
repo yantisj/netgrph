@@ -211,6 +211,44 @@ def get_device_nets(device):
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
+@app.route('/netgrph/api/v1.1/nets', methods=['GET'])
+@auth.login_required
+def get_nets():
+    """
+    nets API method
+
+    Options:
+        none   - return a list of all networks
+        ip     - find the cidr for an IP
+        cidr   - filter networks by CIDR
+        filter - filter networks by NetGrph filter (vrf:[role])
+    """
+
+
+    cidr = None
+    nFilter = 'all'
+
+    if 'ip' in request.args:
+        try:
+            return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
+        except ResultError as e:
+            return jsonify(errors.json_error(e.expression, e.message))
+    elif 'cidr' in request.args:
+        cidr = request.args['cidr']
+        try:
+            return jsonify(nglib.query.net.get_networks_on_cidr(cidr, rtype="NGTREE"))
+        except ResultError as e:
+            return jsonify(errors.json_error(e.expression, e.message))
+        except ValueError as e:
+            print(dir(e))
+            return jsonify(errors.json_error('ValueError', str(e), code=400))
+    else:
+        if 'filter' in request.args:
+            nFilter = request.args['filter']
+        try:
+            return jsonify(nglib.query.net.get_networks_on_filter(nFilter=nFilter, rtype="NGTREE"))
+        except ResultError as e:
+            return jsonify(errors.json_error(e.expression, e.message))
 
 # Info method, Return Request Data back to client as JSON
 @app.route('/' + app_name + '/api/v1.0/info', methods=['POST', 'GET'])

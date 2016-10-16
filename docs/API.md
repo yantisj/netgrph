@@ -12,9 +12,6 @@
 * Run the Server: ```./ctlsrv.py --run```
 * Test a Query: ```curl -u testuser:testpass http://localhost:4096/netgrph/api/v1.1/devs```
 
-### Authentication
-
-* Currently the only authentication method available is Basic Authentication
 
 ### Device Queries
 
@@ -34,28 +31,18 @@ specific information from individual devices.
 * /devs/{device}/vlans - device vlans
 * /devs/{device}/neighbors - device neighbors
 * /devs/{device}/nets - device networks
-* /devs?search='*' - search on devices via regex
-* /devs?group='*' - search on management group via regex
+* /devs?search='.*' - search on devices via regex
+* /devs?group='.*' - search on management group via regex
 * /devs?full=1 - get full device reports
 
 ### Networks
 
-* /nets - list of all
+* /nets - list of all networks
 * /nets?group=X
 * /nets?cidr=X
 * /nets?ip=X
-* /nets?nlist=X
-* /nets?nfilter=X
-
-
-* /devs - list of all
-* /devs/{device}
-* /devs/{device}/vlans
-* /devs/{device}/neighbors
-* /devs/{device}/nets
-* /devs?search='*'
-* /devs?group='*'
-* /devs?full=1
+* /nets?list=X
+* /nets?filter=X
 
 
 * /vlans
