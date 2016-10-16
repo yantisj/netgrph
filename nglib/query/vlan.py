@@ -307,7 +307,7 @@ def get_vlan_bridges(vid):
     # Found VID
     if len(vnames) > 0:
         for vn in vnames.records:
-            if nglib.verbose:
+            if nglib.verbose > 2:
                 print("Found", vn.name, vn.vid)
 
             if vn.name not in vfound.keys():
@@ -321,7 +321,7 @@ def get_vlan_bridges(vid):
 
                 # Standalone VLAN
                 if len(vbridges) == 0:
-                    if nglib.verbose:
+                    if nglib.verbose > 2:
                         print(vid, "not bridged on", vn.name)
                     vname[vn.name] = vid
 
@@ -329,8 +329,8 @@ def get_vlan_bridges(vid):
                 else:
                     rFound = False
                     for rvn in vbridges:
-                        if nglib.verbose:
-                            print("Found RV", rvn.rname)
+                        if nglib.verbose > 2:
+                            print("Found Root VLAN", rvn.rname)
 
                         # Mark all members of bridge as found
                         vfound[rvn.rname] = 1
@@ -342,14 +342,14 @@ def get_vlan_bridges(vid):
 
                         # Root node has no outgoing BRIDGE relationships
                         if len(findroot) == 0:
-                            if nglib.verbose:
+                            if nglib.verbose > 2:
                                 print("Found root", rvn.rname)
                             vname[rvn.rname] = vid
                             rFound = True
 
                     # I must be the root node since others have bridge relationships
                     if not rFound:
-                        if nglib.verbose:
+                        if nglib.verbose > 2:
                             print("I'm the root of", vn.name)
                         vname[vn.name] = vid
 

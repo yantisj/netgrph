@@ -262,8 +262,8 @@ def get_networks_on_cidr(cidr, rtype="CSV"):
                     netDict = get_net_props(net['vrfcidr'])
 
                     # # Get extended net tree for subnet and pull out child element
-
-                    logging.debug(netDict['CIDR'] + " in Supernet " + cidr)
+                    if nglib.verbose > 2:
+                        logging.debug(netDict['CIDR'] + " in Supernet " + cidr)
                     netList.append(netDict)
 
                     # NGTree

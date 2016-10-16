@@ -26,8 +26,7 @@
 #    then also delete it in the license file.
 #
 """
-API Views for serving user requests with examples
-Add your own methods here
+NetGrph API Views
 """
 import logging
 import nglib
@@ -41,9 +40,75 @@ from apisrv import app, auth, config, errors
 logger = logging.getLogger(__name__)
 app_name = config['apisrv']['app_name']
 
+# Device Queries
+@app.route('/netgrph/api/v1.1/devs', methods=['GET'])
+@auth.login_required
+def get_devs():
+    """ Get Device Reports
+    
+        Notes: Truncates by default for speed
+    """
+    search = '.*'
+    group = '.*'
+    trunc = True
+
+    if 'search' in request.args:
+        search = request.args['search']
+    if 'group' in request.args:
+        group = request.args['group']
+    if 'full' in request.args:
+        trunc = False
+
+    try:
+        return jsonify(nglib.report.get_dev_report(dev=search, group=group, trunc=trunc))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>', methods=['GET'])
+@auth.login_required
+def get_device(device):
+    """ Get specific device reports """
+
+    try:
+        return jsonify(nglib.query.dev.get_device(device, rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>/neighbors', methods=['GET'])
+@auth.login_required
+def get_device_neighbors(device):
+    """ Get specific device neighbors """
+
+    try:
+        return jsonify(nglib.query.dev.get_neighbors(device))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>/vlans', methods=['GET'])
+@auth.login_required
+def get_device_vlans(device):
+    """ Get specific device vlans """
+
+    try:
+        return jsonify(nglib.query.dev.get_vlans(device))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>/nets', methods=['GET'])
+@auth.login_required
+def get_device_nets(device):
+    """ Get specific device networks """
+
+    try:
+        return jsonify(nglib.query.dev.get_networks(device))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+# Path Queries
 @app.route('/netgrph/api/<ver>/path', methods=['GET'])
 @auth.login_required
 def get_full_path(ver):
+    """ L2-L4 Path Query, use onePath for single paths """
     onepath = False
     depth = '20'
 
@@ -61,7 +126,7 @@ def get_full_path(ver):
 @app.route('/netgrph/api/<ver>/rpath', methods=['GET'])
 @auth.login_required
 def get_routed_path(ver):
-    """ Routed Path """
+    """ Routed Paths, accepts vrf """
     onepath = False
     depth = '20'
     vrf = 'default'
@@ -97,6 +162,83 @@ def get_switched_path(ver):
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
+# L3 Network Queries
+@app.route('/netgrph/api/v1.1/nets', methods=['GET'])
+@auth.login_required
+def get_nets():
+    """
+    /nets API method
+
+    Options:
+        none   - return a list of all networks
+        ip     - find the cidr for an IP
+        cidr   - filter networks by CIDR
+        filter - filter networks by NetGrph filter (vrf:[role])
+    """
+
+
+    cidr = None
+    nFilter = 'all'
+
+    if 'ip' in request.args:
+        try:
+            return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
+        except ResultError as e:
+            return jsonify(errors.json_error(e.expression, e.message))
+    elif 'cidr' in request.args:
+        cidr = request.args['cidr']
+        cidr = cidr.replace('-', '/')
+        try:
+            return jsonify(nglib.query.net.get_networks_on_cidr(cidr, rtype="NGTREE"))
+        except ResultError as e:
+            return jsonify(errors.json_error(e.expression, e.message))
+        except ValueError as e:
+            print(dir(e))
+            return jsonify(errors.json_error('ValueError', str(e), code=400))
+    else:
+        if 'filter' in request.args:
+            nFilter = request.args['filter']
+        try:
+            return jsonify(nglib.query.net.get_networks_on_filter(nFilter=nFilter, rtype="NGTREE"))
+        except ResultError as e:
+            return jsonify(errors.json_error(e.expression, e.message))
+
+# L2 VLAN Queries
+@app.route('/netgrph/api/<ver>/vlans', methods=['GET'])
+@auth.login_required
+def get_vlans(ver):
+    allSwitches = True
+    vrange = '1-4096'
+    group = '.*'
+    if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
+        allSwitches = False
+    if 'vrange' in request.args:
+        vrange = request.args['vrange']
+    if 'group' in request.args:
+        group = request.args['group']
+
+    try:
+        return jsonify(nglib.report.get_vlan_report(vrange=vrange, group=group, \
+                    rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+
+@app.route('/netgrph/api/<ver>/vlans/<vlan>', methods=['GET'])
+@auth.login_required
+def get_vlan(vlan, ver):
+    allSwitches = True
+
+    if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
+        allSwitches = False
+    try:
+        return jsonify(nglib.query.vlan.get_vlan(vlan, allSwitches=allSwitches, \
+                    rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+
+## v1.0 Methods ##
 @app.route('/netgrph/api/v1.0/net', methods=['GET'])
 @auth.login_required
 def get_net():
@@ -162,140 +304,6 @@ def get_dev():
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
-@app.route('/netgrph/api/v1.1/devs', methods=['GET'])
-@auth.login_required
-def get_devs():
-    """ Get Device Reports
-    
-        Notes: Truncates by default for speed
-    """
-    search = '.*'
-    group = '.*'
-    trunc = True
-
-    if 'search' in request.args:
-        search = request.args['search']
-    if 'group' in request.args:
-        group = request.args['group']
-    if 'full' in request.args:
-        trunc = False
-
-    try:
-        return jsonify(nglib.report.get_dev_report(dev=search, group=group, trunc=trunc))
-    except ResultError as e:
-        return jsonify(errors.json_error(e.expression, e.message))
-
-@app.route('/netgrph/api/v1.1/devs/<device>', methods=['GET'])
-@auth.login_required
-def get_device(device):
-    """ Get specific device reports """
-
-    try:
-        return jsonify(nglib.query.dev.get_device(device, rtype="NGTREE"))
-    except ResultError as e:
-        return jsonify(errors.json_error(e.expression, e.message))
-
-@app.route('/netgrph/api/v1.1/devs/<device>/neighbors', methods=['GET'])
-@auth.login_required
-def get_device_neighbors(device):
-    """ Get specific device neighbors """
-
-    try:
-        return jsonify(nglib.query.dev.get_neighbors(device))
-    except ResultError as e:
-        return jsonify(errors.json_error(e.expression, e.message))
-
-@app.route('/netgrph/api/v1.1/devs/<device>/vlans', methods=['GET'])
-@auth.login_required
-def get_device_vlans(device):
-    """ Get specific device vlans """
-
-    try:
-        return jsonify(nglib.query.dev.get_vlans(device))
-    except ResultError as e:
-        return jsonify(errors.json_error(e.expression, e.message))
-
-@app.route('/netgrph/api/v1.1/devs/<device>/nets', methods=['GET'])
-@auth.login_required
-def get_device_nets(device):
-    """ Get specific device networks """
-
-    try:
-        return jsonify(nglib.query.dev.get_networks(device))
-    except ResultError as e:
-        return jsonify(errors.json_error(e.expression, e.message))
-
-@app.route('/netgrph/api/v1.1/nets', methods=['GET'])
-@auth.login_required
-def get_nets():
-    """
-    /nets API method
-
-    Options:
-        none   - return a list of all networks
-        ip     - find the cidr for an IP
-        cidr   - filter networks by CIDR
-        filter - filter networks by NetGrph filter (vrf:[role])
-    """
-
-
-    cidr = None
-    nFilter = 'all'
-
-    if 'ip' in request.args:
-        try:
-            return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
-        except ResultError as e:
-            return jsonify(errors.json_error(e.expression, e.message))
-    elif 'cidr' in request.args:
-        cidr = request.args['cidr']
-        try:
-            return jsonify(nglib.query.net.get_networks_on_cidr(cidr, rtype="NGTREE"))
-        except ResultError as e:
-            return jsonify(errors.json_error(e.expression, e.message))
-        except ValueError as e:
-            print(dir(e))
-            return jsonify(errors.json_error('ValueError', str(e), code=400))
-    else:
-        if 'filter' in request.args:
-            nFilter = request.args['filter']
-        try:
-            return jsonify(nglib.query.net.get_networks_on_filter(nFilter=nFilter, rtype="NGTREE"))
-        except ResultError as e:
-            return jsonify(errors.json_error(e.expression, e.message))
-
-@app.route('/netgrph/api/<ver>/vlans', methods=['GET'])
-@auth.login_required
-def get_vlans(ver):
-    allSwitches = True
-    vrange = '1-4096'
-    group = '.*'
-    if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
-        allSwitches = False
-    if 'vrange' in request.args:
-        vrange = request.args['vrange']
-    if 'group' in request.args:
-        group = request.args['group']
-
-    try:
-        return jsonify(nglib.report.get_vlan_report(vrange=vrange, group=group, \
-                    rtype="NGTREE"))
-    except ResultError as e:
-        return jsonify(errors.json_error(e.expression, e.message))
-
-
-@app.route('/netgrph/api/<ver>/vlans/<vlan>', methods=['GET'])
-@auth.login_required
-def get_vlan(vlan, ver):
-    allSwitches = True
-
-    if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
-        allSwitches = False
-    try:
-        return jsonify(nglib.query.vlan.get_vlan(vlan, allSwitches=allSwitches, \
-                    rtype="NGTREE"))
-    except ResultError as e:
-        return jsonify(errors.json_error(e.expression, e.message))
 
 # Info method, Return Request Data back to client as JSON
 @app.route('/' + app_name + '/api/<ver>/info', methods=['POST', 'GET'])
