@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 debug = 0
 
 # Flask Limits for Safety
-flask_limits = ["1000 per day", "100 per hour", "5 per minute"]
+flask_limits = ["1000 per day", "200 per hour", "20 per minute"]
 
 # Initialize Configuration
 config_file = builtins.apisrv_CONFIG

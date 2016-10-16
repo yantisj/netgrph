@@ -39,12 +39,18 @@ import nglib.ngtree.export
 
 user = 'yantisj'
 passwd = 'testapi'
-url = 'https://localhost:5000/'
+url = 'http://localhost:4096'
 
-r = requests.get(url + '/netgrph/api2/v1.0/path?src=128.23.1.1&dst=128.23.200.186', auth=(user, passwd), verify=False)
+qlist = ['/netgrph/api/v1.1/devs?group=MDC', '/netgrph/api/v1.1/devs?group=CON&full=1', \
+          '/netgrph/api/v1.1/devs/waringsw1']
 
-if r.status_code == 200:
-    response = r.json()
-    nglib.ngtree.export.exp_ngtree(response, "TREE")
-else:
-    print("Request Error:", r.status_code, r.text)
+#qlist = ['/netgrph/api/v1.1/devs/mdcmdf/nets']
+
+for q in qlist:
+    r = requests.get(url + q, auth=(user, passwd), verify=False)
+
+    if r.status_code == 200:
+        response = r.json()
+        nglib.ngtree.export.exp_ngtree(response, "JSON")
+    else:
+        print("Request Error:", r.status_code, r.text)

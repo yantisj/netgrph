@@ -32,6 +32,7 @@ Add your own methods here
 import logging
 import nglib
 import nglib.query
+import nglib.report
 from nglib.exceptions import ResultError
 from flask import jsonify, request
 from apisrv import app, auth, config, errors
@@ -146,6 +147,70 @@ def get_dev():
         return jsonify(nglib.query.dev.get_device(request.args['dev'], rtype="NGTREE"))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs', methods=['GET'])
+@auth.login_required
+def get_devs():
+    """ Get Device Reports
+    
+        Notes: Truncates by default for speed
+    """
+    search = '.*'
+    group = '.*'
+    trunc = True
+
+    if 'search' in request.args:
+        search = request.args['search']
+    if 'group' in request.args:
+        group = request.args['group']
+    if 'full' in request.args:
+        trunc = False
+
+    try:
+        return jsonify(nglib.report.get_dev_report(dev=search, group=group, trunc=trunc))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>', methods=['GET'])
+@auth.login_required
+def get_device(device):
+    """ Get specific device reports """
+
+    try:
+        return jsonify(nglib.query.dev.get_device(device, rtype="NGTREE"))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>/neighbors', methods=['GET'])
+@auth.login_required
+def get_device_neighbors(device):
+    """ Get specific device neighbors """
+
+    try:
+        return jsonify(nglib.query.dev.get_neighbors(device))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>/vlans', methods=['GET'])
+@auth.login_required
+def get_device_vlans(device):
+    """ Get specific device vlans """
+
+    try:
+        return jsonify(nglib.query.dev.get_vlans(device))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>/nets', methods=['GET'])
+@auth.login_required
+def get_device_nets(device):
+    """ Get specific device networks """
+
+    try:
+        return jsonify(nglib.query.dev.get_networks(device))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
 
 # Info method, Return Request Data back to client as JSON
 @app.route('/' + app_name + '/api/v1.0/info', methods=['POST', 'GET'])
