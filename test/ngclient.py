@@ -32,6 +32,7 @@
 """
 NetGrph API Client
 """
+import sys
 import requests
 import json
 import nglib.ngtree.export
@@ -41,16 +42,22 @@ user = 'yantisj'
 passwd = 'testapi'
 url = 'http://localhost:4096'
 
+output = 'JSON'
+
+if len(sys.argv) > 1:
+    output = sys.argv[1]
+
 #qlist = ['/netgrph/api/v1.1/devs?group=MDC', '/netgrph/api/v1.1/devs?group=CON&full=1', \
 #          '/netgrph/api/v1.1/devs/waringsw1']
 
-qlist = ['/netgrph/api/v1.1/vlans']
+qlist = ['/netgrph/api/v1.1/vlans?vrange=200-205', '/netgrph/api/v1.1/devs?full=1&search=mdc.*']
+
 
 for q in qlist:
     r = requests.get(url + q, auth=(user, passwd), verify=False)
 
     if r.status_code == 200:
         response = r.json()
-        nglib.ngtree.export.exp_ngtree(response, "JSON")
+        nglib.ngtree.export.exp_ngtree(response, output)
     else:
         print("Request Error:", r.status_code, r.text)
