@@ -13,44 +13,44 @@
 
 # Examples
 
-## Switch path
+* Switch path
 
-```
-$ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.0/spath?src=mdcmdf&dst=core1'
-{
-  "Distance": 1,
-  "Links": 1,
-  "Name": "mdcmdf -> core1",
-  "Search Depth": "20",
-  "Traversal Type": "All Paths",
-  "_ccount": 1,
-  "_type": "L2-PATH",
-  "data": [
-    {
-      "From Channel": "0",
-      "From Model": "WS-C3850-48U",
-      "From Port": "Te1/1/4",
-      "From Switch": "mdcmdf",
-      "Link VLANs": "1246,2200,2314,2320,2324,2365,2376",
-      "Link rVLANs": "1246,2200,2314,2320,2324,2365,2376",
-      "Name": "#1 mdcmdf(Te1/1/4) -> core1(Eth10/21)",
-      "Native VLAN": "2200",
-      "To Channel": "0",
-      "To Model": "Nexus7000 C7010",
-      "To Port": "Eth10/21",
-      "To Switch": "core1",
-      "_ccount": 0,
-      "_cversion": "03.06.04.E RELEASE SOFTWARE (fc2)",
-      "_pversion": "Version 6.2(16)",
-      "_reverse": 1,
-      "_rvlans": "1246,2200,2314,2320,2324,2365,2376",
-      "_type": "L2-HOP",
-      "data": [],
-      "distance": 1
-    }
-  ]
-}
-```
+  ```
+  $ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.0/spath?src=mdcmdf&dst=core1'
+  {
+    "Distance": 1,
+    "Links": 1,
+    "Name": "mdcmdf -> core1",
+    "Search Depth": "20",
+    "Traversal Type": "All Paths",
+    "_ccount": 1,
+    "_type": "L2-PATH",
+    "data": [
+      {
+        "From Channel": "0",
+        "From Model": "WS-C3850-48U",
+        "From Port": "Te1/1/4",
+        "From Switch": "mdcmdf",
+        "Link VLANs": "1246,2200,2314,2320,2324,2365,2376",
+        "Link rVLANs": "1246,2200,2314,2320,2324,2365,2376",
+        "Name": "#1 mdcmdf(Te1/1/4) -> core1(Eth10/21)",
+        "Native VLAN": "2200",
+        "To Channel": "0",
+        "To Model": "Nexus7000 C7010",
+        "To Port": "Eth10/21",
+        "To Switch": "core1",
+        "_ccount": 0,
+        "_cversion": "03.06.04.E RELEASE SOFTWARE (fc2)",
+        "_pversion": "Version 6.2(16)",
+        "_reverse": 1,
+        "_rvlans": "1246,2200,2314,2320,2324,2365,2376",
+        "_type": "L2-HOP",
+        "data": [],
+        "distance": 1
+      }
+    ]
+  }
+  ```
 ___
 
 # Device Calls
@@ -62,32 +62,28 @@ specific information from individual devices.
 * __URLs__
   * List all Devices
     * __/devs__
-  * Retrieve a Specific Device
+  * Specific Device
     * __/devs/{device}__
   * Device VLANs
     * __/devs/{device}/vlans__
   * Device Neighbors
-    * __/devs/{device}/neighbors__ - device neighbors
+    * __/devs/{device}/neighbors__
   * Device Networks
-    * __/devs/{device}/nets__ - device networks
+    * __/devs/{device}/nets__
 
 * **Method:**
-
-  `GET`
+  * `GET`
 
 * __URL Parameters__
-
   * __group__: Restrict on device group regex
   * __search__: Restrict on device name regex
   * __full__: Return full device reports (non-truncated and slower)
 
 * **Success Response:**
-
   * **Code:** 200 <br />
     **Content:** `{ Name : Report, _type : "VIDs" }`
 
 * **Error Response:**
-
   * **Code:** 401 <br />
     **Content:** `{ message : "Request Error" }`
 
@@ -99,16 +95,12 @@ Network Queries allow you to query for networks based on CIDRs, VRF, Role and
 Group filters.
 
 * __URLs__
-  * List of All Networks
-    * __/nets__
-  * Networks filtered on group and cidr
-    * __/nets?group=X&cidr=X__
-  * Most Specific CIDR from IP
-    * __/nets?ip=X__
+  * `__/nets__`: List of All Networks
+  * `__/nets?group=X&cidr=X__`: Networks filtered on group and cidr
+  * `__/nets?ip=X__`: Most Specific CIDR from IP
 
 * **Method:**
-
-  `GET`
+  * `GET`
 
 * __URL Parameters__
   * __group__: Restrict on device group regex
@@ -117,12 +109,10 @@ Group filters.
   * __ip__: Find most specific CIDR for IP
 
 * **Success Response:**
-
   * **Code:** 200 <br />
     **Content:** `{ Name : Report, _type : "Networks" }`
 
 * **Error Response:**
-
   * **Code:** 401 <br />
     **Content:** `{ message : "Request Error" }`
 
@@ -132,26 +122,23 @@ ___
 
 VLAN Queries return lists of all VLANs, specific VLAN trees and VLANs for groups
 
+* __URLs__
+  * /vlans
+  * /vlans?vid=X
+  * /vlans?vname=X
+  * /vlans?group=X
+
 * __URL Parameters__
   * __group__: VLANs in a Management Group
   * __vid__: VLAN ID
   * __vname__: MGMT-VID Format
   * __range__: VLAN Range eg. 1-1005
 
-* __URLs__
-
-  * /vlans
-  * /vlans?vid=X
-  * /vlans?vname=X
-  * /vlans?group=X
-
 * **Success Response:**
-
   * **Code:** 200 <br />
     **Content:** `{ Name : Report, _type : "VLANs" }`
 
 * **Error Response:**
-
   * **Code:** 401 <br />
     **Content:** `{ message : "Request Error" }`
 
@@ -177,16 +164,16 @@ Path queries allow you to do L2-L4 traversals between any two points on the netw
   * __onepath__(set True): Only show one path, no ECMP
   * __depth__: Depth of Graph Search (default 20)
   * __vrf__: VRF for Routed Queries
-
   * `Note:` src and dst support regexes on switch paths
 
-* **Success Response:**
+* **Method:**
+  * `GET`
 
+* **Success Response:**
   * **Code:** 200 <br />
     **Content:** `{ Name : Report, _type : "PATH" }`
 
 * **Error Response:**
-
   * **Code:** 401 <br />
     **Content:** `{ message : "Request Error" }`
   
