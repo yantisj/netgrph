@@ -9,4 +9,4 @@ pages:
     - Overview: Tutorials.md
     - CLI: CLI.md
     - Path Finding: PathSample.md
-    - API: API.md
+    - REST API Reference: API.md
