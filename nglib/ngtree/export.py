@@ -54,6 +54,8 @@ def exp_ngtree(ngtree, rtype):
         exp_qtree(ngtree)
     elif rtype == "CSV":
         exp_CSV(ngtree)
+    elif rtype == "CSV2":
+        exp_CSV(ngtree, level=2)
     elif rtype == "JSON":
         exp_JSON(ngtree)
     elif rtype == "YAML":
@@ -86,9 +88,7 @@ def exp_qtree(ngtree):
     """Prints an ngtree with headers only"""
 
     stree = strip_ngtree(ngtree)
-
     nglib.ngtree.print_ngtree(stree, dtree=dict())
-
 
 def cleanNGTree(ngtree):
     """Removes counts from output"""
@@ -97,38 +97,64 @@ def cleanNGTree(ngtree):
     cleanND.pop('_ccount', None)
     return cleanND
 
-def exp_CSV(ngtree):
-    """Flatten NGTREE and dump as CSV, only dumps one level deep"""
+def exp_CSV(ngtree, level=1):
+    """Flatten NGTREE and dump as CSV, optional two levels deep"""
 
     fieldnames = []
+    if level == 2:
+        fieldnames.append('_ctype')
+        fieldnames.append('CName')
 
-    for child in sorted(ngtree.keys()):
-        if re.search('_child', child):
-            for en in sorted(ngtree[child].keys()):
-                if isinstance(en, (int, str)) and en not in fieldnames:
-                    fieldnames.append(en)
+    for child in ngtree['data']:
+        for en in sorted(child.keys()):
+            if isinstance(en, (int, str)) and en != 'data' \
+                and en not in fieldnames:
+                fieldnames.append(en)
+
+        # Two levels deep
+        if level == 2:
+            for gchild in child['data']:
+                for en in sorted(gchild.keys()):
+                    if isinstance(en, (int, str)) and en != 'data' \
+                        and en not in fieldnames:
+                        fieldnames.append(en) 
 
     excsv = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
     excsv.writeheader()
 
-    for child in sorted(ngtree.keys()):
-        if re.search('_child', child):
-            entry = dict()
-            for en in sorted(ngtree[child].keys()):
-                if isinstance(en, (int, str)):
-                    entry[en] = ngtree[child][en]
+    for child in ngtree['data']:
+        entry = dict()
+        for en in sorted(child.keys()):
+            if isinstance(en, (int, str)) and not re.search('data|Switches', en):
+                entry[en] = child[en]
+        if level == 2:
+            for gchild in child['data']:
+                centry = entry.copy()
+                for en in sorted(gchild.keys()):
+                    if isinstance(en, (int, str)) and not re.search('data|Switches', en):
+                        if en == 'Name':
+                            centry['CName'] = gchild[en]
+                        elif en == '_type':
+                            centry['_ctype'] = gchild[en]
+                        else:
+                            centry[en] = gchild[en]
+                excsv.writerow(centry)
+
+        else:
             excsv.writerow(entry)
+
 
 def strip_ngtree(ngtree, top=True):
     """Strips everything but headers from ngtree"""
 
     newtree = nglib.ngtree.get_ngtree(ngtree['Name'], tree_type=ngtree['_type'])
 
-    for en in ngtree:
-        if '_child' in en:
-            newtree[en] = strip_ngtree(ngtree[en], top=False)
-        elif top:
-            newtree[en] = ngtree[en]
+    for en in ngtree['data']:
+        newtree['data'].append(strip_ngtree(en, top=False))
+    if top:
+        for en in ngtree:
+            if en != 'data':
+                newtree[en] = ngtree[en]
 
     return newtree
     

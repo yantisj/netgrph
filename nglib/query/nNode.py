@@ -30,7 +30,7 @@
 #    delete this exception statement from all source files in the program,
 #    then also delete it in the license file.
 """
-Py2Neo Node Properties
+Py2Neo Node Properties (Deprecated)
 
 """
 import logging

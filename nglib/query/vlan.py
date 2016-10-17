@@ -33,9 +33,11 @@ NetGrph VLAN Query Routines
 """
 import sys
 import os
+import re
 import logging
 import nglib
 from nglib.query.nNode import getJSONProperties
+from nglib.exceptions import OutputError, ResultError
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +60,18 @@ def get_vlan_range(vlanRange):
 
     return vlow, vhigh
 
+def get_vlan(vlan, rtype="NGTREE", allSwitches=True):
+    """ Gets a VLAN in VID or VNAME Format """
+
+    if re.search(r'\w+\-\d+', vlan):
+        return get_vtree(vlan, rtype=rtype, allSwitches=allSwitches)
+    else:
+        return search_vlan_id(vlan, rtype=rtype, allSwitches=allSwitches)
 
 def search_vlan_id(vid, rtype="NGTREE", allSwitches=True):
     """Search a VLAN ID for all Bridge Groups"""
 
-    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
+    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE', 'QTREE')
 
     # Truncate Switches when Tree
     if rtype == "TREE":
@@ -95,10 +104,10 @@ def search_vlan_id(vid, rtype="NGTREE", allSwitches=True):
         return pngtree
 
     else:
-        raise Exception("RType Not Supported, use:" + str(rtypes))
+        raise OutputError("RType Not Supported", str(rtypes))
 
 
-def get_vtree(vname, rtype="NGTREE"):
+def get_vtree(vname, rtype="NGTREE", allSwitches=True):
     """Get a VTree on a Vlan Name"""
 
     rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
@@ -116,7 +125,7 @@ def get_vtree(vname, rtype="NGTREE"):
         return ngtree
 
     else:
-        raise Exception("RType Not Supported, use:" + str(rtypes))
+        raise OutputError("RType Not Supported", str(rtypes))
 
 
 def load_bridge_tree(vname, root=True, getSW=False):
@@ -136,7 +145,7 @@ def load_bridge_tree(vname, root=True, getSW=False):
     ngtree = nglib.ngtree.get_ngtree(vname, tree_type="VNAME")
 
     # Find VLAN
-    vlan = get_vlan(vname)
+    vlan = get_vlan_from_vname(vname)
 
     # Find Switches for VLAN
     swtree = get_sw_from_vlan(vname)
@@ -207,14 +216,12 @@ def load_bridge_tree(vname, root=True, getSW=False):
             ngtree['Switches'] = slist
 
 
-        # Only Find Parent for root vname searches
-        if root:
-            # Find Parent VLAN
-            parent = get_parent_vlan(vname)
-            if len(parent) > 0:
-                pvname = parent.records[0].vname
-                pngtree = get_parent_ngtree(pvname)
-                nglib.ngtree.add_parent_ngtree(ngtree, pngtree)
+        # # Only Find Parent for root vname searches
+        # if root:
+        #     # Find Parent VLAN
+        #     parent = get_parent_vlan(vname)
+        #     if len(parent) > 0:
+        #         ngtree['Not Root']
 
 
         # Find Child VLANs
@@ -228,7 +235,7 @@ def load_bridge_tree(vname, root=True, getSW=False):
                     nglib.ngtree.add_child_ngtree(ngtree, cngtree)
 
     else:
-        raise Exception("No VLAN Found (expecting VNAME eg. Core-16): " + vname)
+        raise ResultError("No VLAN Name Found", "Expecting VNAME eg. Core-16: " + vname)
 
     return ngtree
 
@@ -238,7 +245,7 @@ def get_parent_ngtree(vname):
     Build a Parent NGTree (only one Parent allowed)
     FixME (Recursively)
     """
-    vlan = get_vlan(vname)
+    vlan = get_vlan_from_vname(vname)
 
     ngtree = nglib.ngtree.get_ngtree(vname, tree_type="Parent")
 
@@ -300,7 +307,7 @@ def get_vlan_bridges(vid):
     # Found VID
     if len(vnames) > 0:
         for vn in vnames.records:
-            if nglib.verbose:
+            if nglib.verbose > 2:
                 print("Found", vn.name, vn.vid)
 
             if vn.name not in vfound.keys():
@@ -314,7 +321,7 @@ def get_vlan_bridges(vid):
 
                 # Standalone VLAN
                 if len(vbridges) == 0:
-                    if nglib.verbose:
+                    if nglib.verbose > 2:
                         print(vid, "not bridged on", vn.name)
                     vname[vn.name] = vid
 
@@ -322,8 +329,8 @@ def get_vlan_bridges(vid):
                 else:
                     rFound = False
                     for rvn in vbridges:
-                        if nglib.verbose:
-                            print("Found RV", rvn.rname)
+                        if nglib.verbose > 2:
+                            print("Found Root VLAN", rvn.rname)
 
                         # Mark all members of bridge as found
                         vfound[rvn.rname] = 1
@@ -335,19 +342,19 @@ def get_vlan_bridges(vid):
 
                         # Root node has no outgoing BRIDGE relationships
                         if len(findroot) == 0:
-                            if nglib.verbose:
+                            if nglib.verbose > 2:
                                 print("Found root", rvn.rname)
                             vname[rvn.rname] = vid
                             rFound = True
 
                     # I must be the root node since others have bridge relationships
                     if not rFound:
-                        if nglib.verbose:
+                        if nglib.verbose > 2:
                             print("I'm the root of", vn.name)
                         vname[vn.name] = vid
 
     else:
-        raise Exception("No VID Found (expecting VLAN id in range 1-4096): " + vid)
+        raise ResultError("No VID Found", "Expecting VLAN id in range 1-4096: " + vid)
 
     return vname
 
@@ -417,7 +424,7 @@ def get_vlans_on_group(group, vrange):
         print()
         print(" VID             Name           Sw/Macs/Ports  Root       Switches")
 
-        # Header Size
+        # Table Header Size
         try:
             tsize = os.get_terminal_size()
             tsize = tsize.columns
@@ -491,7 +498,7 @@ def get_root_from_vlan(vname):
     return root
 
 
-def get_vlan(vname):
+def get_vlan_from_vname(vname):
     """Get a VNAME"""
 
     vlan = nglib.py2neo_ses.cypher.execute(

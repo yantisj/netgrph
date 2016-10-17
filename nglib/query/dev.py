@@ -33,21 +33,21 @@ Device Query Routines
 
 """
 import logging
-import re
 import sys
 import nglib
 import nglib.ngtree
 import nglib.ngtree.export
+from nglib.exceptions import OutputError, ResultError
 
 logger = logging.getLogger(__name__)
 
 def get_device(dev, rtype="NGTREE", vrange=None):
     """Get Switch perspective (neighbors, vlans, routed networks)"""
 
-    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE')
+    rtypes = ('TREE', 'JSON', 'YAML', 'NGTREE', 'QTREE')
 
     if rtype not in rtypes:
-        raise Exception("Selected RType not allows for this query", rtype)
+        raise OutputError("Selected RType not allows for this query", rtype)
 
     ngtree = nglib.ngtree.get_ngtree(dev, tree_type="Device")
 
@@ -100,16 +100,16 @@ def get_device(dev, rtype="NGTREE", vrange=None):
         for en in sorted(neitree):
             if en == "Total Neighbors":
                 ngtree['Total Neighbors'] = neitree[en]
-            elif re.search(r'_child\d+', en):
-                if neitree[en]["_type"] == "NEI Parents":
-                    nglib.ngtree.add_child_ngtree(ngtree, neitree[en])
-                    ngtree['Parent Neighbors'] = neitree["Parent Neighbors"]
-                elif neitree[en]["_type"] == "NEI Equals":
-                    nglib.ngtree.add_child_ngtree(ngtree, neitree[en])
-                    ngtree['Equal Neighbors'] = neitree["Equal Neighbors"]
-                elif neitree[en]["_type"] == "NEI Children":
-                    c_nei = neitree[en]
-                    c_count = neitree["Child Neighbors"]
+        for en in neitree['data']:
+            if en["_type"] == "NEI Parents":
+                nglib.ngtree.add_child_ngtree(ngtree, en)
+                ngtree['Parent Neighbors'] = neitree["Parent Neighbors"]
+            elif en["_type"] == "NEI Equals":
+                nglib.ngtree.add_child_ngtree(ngtree, en)
+                ngtree['Equal Neighbors'] = neitree["Equal Neighbors"]
+            elif en["_type"] == "NEI Children":
+                c_nei = en
+                c_count = neitree["Child Neighbors"]
 
         # Optionally add children at end when count > 4
         if 0 < c_count <= 4:
@@ -140,9 +140,7 @@ def get_device(dev, rtype="NGTREE", vrange=None):
         nglib.query.exp_ngtree(ngtree, rtype)
         return ngtree
 
-    print("No results found for device:", dev, file=sys.stderr)
-    ngtree['Error'] = "No results for " + dev
-    return ngtree
+    raise ResultError("No Results found for device query", dev)
 
 def get_neighbors(dev):
     """

@@ -1,12 +1,12 @@
 site_name: NetGrph
 pages:
 - Home: index.md
-- About: About.md
-- Install: 
+- About NetGrph: About.md
+- Installing NetGrph: 
     - Installation: INSTALL.md
     - Ansible Install: playbooks/README.md
-- Using:
-    - Overview: Tutorials.md
-    - CLI: CLI.md
-    - Path Finding: PathSample.md
-    - API: API.md
+- Using NetGrph:
+    - Usage Overview: Tutorials.md
+    - Command Line Interface: CLI.md
+    - Topology and Pathfinding: PathSample.md
+    - REST API Reference: API.md

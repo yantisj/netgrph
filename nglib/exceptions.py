@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+#
+#
 # Copyright (c) 2016 "Jonathan Yantis"
+#
+# This file is a part of NetGrph.
 #
 #    This program is free software: you can redistribute it and/or  modify
 #    it under the terms of the GNU Affero General Public License, version 3,
@@ -24,61 +28,24 @@
 #    wish to do so, delete this exception statement from your version. If you
 #    delete this exception statement from all source files in the program,
 #    then also delete it in the license file.
-#
 """
-API Errors Jsonified
+NetGrph Exceptions
 """
-import logging
-from flask import Flask, jsonify, request, g, make_response
-from apisrv import app, auth
 
-logger = logging.getLogger(__name__)
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
 
-@app.errorhandler(404)
-def not_found(error=None):
-    message = {
-            'status': 404,
-            'message': 'Not Found: ' + request.url,
-    }
-    resp = jsonify(message)
-    resp.status_code = 404
-    return resp
+class OutputError(Error):
+    """Exception raised for errors in the output."""
 
-@app.errorhandler(429)
-def ratelimit_handler(e):
-    return make_response(
-            jsonify(error="ratelimit exceeded %s" % e.description)
-            , 429
-    )
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
 
-@auth.error_handler
-def auth_failed(error=None):
-    message = {
-            'status': 401,
-            'message': 'Authentication Failed: ' + request.url
-    }
-    resp = jsonify(message)
-    resp.status_code = 401
+class ResultError(Error):
+    """Exception raised for Result Errors"""
 
-    return resp
-
-@app.errorhandler(400)
-def bad_request(error):
-    print("Bad Request")
-    message = {
-            'status': 400,
-            'message': 'Bad Request: ' + request.url,
-    }
-    resp = jsonify(message)    
-    resp.status_code = 400
-    return resp
-
-def json_error(error, message, code=404):
-
-    ngerror = dict()
-    ngerror['Name'] = error
-    ngerror['_type'] = 'Error'
-    ngerror['message'] = error + ': ' + message
-    ngerror['status'] = code
-
-    return ngerror
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message

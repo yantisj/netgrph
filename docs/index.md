@@ -94,7 +94,7 @@ See the [Tutorials Documentation](Tutorials.md)
 
 See the [Command Line Interface Documentation](CLI.md)
 
-### API Documentation
+### REST API Documentation
 
-See the [API Documentation](API.md)
+See the [REST API Documentation](API.md)
 
