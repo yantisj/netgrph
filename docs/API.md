@@ -11,11 +11,9 @@
 * Run the Server: ```./ctlsrv.py --run```
 * Test a Query: ```curl -u testuser:testpass http://localhost:4096/netgrph/api/v1.1/devs```
 
-___
+# Examples
 
-## Examples
-
-### Switch path
+## Switch path
 
 ```
 $ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.0/spath?src=mdcmdf&dst=core1'
@@ -53,81 +51,142 @@ $ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.0/spath?src=md
   ]
 }
 ```
+___
 
-# Device Queries
+# Device Calls
+
 
 Device Queries allow you to query the API for all devices, regexes and gather
 specific information from individual devices.
 
-#### Get Options
+* __URLs__
+  * List all Devices
+    * __/devs__
+  * Retrieve a Specific Device
+    * __/devs/{device}__
+  * Device VLANs
+    * __/devs/{device}/vlans__
+  * Device Neighbors
+    * __/devs/{device}/neighbors__ - device neighbors
+  * Device Networks
+    * __/devs/{device}/nets__ - device networks
 
-* __group__: Restrict on device group regex
-* __search__: Restrict on device name regex
-* __full__: Return full device reports (non-truncated and slower)
+* **Method:**
 
-#### URIs
+  `GET`
 
-* __/devs__ - list of all devices
-* __/devs/{device}__ - specific device
-* __/devs/{device}/vlans__ - device vlans
-* __/devs/{device}/neighbors__ - device neighbors
-* __/devs/{device}/nets__ - device networks
-* __/devs?search='.*'__ - search on devices via regex
-* __/devs?group='.*'__ - search on management group via regex
-* __/devs?full=1__ - get full device reports
+* __URL Parameters__
 
-# Network Queries
+  * __group__: Restrict on device group regex
+  * __search__: Restrict on device name regex
+  * __full__: Return full device reports (non-truncated and slower)
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** `{ Name : Report, _type : "VIDs" }`
+
+* **Error Response:**
+
+  * **Code:** 401 <br />
+    **Content:** `{ message : "Request Error" }`
+
+___
+
+# Network Calls
 
 Network Queries allow you to query for networks based on CIDRs, VRF, Role and
 Group filters.
 
-#### GET Options
+* __URLs__
+  * List of All Networks
+    * __/nets__
+  * Networks filtered on group and cidr
+    * __/nets?group=X&cidr=X__
+  * Most Specific CIDR from IP
+    * __/nets?ip=X__
 
-* __group__: Restrict on device group regex
-* __cidr__: Restrict on device name regex
-* __filter__: Filter via NetGrph vrf:role syntax
-* __ip__: Find most specific CIDR for IP
+* **Method:**
 
-#### URIs
-* __/nets__ - List of all networks
-* __/nets?group=X__ - List of all networks in a management group
-* __/nets?cidr=X__ - List of all networks found in a CIDR
-* __/nets?ip=X__ - Most Specific CIDR Match
+  `GET`
 
-# VLAN Queries
+* __URL Parameters__
+  * __group__: Restrict on device group regex
+  * __cidr__: Restrict on device name regex (optionally replace /24 mask with -24)
+  * __filter__: Filter via NetGrph vrf:role syntax
+  * __ip__: Find most specific CIDR for IP
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** `{ Name : Report, _type : "Networks" }`
+
+* **Error Response:**
+
+  * **Code:** 401 <br />
+    **Content:** `{ message : "Request Error" }`
+
+___
+
+# VLAN Calls
 
 VLAN Queries return lists of all VLANs, specific VLAN trees and VLANs for groups
 
-#### GET Options
-* __group__: VLANs in a Management Group
-* __vid__: VLAN ID
-* __vname__: MGMT-VID Format
-* __range__: VLAN Range eg. 1-1005
+* __URL Parameters__
+  * __group__: VLANs in a Management Group
+  * __vid__: VLAN ID
+  * __vname__: MGMT-VID Format
+  * __range__: VLAN Range eg. 1-1005
 
-#### URIs
+* __URLs__
 
-* /vlans
-* /vlans?vid=X
-* /vlans?vname=X
-* /vlans?group=X
+  * /vlans
+  * /vlans?vid=X
+  * /vlans?vname=X
+  * /vlans?group=X
 
+* **Success Response:**
 
-# Path Queries
+  * **Code:** 200 <br />
+    **Content:** `{ Name : Report, _type : "VLANs" }`
+
+* **Error Response:**
+
+  * **Code:** 401 <br />
+    **Content:** `{ message : "Request Error" }`
+
+___
+
+# Path Calls
 
 Path queries allow you to do L2-L4 traversals between any two points on the network.
 
-#### GET Options
+* __URLs__
+  * Universal L2-L4 Path Query
+    * `/path?src=[ip]&dst=[ip]`
+  * Switch paths using a regex
+    * `/spath?src=[switch]&dst[switch.*]`
+  * L3 Path inside a VRF
+    * `/rpath?src=[ip]&dst=[ip]&vrf=pci`
+  * L4 Path Query
+    * `/fpath?src=[ip]&dst=[ip]`
 
-* __src__(required): Source of Path Query (regex support on switch paths)
-* __dst__(required): Destination of Path Query
-* __onepath__(set True): Only show one path, no ECMP
-* __depth__: Depth of Graph Search (default 20)
-* __vrf__: VRF for Routed Queries
+* __URL Parameters__
+  * __src__(required): Source of Path Query (regex support on switch paths)
+  * __dst__(required): Destination of Path Query
+  * __onepath__(set True): Only show one path, no ECMP
+  * __depth__: Depth of Graph Search (default 20)
+  * __vrf__: VRF for Routed Queries
 
-Note: src and dst support regexes on switch paths
+  * `Note:` src and dst support regexes on switch paths
 
-#### URIs
-* /path?src=[ip]&dst=[ip] - Universal L2-L4 Path Query
-* /spath?src=[switch]&dst[switch.*] - Switch paths using a regex
-* /rpath?src=[ip]&dst=[ip]&vrf=pci - L3 Path inside a VRF
-* /fpath?src=[ip]&dst=[ip] - L4 Path Query
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** `{ Name : Report, _type : "PATH" }`
+
+* **Error Response:**
+
+  * **Code:** 401 <br />
+    **Content:** `{ message : "Request Error" }`
+  

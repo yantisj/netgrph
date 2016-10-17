@@ -50,7 +50,7 @@ if len(sys.argv) > 1:
 #qlist = ['/netgrph/api/v1.1/devs?group=MDC', '/netgrph/api/v1.1/devs?group=CON&full=1', \
 #          '/netgrph/api/v1.1/devs/waringsw1']
 
-qlist = ['/netgrph/api/v1.1/vlans?vrange=200-205', '/netgrph/api/v1.1/devs?full=1&search=mdc.*']
+qlist = ['/netgrph/api/v1.1/vlans?vrange=200-205', '/netgrph/api/v1.1/devs?full=1&search=cr3.*']
 
 
 for q in qlist:
