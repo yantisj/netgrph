@@ -6,52 +6,81 @@
 
 ## Setup
 * Configure the [api] section in netgrph.ini
-* Enable HTTPS with valid certs for listening beyond localhost
-* Initialize the SQL Lite database: ```./ctlsrv.py --initdb```
-* Add an API User: ```./ctlsrv --adduser testuser```
-* Run the Server: ```./ctlsrv.py --run```
-* Test a Query: ```curl -u testuser:testpass http://localhost:4096/netgrph/api/v1.1/devs```
+* Enable HTTPS using valid certs for serving API calls beyond localhost
+* Setup Process
+  * Initialize the SQL Lite database: ```./ctlsrv.py --initdb```
+  * Add an API User: ```./ctlsrv --adduser testuser```
+  * Run the Server: ```./ctlsrv.py --run```
+  * Test a Query: ```curl -u testuser:testpass http://localhost:4096/netgrph/api/v1.1/devs```
 
 # Examples
 
-* Switch path
+### Switch path
 
-  ```
-  $ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.0/spath?src=mdcmdf&dst=core1'
-  {
-    "Distance": 1,
-    "Links": 1,
-    "Name": "mdcmdf -> core1",
-    "Search Depth": "20",
-    "Traversal Type": "All Paths",
-    "_ccount": 1,
-    "_type": "L2-PATH",
-    "data": [
-      {
-        "From Channel": "0",
-        "From Model": "WS-C3850-48U",
-        "From Port": "Te1/1/4",
-        "From Switch": "mdcmdf",
-        "Link VLANs": "1246,2200,2314,2320,2324,2365,2376",
-        "Link rVLANs": "1246,2200,2314,2320,2324,2365,2376",
-        "Name": "#1 mdcmdf(Te1/1/4) -> core1(Eth10/21)",
-        "Native VLAN": "2200",
-        "To Channel": "0",
-        "To Model": "Nexus7000 C7010",
-        "To Port": "Eth10/21",
-        "To Switch": "core1",
-        "_ccount": 0,
-        "_cversion": "03.06.04.E RELEASE SOFTWARE (fc2)",
-        "_pversion": "Version 6.2(16)",
-        "_reverse": 1,
-        "_rvlans": "1246,2200,2314,2320,2324,2365,2376",
-        "_type": "L2-HOP",
-        "data": [],
-        "distance": 1
-      }
-    ]
-  }
-  ```
+```
+$ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.0/spath?src=mdcmdf&dst=core1'
+{
+  "Distance": 1,
+  "Links": 1,
+  "Name": "mdcmdf -> core1",
+  "Search Depth": "20",
+  "Traversal Type": "All Paths",
+  "_ccount": 1,
+  "_type": "L2-PATH",
+  "data": [
+    {
+      "From Channel": "0",
+      "From Model": "WS-C3850-48U",
+      "From Port": "Te1/1/4",
+      "From Switch": "mdcmdf",
+      "Link VLANs": "1246,2200,2314,2320,2324,2365,2376",
+      "Link rVLANs": "1246,2200,2314,2320,2324,2365,2376",
+      "Name": "#1 mdcmdf(Te1/1/4) -> core1(Eth10/21)",
+      "Native VLAN": "2200",
+      "To Channel": "0",
+      "To Model": "Nexus7000 C7010",
+      "To Port": "Eth10/21",
+      "To Switch": "core1",
+      "_ccount": 0,
+      "_cversion": "03.06.04.E RELEASE SOFTWARE (fc2)",
+      "_pversion": "Version 6.2(16)",
+      "_reverse": 1,
+      "_rvlans": "1246,2200,2314,2320,2324,2365,2376",
+      "_type": "L2-HOP",
+      "data": [],
+      "distance": 1
+    }
+  ]
+}
+```
+
+### Networks on a filter (guest VRF with guest access role)
+
+```
+curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.1/nets?filter=guest:nac-guest'
+{
+  "Count": 23,
+  "Filter": "guest:nac-guest",
+  "Name": "Networks",
+  "_ccount": 23,
+  "_type": "NET",
+  "data": [
+    {
+      "CIDR": "10.29.2.0/23",
+      "Description": "None",
+      "Gateway": "10.29.2.1",
+      "Location": null,
+      "Name": "10.29.2.0/23",
+      "NetRole": "nac-guest",
+      "Router": "mdcmdf",
+      "SecurityLevel": "10",
+      "StandbyRouter": null,
+      "VLAN": "270",
+      "VRF": "guest",
+      "_type": "CIDR",
+      "vrfcidr": "guest-10.29.2.0/23"
+    },
+```
 ___
 
 # Device Calls
