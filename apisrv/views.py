@@ -32,6 +32,7 @@ import logging
 import nglib
 import nglib.query
 import nglib.report
+import nglib.netdb.switch
 from nglib.exceptions import ResultError
 from flask import jsonify, request
 from apisrv import app, auth, config, errors
@@ -101,6 +102,20 @@ def get_device_nets(device):
 
     try:
         return jsonify(nglib.query.dev.get_networks(device))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netgrph/api/v1.1/devs/<device>/ints', methods=['GET'])
+@auth.login_required
+def get_device_ints(device):
+    """ Get specific device interfaces """
+
+    if not nglib.netdb:
+        return jsonify(errors.json_error('NetDB Error', \
+            'NetDB Must be enabled to run this query'))
+
+    try:
+        return jsonify(nglib.netdb.switch.get_switch(device))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
