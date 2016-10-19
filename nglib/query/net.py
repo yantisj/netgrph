@@ -202,6 +202,7 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
                 netList.append(netDict)
                 netDict['_type'] = "CIDR"
                 netDict['Name'] = netDict['CIDR']
+                netDict['data'] = []
 
                 # Cleanup Results
                 netDict.pop('__values__', None)
