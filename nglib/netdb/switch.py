@@ -80,7 +80,7 @@ def get_switch(switch, port='%', hours=720, trunc=True):
 
     pc = cursor.fetchall()
 
-    pngtree = nglib.ngtree.get_ngtree("INTERFACES", tree_type="NetDB")
+    pngtree = nglib.ngtree.get_ngtree(switch, tree_type="INTs")
 
     print(dir(pc))
 
