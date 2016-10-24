@@ -58,7 +58,8 @@ def get_device(dev, rtype="NGTREE", vrange=None):
     switch = nglib.bolt_ses.run(
         'MATCH (s:Switch {name:{dev}})'
         + 'RETURN s.name as name, s.distance as distance, s.mgmt as mgmt, '
-        + 's.location as location, s.model as model, s.version as version',
+        + 's.location as location, s.model as model, s.version as version, '
+        + 's.Platform AS platform, s.FQDN as FQDN',
         {"dev": dev})
 
     for sw in switch:
@@ -73,6 +74,8 @@ def get_device(dev, rtype="NGTREE", vrange=None):
         ngtree['MGMT Group'] = sw['mgmt']
         ngtree['Model'] = sw['model']
         ngtree['Version'] = sw['version']
+        ngtree['Platform'] = sw['platform']
+        ngtree['FQDN'] = sw['FQDN']
         if vrange:
             ngtree['VLAN Range'] = vrange
 

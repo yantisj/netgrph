@@ -198,7 +198,8 @@ def get_dev_report(dev, group=".*", trunc=False, rtype="NGTREE"):
             'MATCH(s:Switch) WHERE s.mgmt =~ {mgmt} AND s.name =~ {dev} '
             + 'RETURN s.name AS name, s.mgmt AS mgmt, '
             + 's.location AS location, s.model AS model, s.version AS version, '
-            + 's.distance AS distance ORDER BY name',
+            + 's.distance AS distance, s.Platform AS platform, s.FQDN as FQDN '
+            + 'ORDER BY name',
             {'dev': dev, 'mgmt': group})
 
         ngtree = nglib.ngtree.get_ngtree("Report", tree_type="DEVS")
@@ -213,6 +214,8 @@ def get_dev_report(dev, group=".*", trunc=False, rtype="NGTREE"):
                     ct['MGMT Group'] = d['mgmt']
                     ct['Model'] = d['model']
                     ct['Version'] = d['version']
+                    ct['Platform'] = d['platform']
+                    ct['FQDN'] = d['FQDN']
                     nglib.ngtree.add_child_ngtree(ngtree, ct)
                 else:
                     cngtree = nglib.query.dev.get_device(d["name"])
