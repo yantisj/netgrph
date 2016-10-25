@@ -180,7 +180,7 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
             + 'RETURN n.cidr AS CIDR, n.vid AS VLAN, '
             + 'n.gateway as Gateway, n.location as Location, n.desc AS Description, '
             + 'r.name AS Router, rs.name AS StandbyRouter, s.role AS NetRole, '
-            + 's.mgmt AS Mgmt, v.name as VRF, n.vrfcidr AS vrfcidr, '
+            + 'r.mgmt AS Mgmt, v.name as VRF, n.vrfcidr AS vrfcidr, '
             + 'v.seczone AS SecurityLevel ORDER BY CIDR')
 
 
@@ -317,7 +317,7 @@ def find_cidr(ip):
     if len(networks) > 1:
         for r in networks.records:
             if ipaddress.ip_address(ip) in ipaddress.ip_network(r.cidr):
-                if nglib.verbose>1:
+                if nglib.verbose > 1:
                     print("find_cidr", ip + " in " + r.cidr)
                 mostSpecific = compare_cidr(mostSpecific, r.cidr)
 

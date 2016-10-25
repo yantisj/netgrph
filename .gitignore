@@ -17,3 +17,7 @@ newhal.crt
 newhal.key
 prod.ini
 test.ini
+nsj.ini
+nsj.log
+job.log
+*.cmd
