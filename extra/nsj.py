@@ -86,6 +86,9 @@ parser.add_argument("-cfile", metavar='CMD File',
 parser.add_argument("-ccmd", metavar='cmd[,cmd]',
                     help="Send Config Commands To Devices",
                     type=str)
+parser.add_argument("-logd", metavar='directory',
+                    help="Log per device to this directory",
+                    type=str)
 parser.add_argument('--timing',
                     help="Don't prompt check commands, just wait",
                     action="store_true")
