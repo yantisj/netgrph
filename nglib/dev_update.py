@@ -92,6 +92,9 @@ def import_devicelist(fileName, infoFile):
                                  "Version": "Unknown", "FQDN": device,
                                  "Platform": "Unknown"}
 
+        if 'Platform' in en and devinfodb[device]['Platform'] == 'Unknown':
+            devinfodb[device]['Platform'] = en['Platform']
+
         if rType == "Primary":
             if nglib.verbose > 3:
                 print("R: " + device)
