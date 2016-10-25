@@ -31,6 +31,7 @@
 """
 Netmiko based Sendjob Script
    - Uses NetGrph API for Inventory
+   - Lifted some code from netmiko-tools, thanks Kirk!
 """
 import sys
 import os
