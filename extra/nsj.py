@@ -36,11 +36,11 @@ import sys
 import os
 import re
 import threading
-import subprocess
 from time import sleep
 import argparse
 import configparser
 import logging
+from logging.handlers import RotatingFileHandler
 from ssl import CertificateError
 import requests
 try:
@@ -54,6 +54,7 @@ config_file = '/etc/nsj.ini'
 alt_config = './nsj.ini'
 
 ERROR_PATTERN = "%%%failed%%%"
+debug = 0
 
 logger = logging.getLogger(__name__)
 
@@ -202,11 +203,11 @@ def send_job(dl):
         for l in cf:
             l = l.strip()
             confcmds.append(l)
-    if args.debug > 1:
+    if debug > 1:
         print("CONF", confcmds)
 
     for d in dl:
-        logging.info("Active Threads: %s" %(str(threading.activeCount())))
+        logging.debug("Active Threads: %s" %(str(threading.activeCount())))
         while threading.activeCount() >= int(config['nsj']['threads']):
             sleep(0.25)
 
@@ -294,19 +295,43 @@ if not os.path.exists(config_file):
 config = configparser.ConfigParser()
 config.read(config_file)
 
-loglevel = logging.DEBUG
-if config['nsj']['loglevel'] == 'info':
-    loglevel = logging.INFO
-elif config['nsj']['loglevel'] == 'warning':
-    loglevel = logging.WARNING
-if args.debug:
-    loglevel = logging.INFO
-    if args.debug > 2:
-        loglevel = logging.DEBUG
+# verbose
+if args.verbose:
+    debug = 1
 
-logging.basicConfig(level=loglevel,
-                    format='[%(levelname)s] (%(threadName)-10s) %(message)s',
-                   )
+# debug
+if args.debug:
+    debug = args.debug
+elif 'debug' in config['nsj'] and int(config['nsj']['debug']) != '0':
+    debug = int(config['nsj']['debug'])
+
+# Logging Configuration, default level INFO
+logger = logging.getLogger('')
+logger.setLevel(logging.INFO)
+lformat = logging.Formatter('%(asctime)s %(name)s:%(levelname)s: %(message)s')
+
+# Debug mode Enabled
+if debug > 2:
+    logger.setLevel(logging.DEBUG)
+    logging.debug('Enabled Debug mode')
+
+# Enable logging to file if configured
+if 'runlog' in config['nsj']:
+    lfh = RotatingFileHandler(config['nsj']['runlog'], maxBytes=(1048576*5), backupCount=3)
+    lfh.setFormatter(lformat)
+    logger.addHandler(lfh)
+
+# STDOUT Logging defaults to Warning
+if debug < 2:
+    lsh = logging.StreamHandler(sys.stdout)
+    lsh.setFormatter(lformat)
+    if debug > 2:
+        lsh.setLevel(logging.DEBUG)
+    elif debug > 1:
+        lsh.setLevel(logging.INFO)
+    else:
+        lsh.setLevel(logging.WARNING)
+    logger.addHandler(lsh)
 outlog = config['nsj']['outlog']
 
 # Sendjob based on device filters
