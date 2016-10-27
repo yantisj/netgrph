@@ -66,12 +66,18 @@ def import_devicelist(fileName, infoFile):
         devinfodb[en['Device']]['Location'] = 'Unknown'
         devinfodb[en['Device']]['Model'] = 'Unknown'
         devinfodb[en['Device']]['Version'] = 'Unknown'
+        devinfodb[en['Device']]['FQDN'] = en['Device']
+        devinfodb[en['Device']]['Platform'] = 'Unknown'
         if 'Location' in en:
             devinfodb[en['Device']]['Location'] = en['Location']
         if 'Model' in en:
             devinfodb[en['Device']]['Model'] = en['Model']
         if 'Version' in en:
             devinfodb[en['Device']]['Version'] = en['Version']
+        if 'FQDN' in en:
+            devinfodb[en['Device']]['FQDN'] = en['FQDN']
+        if 'Platform' in en:
+            devinfodb[en['Device']]['Platform'] = en['Platform']
 
     for en in devdb:
 
@@ -83,7 +89,11 @@ def import_devicelist(fileName, infoFile):
 
         if device not in devinfodb:
             devinfodb[device] = {"Location": "Unknown", "Model": "Unknown", \
-                                 "Version": "Unknown"}
+                                 "Version": "Unknown", "FQDN": device,
+                                 "Platform": "Unknown"}
+
+        if 'Platform' in en and devinfodb[device]['Platform'] == 'Unknown':
+            devinfodb[device]['Platform'] = en['Platform']
 
         if rType == "Primary":
             if nglib.verbose > 3:
@@ -124,20 +134,22 @@ def import_switch(switch, group, time, seed, devinfo):
 
             nglib.py2neo_ses.cypher.execute(
                 'CREATE (s:Switch {name:{switch}, distance:{distance}, seed:{seed}, '
-                + 'mgmt:{group}, location:{location}, time:{time}, model:{model}, version:{version}})'
+                + 'mgmt:{group}, location:{location}, time:{time}, model:{model}, '
+                + 'version:{version}, FQDN:{fqdn}, Platform:{platform}})'
                 + ' RETURN s',
                 switch=switch, seed=isSeed, distance=distance, group=group,
                 location=devinfo['Location'], model=devinfo['Model'], version=devinfo['Version'],
-                time=time)
+                fqdn=devinfo['FQDN'], platform=devinfo['Platform'], time=time)
         else:
             logger.debug("Switch Exists %s", switch)
 
             nglib.py2neo_ses.cypher.execute(
                 'MATCH (s:Switch {name:{switch}}) SET s += '
                 + '{time:{time}, seed:{seed}, mgmt:{group}, location:{location},'
-                + 'model:{model}, version:{version}} RETURN s',
+                + 'model:{model}, version:{version}, FQDN:{fqdn}, Platform:{platform}} RETURN s',
                 switch=switch, seed=isSeed, group=group, location=devinfo['Location'],
-                model=devinfo['Model'], version=devinfo['Version'], time=time)
+                model=devinfo['Model'], version=devinfo['Version'],
+                fqdn=devinfo['FQDN'], platform=devinfo['Platform'], time=time)
 
         # Update Distance on Node from Seed
         update_distance(switch)
@@ -176,20 +188,21 @@ def import_router(router, group, time, seed, rType, devinfo):
         nglib.py2neo_ses.cypher.execute(
             'CREATE (r:Switch:Router {name:{router}, seed:{seed}, distance:{distance}, '
             + 'standby:{standby}, mgmt:{group}, location:{location}, '
-            + 'model:{model}, version:{version}, time:{time}})',
+            + 'model:{model}, version:{version}, Platform:{platform}, FQDN:{fqdn}, time:{time}})',
             router=router, seed=isSeed, distance=distance, location=devinfo['Location'],
             model=devinfo['Model'], version=devinfo['Version'], standby=standby,
-            group=group, time=time)
+            fqdn=devinfo['FQDN'], platform=devinfo['Platform'], group=group, time=time)
 
     else:
         logger.debug("Router Exists %s, updating timestamp", router)
         nglib.py2neo_ses.cypher.execute(
             'MATCH (s:Switch:Router {name:{router}}) SET s += '
             + '{time:{time},seed:{seed},standby:{standby}, '
-            + 'location:{location}, model:{model}, version:{version}, mgmt:{group}} RETURN s',
+            + 'location:{location}, model:{model}, version:{version}, '
+            + 'FQDN:{fqdn}, Platform:{platform}, mgmt:{group}} RETURN s',
             router=router, seed=isSeed, standby=standby, group=group,
             location=devinfo['Location'], model=devinfo['Model'], version=devinfo['Version'],
-            time=time)
+            fqdn=devinfo['FQDN'], platform=devinfo['Platform'], time=time)
 
     # Map all routers to default VRF
     link_router_to_vrf(router, "default")

@@ -69,31 +69,46 @@ def load_nd_file(fileName):
         fqdn   = en[0]
         mgmt   = None
         dtype = "Switch"
+        platform = 'cisco_ios'
 
         for e in en:
             # Device Flags
             mg      = re.search('mgmtgroup\=(\w+)', e)
             arp     = re.search('^(arp|netdbarp)$', e)
             standby = re.search('^(standby)$', e)
+            p = re.search('devtype\=(\w+)', e)
             if mg:
                 mgmt = mg.group(1)
             elif arp:
                 dtype = "Primary"
             elif standby:
                 dtype = "Standby"
+            elif p:
+                #print(p.group(1))
+                platform = tr_devtype(p.group(1))
 
         #print(router)
         #print(en)
 
-        dev = ("{0},{1},{2},{3}").format(device,fqdn,mgmt,dtype)
+        dev = ("{0},{1},{2},{3},{4}").format(device,fqdn,mgmt,dtype,platform)
         devdata.append(dev)
 
     return devdata
 
+def tr_devtype(dt):
+    """Translation NetDB devtype to Netmiko"""
+    if dt == 'nxos':
+        dt = 'cisco_nxos'
+    elif dt == 'asa':
+        dt = 'cisco_asa'
+
+    return dt
+
+
 def save_nd_data(ndata):
 
     save = open(args.of, "w")
-    print("Device,FQDN,MgmtGroup,Type", file=save)
+    print("Device,FQDN,MgmtGroup,Type,Platform", file=save)
 
     print(*ndata, sep='\n', file=save)
     save.close()

@@ -180,7 +180,7 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
             + 'RETURN n.cidr AS CIDR, n.vid AS VLAN, '
             + 'n.gateway as Gateway, n.location as Location, n.desc AS Description, '
             + 'r.name AS Router, rs.name AS StandbyRouter, s.role AS NetRole, '
-            + 'v.name as VRF, n.vrfcidr AS vrfcidr, '
+            + 'r.mgmt AS Mgmt, v.name as VRF, n.vrfcidr AS vrfcidr, '
             + 'v.seczone AS SecurityLevel ORDER BY CIDR')
 
 
@@ -202,6 +202,7 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
                 netList.append(netDict)
                 netDict['_type'] = "CIDR"
                 netDict['Name'] = netDict['CIDR']
+                netDict['data'] = []
 
                 # Cleanup Results
                 netDict.pop('__values__', None)
@@ -316,7 +317,7 @@ def find_cidr(ip):
     if len(networks) > 1:
         for r in networks.records:
             if ipaddress.ip_address(ip) in ipaddress.ip_network(r.cidr):
-                if nglib.verbose>1:
+                if nglib.verbose > 1:
                     print("find_cidr", ip + " in " + r.cidr)
                 mostSpecific = compare_cidr(mostSpecific, r.cidr)
 
@@ -349,9 +350,11 @@ def get_net_props(vrfcidr):
 
     result = nglib.bolt_ses.run(
         'MATCH(n:Network {vrfcidr:{vrfcidr}}), (n)--(v:VRF), (n)--(r:Switch:Router)'
-        + ' OPTIONAL MATCH (n)--(s:Supernet) RETURN n.cidr AS CIDR, n.vid AS VLAN,'
+        + ' OPTIONAL MATCH (n)--(s:Supernet), (n)-[:ROUTED_STANDBY]->(rs:Switch:Router)'
+        + ' RETURN n.cidr AS CIDR, n.vid AS VLAN,'
         + ' n.gateway as Gateway, n.location as Location, n.desc AS Description, '
-        + 'r.name AS Router, s.role AS NetRole, v.name as VRF, v.seczone AS SecurityLevel',
+        + 'r.name AS Router, s.role AS NetRole, v.name as VRF, v.seczone AS SecurityLevel, '
+        + 'r.mgmt AS Mgmt, rs.name AS StandbyRouter, n.name AS vrfcidr',
         {"vrfcidr": vrfcidr})
 
     for r in result:

@@ -2,10 +2,10 @@
 
 NetGrph is an abstract network model for automation, providing a unified network
 view across diverse network components in order to manage them as a single
-system via the Neo4j Graph Database](http://neo4j.com). This enables you to
+system via the [Neo4j Graph Database](http://neo4j.com). This enables you to
 navigate your traditional LAN/WAN and/or mixed SDN networks as interconnected
-nodes and relationships in software, and is being shared to help others with
-network discovery, and automation.
+nodes and relationships in software, all modeled via the network configurations
+as they exist rather than secondary sources.
 
 NetGrph can perform universal L2/L3/L4 path traversals, providing context for
 each layer along the path. It also serves as a VLAN and CIDR database, showing
