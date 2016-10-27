@@ -21,3 +21,4 @@ nsj.ini
 nsj.log
 job.log
 *.cmd
+*.json

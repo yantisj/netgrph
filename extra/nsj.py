@@ -32,6 +32,28 @@
 Netmiko based Sendjob Script
    - Uses NetGrph API for Inventory
    - Lifted some code from netmiko-tools, thanks Kirk!
+
+   JSON Format:
+{
+  "abc2e1sw1": {
+    "FQDN": "abc2e1sw1XX.domain.com",
+    "Name": "abc2e1sw1",
+    "Platform": "cisco_ios",
+    "confcmds": [
+      "interface Gi1/0/49",
+      "switchport trunk allowed vlan add 1-1254"
+    ]
+  },
+  "abc2sw1": {
+    "FQDN": "abc2sw123.domain.com",
+    "Name": "abc2sw1",
+    "Platform": "cisco_ios",
+    "confcmds": [
+      "interface Gi1/0/49",
+      "switchport trunk allowed vlan add 1-1254"
+    ]
+  }
+}
 """
 import sys
 import os
@@ -44,6 +66,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from ssl import CertificateError
 import requests
+import json
 try:
     from Queue import Queue
 except ImportError:
@@ -89,6 +112,9 @@ parser.add_argument("-ccmd", metavar='cmd[,cmd]',
                     type=str)
 parser.add_argument("-logd", metavar='directory',
                     help="Log per device to this directory",
+                    type=str)
+parser.add_argument("-json", metavar="JSON File",
+                    help='JSON File Containing Commands per device',
                     type=str)
 parser.add_argument('--timing',
                     help="Don't prompt check commands, just wait",
@@ -174,6 +200,7 @@ def ssh_conn(**kwargs):
         if len(kwargs['confcmds']) > 0:
             net_connect.config_mode()
             for c in kwargs['confcmds']:
+                output = ""
                 logging.debug('Sending Command to %s: %s' % (kwargs['Name'], c))
                 if args.timing:
                     output = net_connect.send_command_timing(c)
@@ -186,7 +213,10 @@ def ssh_conn(**kwargs):
             net_connect.send_command("wr")
             sleep(20)
         net_connect.disconnect()
-    except Exception:
+    except Exception as e:
+        error = 'Error on {}: {}'.format(kwargs['FQDN'], e)
+        logger.critical(error)
+        #print('ERROR on ', kwargs['FQDN'], e)
         output = ERROR_PATTERN
     output_q.put({kwargs['Name']: sout})
 
@@ -215,8 +245,9 @@ def send_job(dl):
         while threading.activeCount() >= int(config['nsj']['threads']):
             sleep(0.25)
 
+        if not args.json:
+            d['confcmds'] = confcmds
         d['shcmds'] = shcmds
-        d['confcmds'] = confcmds
         d['output_q'] = output_q
 
         my_thread = threading.Thread(target=ssh_conn, kwargs=d)
@@ -244,13 +275,24 @@ def send_job(dl):
 def send_devs():
     """Send Show and/or Config Commands to these devices"""
 
-    devs = filter_devs()
+    devs = []
+    if args.json:
+        f = open(args.json, 'r')
+        jdevs = json.load(f)
+        for j in jdevs:
+            devs.append(jdevs[j])
+    else:
+        devs = filter_devs()
 
     if len(devs) > 0:
         print("Found " + str(len(devs)) + " Devices to send commands to:")
         for d in devs:
-            print("Switch: {}, Group: {}, Model: {}, Platform: {}, Version: {}".format(
-                d['Name'], d['MGMT Group'], d['Model'], d['Platform'], d['Version']))
+            if args.json:
+                print("Switch: {}, Model: {}, Platform: {}".format(
+                    d['Name'], d['Model'], d['Platform']))
+            else:
+                print("Switch: {}, Group: {}, Model: {}, Platform: {}, Version: {}".format(
+                    d['Name'], d['MGMT Group'], d['Model'], d['Platform'], d['Version']))
         if query_yes_no("Send Commands to These Devices?", default="no"):
             send_job(devs)
         else:
@@ -341,6 +383,10 @@ outlog = config['nsj']['outlog']
 # Sendjob based on device filters
 if (args.model or args.group or args.platform or args.name) \
     and (args.scmd or args.ccmd or args.cfile):
+    send_devs()
+
+# Send to JSON Format of Devices
+elif args.json:
     send_devs()
 else:
     parser.print_help()
