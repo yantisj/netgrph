@@ -110,10 +110,28 @@ limiter = Limiter(
     global_limits=flask_limits
 )
 
+def get_bolt_db():
+    """Store nglib database handle under thread"""
+    bdb = getattr(g, '_boltdb', None)
+    if bdb is None:
+        bdb = g._boltdb = nglib.get_bolt_db()
+    return bdb
+
+def get_py2neo_db():
+    """Store nglib database handle under thread"""
+    pydb = getattr(g, '_py2neodb', None)
+    if pydb is None:
+        pydb = g._py2neodb = nglib.get_py2neo_db()
+    return pydb
+
 @app.before_request
 def init_db():
+    """Initialize Library on each request"""
+    logging.debug('Getting Neo4j Database Connections')
     nglib.verbose = debug
-    nglib.init_nglib(config_file)
+    nglib.init_nglib(config_file, initdb=False)
+    nglib.bolt_ses = get_bolt_db()
+    nglib.py2neo_ses = get_py2neo_db()
 
 @app.teardown_appcontext
 def close_db(error):
