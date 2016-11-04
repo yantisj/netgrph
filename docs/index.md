@@ -38,11 +38,16 @@ distributed to multiple machines.
 * VLAN Inventory of all VLAN instances across the network, segmented by switch domain
 * Maps L2 VLAN bridges across switch domains, and calculates local/global STP roots
 * Maps L2 paths between devices (regexs supported, eg. dc.* -> dc.* for all datacenter links)
-* Reports both the configured VLANs and actual VLANs existing on each link for all L2 paths
-* Optional Secure REST API Server and Client
+* Reports the configured VLANs and actual VLANs existing on each link for all L2 paths
+* Secure REST API Server and Client
 * High performance, low latency queries (All queries are sub-second)
-* Easily extendable to support mixed-vendor environnments via configuration parsing to CSV input format
+* Easily extendable to support mixed-vendor environnments
 * Ansible playbooks for a five minute install on Ubuntu 14.04/16.04
+
+## Planned Features
+* Rewrite API to be more consistent
+* Develop a Web frontend
+* Integrate with Napalm for datasources
 
 ## Requirements
 
