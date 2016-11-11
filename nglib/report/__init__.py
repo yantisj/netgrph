@@ -57,7 +57,11 @@ def get_vlan_report(vrange, group='.*', report="full", rtype="NGTREE"):
             logger.info("Query: Generating Full VLAN Report (%s) for %s", vrange, nglib.user)
 
             # Get all VLANs as NGTree
-            ngtree = get_vlan_data(vrange, rtype)
+            ngtree = None
+            if group != '.*':
+                ngtree = nglib.query.vlan.get_vlans_on_group(group, vrange, rtype="NGTREE")
+            else:
+                ngtree = get_vlan_data(vrange, rtype)
             if '_ccount' in ngtree.keys():
                 nglib.query.exp_ngtree(ngtree, rtype)
                 return ngtree
@@ -107,7 +111,7 @@ def get_empty_vlans(ngtree, etree):
     for vid in vidlist:
 
         # No MACs in VLAN
-        if 'MAC Count' not in vid.keys():
+        if vid['MAC Count'] == 0:
             childlist = vid['data']
             if not childlist:
                 nglib.ngtree.add_child_ngtree(etree, vid)
@@ -116,7 +120,7 @@ def get_empty_vlans(ngtree, etree):
 
     return etree
 
-def get_vlan_data(vrange, rtype):
+def get_vlan_data(vrange, rtype, group='.*'):
     """Get all vlans in a range for reports"""
 
     allSwitches = True
@@ -127,8 +131,9 @@ def get_vlan_data(vrange, rtype):
 
     vlans = nglib.bolt_ses.run(
         'MATCH(v:VLAN) WHERE toInt(v.vid) >= {vlow} AND toInt(v.vid) <= {vhigh} '
+        + 'AND v.mgmt =~ {group} '
         + 'RETURN DISTINCT v.vid AS vid ORDER BY toInt(vid)',
-        {"vlow": vlow, "vhigh": vhigh})
+        {"vlow": vlow, "vhigh": vhigh, "group": group})
 
     pngtree = nglib.ngtree.get_ngtree("Report", tree_type="VIDs")
 

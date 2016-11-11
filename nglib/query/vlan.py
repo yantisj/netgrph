@@ -200,8 +200,12 @@ def load_bridge_tree(vname, root=True, getSW=False):
         # NetDB Port and MAC Counts
         if pcount:
             ngtree['Port Count'] = pcount
+        else:
+            ngtree['Port Count'] = 0
         if mcount:
             ngtree['MAC Count'] = mcount
+        else:
+            ngtree['MAC Count'] = 0
 
         # SW Tree Search for list and counts
         if len(swtree):
@@ -359,7 +363,32 @@ def get_vlan_bridges(vid):
     return vname
 
 
-def get_vlans_on_group(group, vrange):
+def get_vlans_on_group(group, vrange, rtype="TABLE"):
+    """ Get VLAN Group Report """
+
+    if rtype == "TABLE":
+        get_vlans_on_group_table(group, vrange)
+    else:
+        logger.info("Query: VLAN DB %s for %s", group, nglib.user)
+        (vlow, vhigh) = nglib.query.vlan.get_vlan_range(vrange)
+
+        ngt = nglib.ngtree.get_ngtree(group, 'VGR')
+
+        results = nglib.bolt_ses.run(
+            'MATCH (v:VLAN {mgmt:{group}}) '
+            + 'WHERE toInt(v.vid) >= {vlow} AND toInt(v.vid) <= {vhigh} '
+            + 'RETURN v.name AS name ORDER BY v.vid',
+            {'group': group, 'vlow': vlow, 'vhigh': vhigh})
+
+        for r in results:
+            cngt = get_vtree(r['name'])
+            nglib.ngtree.add_child_ngtree(ngt, cngt)
+
+        ngt = nglib.ngtree.export.exp_ngtree(ngt, rtype=rtype)
+        return ngt
+
+
+def get_vlans_on_group_table(group, vrange):
     """Get all VLANs in a Management group"""
 
     logger.info("Query: VLAN DB %s for %s", group, nglib.user)
@@ -461,7 +490,7 @@ def add_bridge_data(ngtree, parent, child):
         'MATCH (pv:VLAN {name:{pvname}})-[e:BRIDGE]->(cv:VLAN {name:{cvname}}) '
         + 'RETURN e.pswitch AS pswitch, e.cswitch AS cswitch',
         {"pvname":parent, "cvname":child})
-    
+
     for rec in bridge:
         ngtree["Bridge"] = rec["cswitch"] + ' <-> ' + rec["pswitch"]
 
