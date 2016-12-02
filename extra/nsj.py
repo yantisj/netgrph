@@ -116,6 +116,9 @@ parser.add_argument("-logd", metavar='directory',
 parser.add_argument("-json", metavar="JSON File",
                     help='JSON File Containing Commands per device',
                     type=str)
+parser.add_argument("-pjson", metavar="JSON File",
+                    help='Print JSON Commands as Manual Config',
+                    type=str)
 parser.add_argument('--timing',
                     help="Don't prompt check commands, just wait",
                     action="store_true")
@@ -327,6 +330,22 @@ def query_yes_no(question, default="no"):
                              "(or 'y' or 'n').\n")
 
 
+def print_json(pj):
+    """Print JSON job as manual commands"""
+
+    f = open(pj, 'r')
+    jdevs = json.load(f)
+
+    for s in sorted(jdevs.keys()):
+        print('!! ' + s)
+        print('conf t')
+        for c in jdevs[s]['confcmds']:
+            print(c)
+        print('end')
+        print('wr')
+        print('!!\n\n')
+
+
 # Alternate Config File
 if args.conf:
     config_file = args.conf
@@ -388,6 +407,8 @@ if (args.model or args.group or args.platform or args.name) \
 # Send to JSON Format of Devices
 elif args.json:
     send_devs()
+elif args.pjson:
+    print_json(args.pjson)
 else:
     parser.print_help()
     print()
