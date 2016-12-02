@@ -100,3 +100,31 @@ def get_switch(switch, port='%', hours=720, trunc=True):
             nglib.ngtree.add_child_ngtree(pngtree, ngtree)
 
     return pngtree
+
+def mac(switch, port='%', hours=1):
+    """Pull the MAC Table on a switch from NetDB, use switch='%' for everything"""
+
+    netdb_ses = nglib.netdb.connect_netdb()
+
+    lastseen = nglib.netdb.get_lastseen(hours)
+
+    cursor = netdb_ses.cursor(pymysql.cursors.DictCursor)
+    # cursor = netdb_ses.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM superswitch "
+                   + "WHERE switch LIKE '{}' AND port LIKE '{}' ".format(switch, port)
+                   + "AND lastseen > '{}'".format(lastseen))
+
+    pc = cursor.fetchall()
+
+    pngtree = nglib.ngtree.get_ngtree("MAC-Table", tree_type="NetDB")
+
+    for en in pc:
+        ngtree = nglib.ngtree.get_ngtree("MAC", tree_type="NetDB")
+
+        for f in en:
+            ngtree[f] = str(en[f])
+
+        nglib.ngtree.add_child_ngtree(pngtree, ngtree)
+
+    return pngtree

@@ -143,5 +143,6 @@ def close_db(error):
 import apisrv.errors
 import apisrv.views
 import apisrv.user
+import apisrv.netdb
 
 
