@@ -92,6 +92,7 @@ def get_mactable():
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
+
 @app.route('/netdb/api/v1.0/table/mac/<switch>/count', methods=['GET'])
 @auth.login_required
 def get_mac_count(switch):
