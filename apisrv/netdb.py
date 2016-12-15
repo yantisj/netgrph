@@ -91,3 +91,19 @@ def get_mactable():
         return jsonify(nglib.netdb.switch.mac(switch=switch, port=port, hours=hours))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
+
+@app.route('/netdb/api/v1.0/table/mac/<switch>/count', methods=['GET'])
+@auth.login_required
+def get_mac_count(switch):
+    """ Get the MAC Table count from NetDB
+    """
+    hours = 1
+    switch = switch.replace('*', '%')
+
+    if 'hours' in request.args:
+        hours = int(request.args['hours'])
+
+    try:
+        return jsonify(nglib.netdb.switch.count(switch=switch, hours=hours))
+    except ResultError as e:
+        return jsonify(errors.json_error(e.expression, e.message))
