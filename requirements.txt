@@ -12,3 +12,4 @@ passlib
 sqlalchemy
 flask_sqlalchemy
 requests
+uwsgi

@@ -52,7 +52,11 @@ debug = 0
 flask_limits = ["10000 per day", "2000 per hour", "100 per minute"]
 
 # Initialize Configuration
-config_file = builtins.apisrv_CONFIG
+config_file = None
+if 'NGLIB_config_file' in os.environ:
+    config_file = os.environ['NGLIB_config_file']
+else:
+    config_file = builtins.apisrv_CONFIG
 config = configparser.ConfigParser()
 config.read(config_file)
 
@@ -131,13 +135,32 @@ def init_db():
     nglib.verbose = debug
     nglib.init_nglib(config_file, initdb=False)
     nglib.bolt_ses = get_bolt_db()
+    g.neo4j_db_bolt = nglib.bolt_ses
     nglib.py2neo_ses = get_py2neo_db()
+    g.neo4j_db_py2neo = nglib.py2neo_ses
 
 @app.teardown_appcontext
 def close_db(error):
     """Closes the database again at the end of the request."""
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
+
+    bolt_ses = getattr(g, 'neo4j_db_bolt', None)
+    if bolt_ses is not None:
+        logger.debug('Closing Neo4j Database Connection')
+        g.neo4j_db = None
+        nglib.bolt_ses = None
+        bolt_ses.last_result = None
+        bolt_ses.close()
+
+    py2neo_ses = getattr(g, 'neo4j_db_py2neo', None)
+    if py2neo_ses is not None:
+        logger.debug('Closing Neo4j Database Connection')
+        g.neo4j_db = None
+        nglib.py2neo_ses = None
+        py2neo_ses.last_result = None
+        py2neo_ses = None
+
 
 # Safe circular imports per Flask guide
 import apisrv.errors

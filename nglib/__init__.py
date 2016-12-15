@@ -104,7 +104,7 @@ def get_db_client(dbhost, dbuser, dbpass, bolt=False):
         bolt_url = "bolt://" + dbhost
         auth_token = basic_auth(dbuser, dbpass)
         try:
-            driver = GraphDatabase.driver(bolt_url, auth=auth_token)
+            driver = GraphDatabase.driver(bolt_url, auth=auth_token, max_pool_size=5)
             bolt_session = driver.session()
             return bolt_session
         except Exception as e:
