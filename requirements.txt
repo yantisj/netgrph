@@ -4,7 +4,7 @@ pylint
 pyyaml
 pymysql
 py2neo==2.0.8
-neo4j-driver
+neo4j-driver==1.0.2
 Flask
 Flask-HTTPAuth
 flask_limiter
