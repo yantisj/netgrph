@@ -46,7 +46,7 @@ app_name = config['apisrv']['app_name']
 @auth.login_required
 def get_devs():
     """ Get Device Reports
-    
+
         Notes: Truncates by default for speed
     """
     search = '.*'

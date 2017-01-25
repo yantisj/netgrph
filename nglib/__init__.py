@@ -53,7 +53,6 @@ try:
 except ImportError:
     pass
 
-
 logger = logging.getLogger(__name__)
 
 # Global variables (all library global variables go here)
@@ -74,6 +73,25 @@ dev_seeds = None
 # NetDB Enabled
 use_netdb = False
 
+def get_bolt_db():
+    """Return Bolt Session"""
+
+    # DB Credentials
+    dbuser = config['nglib']['dbuser']
+    dbpass = config['nglib']['dbpass']
+    dbhost = config['nglib']['dbhost']
+
+    return get_db_client(dbhost, dbuser, dbpass, bolt=True)
+
+def get_py2neo_db():
+    """Return Bolt Session"""
+
+    # DB Credentials
+    dbuser = config['nglib']['dbuser']
+    dbpass = config['nglib']['dbpass']
+    dbhost = config['nglib']['dbhost']
+
+    return get_db_client(dbhost, dbuser, dbpass, bolt=False)
 
 def get_db_client(dbhost, dbuser, dbpass, bolt=False):
     """Return a Neo4j DB session. bolt=True uses bolt driver"""    
@@ -85,7 +103,7 @@ def get_db_client(dbhost, dbuser, dbpass, bolt=False):
         bolt_url = "bolt://" + dbhost
         auth_token = basic_auth(dbuser, dbpass)
         try:
-            driver = GraphDatabase.driver(bolt_url, auth=auth_token)
+            driver = GraphDatabase.driver(bolt_url, auth=auth_token, max_pool_size=5)
             bolt_session = driver.session()
             return bolt_session
         except Exception as e:
@@ -154,7 +172,7 @@ def importCSVasList(fileName):
 
 
 # Initialize Configuration
-def init_nglib(configFile):
+def init_nglib(configFile, initdb=True):
     """Initializes Library based on config file
 
     - Sets global variables in library for use with other modules
@@ -188,17 +206,17 @@ def init_nglib(configFile):
     if use_netdb:
         use_netdb = True
 
+    if initdb:
+        # DB Credentials
+        dbuser = config['nglib']['dbuser']
+        dbpass = config['nglib']['dbpass']
+        dbhost = config['nglib']['dbhost']
 
-    # DB Credentials
-    dbuser = config['nglib']['dbuser']
-    dbpass = config['nglib']['dbpass']
-    dbhost = config['nglib']['dbhost']
-
-    # Login to DB for parent Variables
-    if verbose > 1:
-        logger.info("Connecting to Neo4j: %s %s", dbhost, dbuser)
-    bolt_ses = get_db_client(dbhost, dbuser, dbpass, bolt=True)
-    py2neo_ses = get_db_client(dbhost, dbuser, dbpass)
+        # Login to DB for parent Variables
+        if verbose > 1:
+            logger.info("Connecting to Neo4j: %s %s", dbhost, dbuser)
+        bolt_ses = get_db_client(dbhost, dbuser, dbpass, bolt=True)
+        py2neo_ses = get_db_client(dbhost, dbuser, dbpass)
 
     # Topology
     max_distance = int(config['topology']['max_distance'])

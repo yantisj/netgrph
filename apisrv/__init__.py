@@ -49,10 +49,14 @@ logger = logging.getLogger(__name__)
 debug = 0
 
 # Flask Limits for Safety
-flask_limits = ["10000 per day", "2000 per hour", "100 per minute"]
+flask_limits = ["100000 per day", "5000 per hour", "600 per minute"]
 
 # Initialize Configuration
-config_file = builtins.apisrv_CONFIG
+config_file = None
+if 'NGLIB_config_file' in os.environ:
+    config_file = os.environ['NGLIB_config_file']
+else:
+    config_file = builtins.apisrv_CONFIG
 config = configparser.ConfigParser()
 config.read(config_file)
 
@@ -110,10 +114,30 @@ limiter = Limiter(
     global_limits=flask_limits
 )
 
+def get_bolt_db():
+    """Store nglib database handle under thread"""
+    bdb = getattr(g, '_boltdb', None)
+    if bdb is None:
+        bdb = g._boltdb = nglib.get_bolt_db()
+    return bdb
+
+def get_py2neo_db():
+    """Store nglib database handle under thread"""
+    pydb = getattr(g, '_py2neodb', None)
+    if pydb is None:
+        pydb = g._py2neodb = nglib.get_py2neo_db()
+    return pydb
+
 @app.before_request
 def init_db():
+    """Initialize Library on each request"""
+    logging.debug('Getting Neo4j Database Connections')
     nglib.verbose = debug
-    nglib.init_nglib(config_file)
+    nglib.init_nglib(config_file, initdb=False)
+    nglib.bolt_ses = get_bolt_db()
+    g.neo4j_db_bolt = nglib.bolt_ses
+    nglib.py2neo_ses = get_py2neo_db()
+    g.neo4j_db_py2neo = nglib.py2neo_ses
 
 @app.teardown_appcontext
 def close_db(error):
@@ -121,9 +145,27 @@ def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 
+    bolt_ses = getattr(g, 'neo4j_db_bolt', None)
+    if bolt_ses is not None:
+        logger.debug('Closing Neo4j Database Connection')
+        g.neo4j_db = None
+        nglib.bolt_ses = None
+        bolt_ses.last_result = None
+        bolt_ses.close()
+
+    py2neo_ses = getattr(g, 'neo4j_db_py2neo', None)
+    if py2neo_ses is not None:
+        logger.debug('Closing Neo4j Database Connection')
+        g.neo4j_db = None
+        nglib.py2neo_ses = None
+        py2neo_ses.last_result = None
+        py2neo_ses = None
+
+
 # Safe circular imports per Flask guide
 import apisrv.errors
 import apisrv.views
 import apisrv.user
+import apisrv.netdb
 
 

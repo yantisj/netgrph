@@ -113,3 +113,39 @@ def get_netdb_ip(ip, hours=720):
             nglib.ngtree.add_child_ngtree(multitree, pngtree[en])
     nglib.ngtree.add_child_ngtree(latest, multitree)
     return latest
+
+def arp(router, hours=1):
+    """Pull the ARP Table on a router from NetDB, use router='%' for everything"""
+
+    netdb_ses = nglib.netdb.connect_netdb()
+
+    lastseen = nglib.netdb.get_lastseen(hours)
+
+    cursor = netdb_ses.cursor(pymysql.cursors.DictCursor)
+    # cursor = netdb_ses.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM superarp "
+                   + "WHERE router LIKE '{}' AND lastseen > '{}'".format(router, lastseen))
+
+    pc = cursor.fetchall()
+
+    pngtree = nglib.ngtree.get_ngtree("ARP-Table", tree_type="NetDB")
+
+    for en in pc:
+        ngtree = nglib.ngtree.get_ngtree("ARP Entry", tree_type="NetDB")
+
+        ngtree['firstSeen'] = str(en['firstseen'])
+        ngtree['lastSeen'] = str(en['lastseen'])
+        ngtree['ip'] = en['ip']
+        ngtree['vrf'] = en['vrf']
+        ngtree['mac'] = en['mac']
+        ngtree['fqdn'] = en['name']
+        ngtree['vendor'] = en['vendor']
+        ngtree['switch'] = en['lastswitch']
+        ngtree['port'] = en['lastport']
+        ngtree['userid'] = en['userID']
+        ngtree['vlan'] = en['vlan']
+
+        nglib.ngtree.add_child_ngtree(pngtree, ngtree)
+
+    return pngtree

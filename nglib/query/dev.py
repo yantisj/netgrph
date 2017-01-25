@@ -272,6 +272,7 @@ def get_vlans(dev, vrange=None):
             nglib.ngtree.add_child_ngtree(vtree, vt)
 
             vt['Description'] = vlan['desc']
+            vt['VID'] = vlan['vid']
             if vlan['pcount']:
                 vt['Port Count'] = vlan['pcount']
             if vlan['mcount']:

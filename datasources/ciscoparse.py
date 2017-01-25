@@ -40,8 +40,8 @@ import ipaddress
 from ciscoconfparse import CiscoConfParse
 
 # Config Options
-conf_dir = "/scripts/sendjob/configs/"
-#conf_dir = "/tftpboot/"
+#conf_dir = "/scripts/sendjob/configs/"
+conf_dir = "/tftpboot/"
 
 # P2P networks match this cidr regex
 p2p_regex = '^10\.23\.'

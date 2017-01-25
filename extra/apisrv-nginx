@@ -1,0 +1,11 @@
+server {
+    listen 9000 ssl;
+        server_name 0.0.0.0;
+        ssl_certificate /home/netgrph/netgrph/newhal.crt;
+	    ssl_certificate_key /home/netgrph/netgrph/newhal.key;
+
+    location / {
+            include uwsgi_params;
+	        uwsgi_pass unix:/home/netgrph/netgrph/apisrv.sock;
+	    }
+}
