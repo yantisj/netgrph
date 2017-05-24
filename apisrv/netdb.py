@@ -35,18 +35,24 @@ import nglib.report
 import nglib.netdb.switch
 from nglib.exceptions import ResultError
 from flask import jsonify, request
-from apisrv import app, auth, config, errors
+from apisrv import app, auth, config, errors, upgrade_api, version_chk
 
 # Setup
 logger = logging.getLogger(__name__)
 app_name = config['apisrv']['app_name']
 
 # Device Queries
-@app.route('/netdb/api/v1.0/table/arp', methods=['GET'])
+@app.route('/netdb/api/<ver>/table/arp', methods=['GET'])
+@app.route('/api/<ver>/table/arp', methods=['GET'])
 @auth.login_required
-def get_arptable():
+def get_arptable(ver):
     """ Get ARP Tables from NetDB
     """
+
+    error = version_chk(ver, ['v1.0', 'v2'])
+    if error:
+        return error
+
     router = None
     hours = 1
 
@@ -61,15 +67,21 @@ def get_arptable():
 
 
     try:
-        return jsonify(nglib.netdb.ip.arp(router=router, hours=hours))
+        return jsonify(upgrade_api(nglib.netdb.ip.arp(router=router, hours=hours), ver))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
-@app.route('/netdb/api/v1.0/table/mac', methods=['GET'])
+@app.route('/netdb/api/<ver>/table/mac', methods=['GET'])
+@app.route('/api/<ver>/table/mac', methods=['GET'])
 @auth.login_required
-def get_mactable():
+def get_mactable(ver):
     """ Get the MAC Table from NetDB
     """
+
+    error = version_chk(ver, ['v1.0', 'v2'])
+    if error:
+        return error
+
     switch = None
     port = '%'
     hours = 1
@@ -88,16 +100,22 @@ def get_mactable():
         hours = int(request.args['hours'])
 
     try:
-        return jsonify(nglib.netdb.switch.mac(switch=switch, port=port, hours=hours))
+        return jsonify(upgrade_api(nglib.netdb.switch.mac(switch=switch, port=port, hours=hours), ver))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
 
-@app.route('/netdb/api/v1.0/table/mac/<switch>/count', methods=['GET'])
+@app.route('/netdb/api/<ver>/table/mac/<switch>/count', methods=['GET'])
+@app.route('/api/<ver>/table/mac/<switch>/count', methods=['GET'])
 @auth.login_required
-def get_mac_count(switch):
+def get_mac_count(ver, switch):
     """ Get the MAC Table count from NetDB
     """
+
+    error = version_chk(ver, ['v1.0', 'v2'])
+    if error:
+        return error
+
     hours = 1
     switch = switch.replace('*', '%')
 
@@ -105,6 +123,6 @@ def get_mac_count(switch):
         hours = int(request.args['hours'])
 
     try:
-        return jsonify(nglib.netdb.switch.count(switch=switch, hours=hours))
+        return jsonify(upgrade_api(nglib.netdb.switch.count(switch=switch, hours=hours), ver))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))

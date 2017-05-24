@@ -227,9 +227,10 @@ def get_switched_path(ver):
         return jsonify(errors.json_error(e.expression, e.message))
 
 # L3 Network Queries
-@app.route('/netgrph/api/v1.1/nets', methods=['GET'])
+@app.route('/netgrph/api/<ver>/nets', methods=['GET'])
+@app.route('/api/<ver>/nets', methods=['GET'])
 @auth.login_required
-def get_nets():
+def get_nets(ver):
     """
     /nets API method
 
@@ -240,20 +241,23 @@ def get_nets():
         filter - filter networks by NetGrph filter (vrf:[role])
     """
 
+    error = version_chk(ver)
+    if error:
+        return error
 
     cidr = None
     nFilter = 'all'
 
     if 'ip' in request.args:
         try:
-            return jsonify(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"))
+            return jsonify(upgrade_api(nglib.query.net.get_net(request.args['ip'], rtype="NGTREE"), ver))
         except ResultError as e:
             return jsonify(errors.json_error(e.expression, e.message))
     elif 'cidr' in request.args:
         cidr = request.args['cidr']
         cidr = cidr.replace('-', '/')
         try:
-            return jsonify(nglib.query.net.get_networks_on_cidr(cidr, rtype="NGTREE"))
+            return jsonify(upgrade_api(nglib.query.net.get_networks_on_cidr(cidr, rtype="NGTREE"), ver))
         except ResultError as e:
             return jsonify(errors.json_error(e.expression, e.message))
         except ValueError as e:
@@ -263,14 +267,21 @@ def get_nets():
         if 'filter' in request.args:
             nFilter = request.args['filter']
         try:
-            return jsonify(nglib.query.net.get_networks_on_filter(nFilter=nFilter, rtype="NGTREE"))
+            return jsonify(upgrade_api(nglib.query.net.get_networks_on_filter(nFilter=nFilter, rtype="NGTREE"), ver))
         except ResultError as e:
             return jsonify(errors.json_error(e.expression, e.message))
 
 # L2 VLAN Queries
 @app.route('/netgrph/api/<ver>/vlans', methods=['GET'])
+@app.route('/api/<ver>/vlans', methods=['GET'])
 @auth.login_required
 def get_vlans(ver):
+    'L2 VLANs'
+
+    error = version_chk(ver, ['v1.0', 'v1.1', 'v2'])
+    if error:
+        return error
+
     allSwitches = True
     vrange = '1-4096'
     group = '.*'
@@ -282,22 +293,28 @@ def get_vlans(ver):
         group = request.args['group']
 
     try:
-        return jsonify(nglib.report.get_vlan_report(vrange=vrange, group=group, \
-                    rtype="NGTREE"))
+        return jsonify(upgrade_api(nglib.report.get_vlan_report(vrange=vrange, group=group, \
+                    rtype="NGTREE"), ver))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
 
 @app.route('/netgrph/api/<ver>/vlans/<vlan>', methods=['GET'])
+@app.route('/api/<ver>/vlans/<vlan>', methods=['GET'])
 @auth.login_required
 def get_vlan(vlan, ver):
+    'Get individual vlan'
     allSwitches = True
+
+    error = version_chk(ver)
+    if error:
+        return error
 
     if 'allSwitches' in request.args and request.args['allSwitches'] == 'False':
         allSwitches = False
     try:
-        return jsonify(nglib.query.vlan.get_vlan(vlan, allSwitches=allSwitches, \
-                    rtype="NGTREE"))
+        return jsonify(upgrade_api(nglib.query.vlan.get_vlan(vlan, allSwitches=allSwitches, \
+                    rtype="NGTREE"), ver))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 

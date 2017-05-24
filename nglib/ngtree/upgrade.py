@@ -37,6 +37,14 @@ def upgrade_ngt_v2(ngt):
 def _new_name(old):
     'Get new name for fields (lowercase, replace spaces with _)'
 
+    nmap = {
+        'StandbyRouter': 'standby_router',
+        'SecurityLevel': 'security_level'
+        }
+
+    if old in nmap:
+        return nmap[old]
+
     old = old.replace(' ', '_')
     old = old.lower()
 
