@@ -379,16 +379,17 @@ def update_supernet_links():
     # Scan all networks and try to link to supernet
     for record in results:
         cidr = record.cidr
-        ip = nglib.getEntry(cidr.rsplit('/'))
+        if cidr:
+            ip = nglib.getEntry(cidr.rsplit('/'))
 
-        # Search through Supernets for cidr match
-        for key in snet.keys():
+            # Search through Supernets for cidr match
+            for key in snet.keys():
 
-            if ipaddress.ip_address(ip) in ipaddress.ip_network(key):
-                logger.debug(cidr + " in Supernet " + key)
+                if ipaddress.ip_address(ip) in ipaddress.ip_network(key):
+                    logger.debug(cidr + " in Supernet " + key)
 
-                # Create or update supernet link
-                superLink(record.vrfcidr, key)
+                    # Create or update supernet link
+                    superLink(record.vrfcidr, key)
 
 
 def superLink(vrfcidr, supercidr):

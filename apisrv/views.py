@@ -35,7 +35,7 @@ import nglib.report
 import nglib.netdb.switch
 from nglib.exceptions import ResultError
 from flask import jsonify, request
-from apisrv import app, auth, config, errors
+from apisrv import app, auth, config, errors, upgrade_api
 
 # Setup
 logger = logging.getLogger(__name__)
@@ -65,13 +65,21 @@ def get_devs():
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 
-@app.route('/netgrph/api/v1.1/devs/<device>', methods=['GET'])
+@app.route('/netgrph/api/<version>/devs/<device>', methods=['GET'])
+@app.route('/api/<version>/devs/<device>')
 @auth.login_required
-def get_device(device):
+def get_device(device, version):
     """ Get specific device reports """
 
+    versions = ['v1.1', 'v2']
+    if version not in versions:
+        return jsonify(errors.json_error('API Version Error', 'Version ' \
+            + version + ' not supported on this endpoint'))
+
     try:
-        return jsonify(nglib.query.dev.get_device(device, rtype="NGTREE"))
+        res = nglib.query.dev.get_device(device, rtype="NGTREE")
+
+        return jsonify(upgrade_api(nglib.query.dev.get_device(device, rtype="NGTREE"), version))
     except ResultError as e:
         return jsonify(errors.json_error(e.expression, e.message))
 

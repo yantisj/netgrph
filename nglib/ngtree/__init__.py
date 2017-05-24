@@ -47,6 +47,7 @@ import datetime
 import logging
 import nglib
 from . import export
+from . import upgrade
 
 logger = logging.getLogger(__name__)
 

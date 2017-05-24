@@ -162,6 +162,15 @@ def close_db(error):
         py2neo_ses = None
 
 
+def upgrade_api(ngt, version):
+    'Upgrade the output of NGT API data'
+
+    nt = ngt
+
+    if version == 'v2':
+        nt = nglib.ngtree.upgrade.upgrade_ngt_v2(ngt)
+    return nt
+
 # Safe circular imports per Flask guide
 import apisrv.errors
 import apisrv.views
