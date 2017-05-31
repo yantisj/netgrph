@@ -12,6 +12,7 @@ ngtest.py.bak
 .DS_Store
 venv/
 api.log
+api.log.*
 api.db
 newhal.crt
 newhal.key

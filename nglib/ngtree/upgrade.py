@@ -39,7 +39,8 @@ def _new_name(old):
 
     nmap = {
         'StandbyRouter': 'standby_router',
-        'SecurityLevel': 'security_level'
+        'SecurityLevel': 'security_level',
+        'mgmtgroup': 'mgmt_group'
         }
 
     if old in nmap:

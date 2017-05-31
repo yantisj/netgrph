@@ -235,17 +235,17 @@ def get_networks(dev, vrange=None):
     if vrange:
         (vlow, vhigh) = nglib.query.vlan.get_vlan_range(vrange)
 
-    ## Find all networks and build tree
+    ## Find all networks and build tree (non-p2p routed)
     networks = nglib.bolt_ses.run(
-        'MATCH (s:Switch {name:{dev}})<-[e:ROUTED_BY|ROUTED_STANDBY]-(n:Network) '
-        + 'RETURN n.cidr as cidr, n.vid as vid ORDER BY toInt(vid)',
+        'MATCH (s:Switch {name:{dev}})<-[e:ROUTED_BY|ROUTED_STANDBY|ROUTED]-(n:Network) '
+        + 'RETURN n.cidr as cidr, n.vid as vid, n.vrfcidr AS vrfcidr ORDER BY toInt(vid)',
         {"dev": dev})
 
     nettree = nglib.ngtree.get_ngtree(dev, tree_type="Networks")
 
     for net in networks:
         if not vrange or vlow <= int(net['vid']) <= vhigh:
-            nettree = nglib.query.net.get_net_extended_tree(net['cidr'], ngtree=nettree)
+            nettree = nglib.query.net.get_net_extended_tree(net['vrfcidr'], ngtree=nettree)
 
     return nettree
 

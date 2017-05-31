@@ -75,12 +75,28 @@ def get_net(ip, rtype="TREE", days=7, verbose=True):
 
 
 def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
-    """Built a Network ngtree with extended subnet attributes"""
+    """Built a Network ngtree with extended subnet attributes
+    
+        Accepts cidrs and vrfcidrs (vrf-1.1.1.0/24)
+    """
 
-    network = nglib.py2neo_ses.cypher.execute(
-        'MATCH (n:Network { cidr:{net} })-[e:ROUTED_BY]->(r) '
-        + 'OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(sr) RETURN n,r,sr',
-        net=net)
+    network = None
+
+    # Specific VRF Query (also matches routed p2p links)
+    if re.search(r'^\w+\-\d+', net):
+
+        network = nglib.py2neo_ses.cypher.execute(
+            'MATCH (n:Network { vrfcidr:{vrfcidr} })-[e:ROUTED_BY|ROUTED]->(r) '
+            + 'OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(sr) RETURN n,r,sr',
+            vrfcidr=net)
+
+        net = net.split('-')[1]
+    else:
+
+        network = nglib.py2neo_ses.cypher.execute(
+            'MATCH (n:Network { cidr:{net} })-[e:ROUTED_BY]->(r) '
+            + 'OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(sr) RETURN n,r,sr',
+            net=net)
 
     subnet = nglib.query.net.get_ipv4net(net)
     if not ngtree:
