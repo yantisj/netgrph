@@ -374,7 +374,7 @@ def parse_int(line, ientry, default_shut):
     nxhsrp = re.search('\s\s\s\s+ip\s(\d+.\d+.\d+.\d+)', line)
     catip = re.search('\s+ip address\s(\d+.\d+.\d+.\d+)\s+(255.\d+.\d+.\d+)$', line)
     catip_sec = re.search('\s+ip address\s(\d+.\d+.\d+.\d+)\s+(255.\d+.\d+.\d+) secondary$', line)
-    cathsrp = re.search('\s+standby\s\d+\sip\s(\d+.\d+.\d+.\d+)', line)
+    cathsrp = re.search('\s+standby\s(\d+)\sip\s(\d+.\d+.\d+.\d+)', line)
     nxvrf = re.search('\s+vrf member (\w+)', line)
     catvrf = re.search('\s+ip vrf forwarding (\w+)', line)
     descre = re.search('\s+description\s+\[\s*(.*)\s*\]', line)
@@ -438,13 +438,14 @@ def parse_int(line, ientry, default_shut):
     # IOS HSRP
     elif cathsrp:
         network = ipaddress.ip_network(ientry['ip'],strict=False)
-        if ipaddress.ip_address(cathsrp.group(1)) in ipaddress.ip_network(network):
-            ientry['gateway'] = cathsrp.group(1)
+        ientry['virtual_group'] = cathsrp.group(1)
+        if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
+            ientry['gateway'] = cathsrp.group(2)
 
         if 'sec_ip' in ientry.keys():
             network = ipaddress.ip_network(ientry['sec_ip'],strict=False)
-            if ipaddress.ip_address(cathsrp.group(1)) in ipaddress.ip_network(network):
-                ientry['sec_gateway'] = cathsrp.group(1)
+            if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
+                ientry['sec_gateway'] = cathsrp.group(2)
 
     elif nxvrf:
         ientry['vrf'] = nxvrf.group(1)
