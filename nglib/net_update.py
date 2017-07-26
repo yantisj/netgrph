@@ -77,6 +77,9 @@ def import_single_net(net, ignore_new, vrfmap):
     vlan = net['VLAN']
     p2p = net['P2P']
     standby = net['Standby']
+    rip = net['Gateway_Physical']
+    vpriority = net['Virtual_Priority']
+    vgroup = net['Virtual_Group']
 
     # Check VRF Mapping to remap defaults
     if vrf == 'default' and router in vrfmap:
@@ -169,8 +172,9 @@ def import_single_net(net, ignore_new, vrfmap):
 
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}}), (r:Switch:Router {name:{router}}) '
-                + 'CREATE (n)-[e:ROUTED_BY {vrf:{vrf}, time:{time}}]->(r) RETURN e',
-                vrfcidr=vrfcidr, vrf=vrf, time=time, router=router)
+                + 'CREATE (n)-[e:ROUTED_BY {vrf:{vrf}, ip:{rip}, v_group:{vgroup}, '
+                + 'v_prio:{vpriority}, time:{time}}]->(r) RETURN e',
+                vrfcidr=vrfcidr, vrf=vrf, time=time, router=router, rip=rip, vgroup=vgroup, vpriority=vpriority)
 
             if len(results) == 0:
                 logger.warning("Failed to Create Router Relationship "
@@ -184,8 +188,8 @@ def import_single_net(net, ignore_new, vrfmap):
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}})-[e:ROUTED_BY]->'
                 + '(r:Switch:Router {name:{router}}) '
-                + 'SET e += {vrf:{vrf}, time:{time}} RETURN n',
-                vrfcidr=vrfcidr, vrf=vrf, router=router, time=time)
+                + 'SET e += {vrf:{vrf}, ip:{rip}, v_group:{vgroup}, v_prio:{vpriority}, time:{time}} RETURN n',
+                vrfcidr=vrfcidr, vrf=vrf, router=router, time=time, rip=rip, vgroup=vgroup, vpriority=vpriority)
 
     # Standby Router for Network
     elif standby and not p2p:
@@ -201,8 +205,9 @@ def import_single_net(net, ignore_new, vrfmap):
 
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}}), (r:Switch:Router {name:{router}}) '
-                + 'CREATE (n)-[e:ROUTED_STANDBY {vrf:{vrf}, time:{time}}]->(r) RETURN e',
-                vrfcidr=vrfcidr, vrf=vrf, time=time, router=router)
+                + 'CREATE (n)-[e:ROUTED_STANDBY {vrf:{vrf}, ip:{rip}, v_group:{vgroup}, '
+                + 'v_prio:{vpriority}, time:{time}}]->(r) RETURN e',
+                vrfcidr=vrfcidr, vrf=vrf, time=time, router=router, rip=rip, vgroup=vgroup, vpriority=vpriority)
 
             if len(results) == 0:
                 logger.warning("Failed to Create Router Relationship "
@@ -215,8 +220,9 @@ def import_single_net(net, ignore_new, vrfmap):
 
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}})-[e:ROUTED_STANDBY]->'
-                + '(r:Switch:Router {name:{router}}) SET e += {vrf:{vrf}, time:{time}} RETURN n',
-                vrfcidr=vrfcidr, vrf=vrf, router=router, time=time)
+                + '(r:Switch:Router {name:{router}}) SET e += {vrf:{vrf}, ip:{rip}, '
+                + 'v_group:{vgroup}, v_prio:{vpriority}, time:{time}} RETURN n',
+                vrfcidr=vrfcidr, vrf=vrf, router=router, time=time, rip=rip, vgroup=vgroup, vpriority=vpriority)
 
     # P2P Routed Network. Use Special ROUTED Label for each VRF
     elif p2p:
@@ -234,8 +240,8 @@ def import_single_net(net, ignore_new, vrfmap):
 
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}}), (r:Switch:Router {name:{router}}) '
-                + 'CREATE (n)-[e:ROUTED {vrf:{vrf}, gateway:{gateway}, time:{time}}]->(r) RETURN e',
-                vrfcidr=vrfcidr, vrf=vrf, time=time, gateway=gateway, router=router)
+                + 'CREATE (n)-[e:ROUTED {vrf:{vrf}, gateway:{gateway}, ip:{rip}, time:{time}}]->(r) RETURN e',
+                vrfcidr=vrfcidr, vrf=vrf, time=time, gateway=gateway, router=router, rip=rip)
 
             if len(results) == 0:
                 logger.warning("Failed to Create Router Relationship "
@@ -249,8 +255,8 @@ def import_single_net(net, ignore_new, vrfmap):
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}})-[e:ROUTED]->'
                 + '(r:Switch:Router {name:{router}}) '
-                + 'SET e += {vrf:{vrf}, gateway:{gateway}, time:{time}} RETURN n',
-                vrfcidr=vrfcidr, vrf=vrf, router=router, gateway=gateway, time=time)
+                + 'SET e += {vrf:{vrf}, gateway:{gateway}, ip:{rip}, time:{time}} RETURN n',
+                vrfcidr=vrfcidr, vrf=vrf, router=router, gateway=gateway, rip=rip, time=time)
 
     # Link up L2 to L3 info
     link_l3_to_l2(vrfcidr, vlan, router, time)

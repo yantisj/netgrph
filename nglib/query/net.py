@@ -76,7 +76,7 @@ def get_net(ip, rtype="TREE", days=7, verbose=True):
 
 def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
     """Built a Network ngtree with extended subnet attributes
-    
+
         Accepts cidrs and vrfcidrs (vrf-1.1.1.0/24)
     """
 
