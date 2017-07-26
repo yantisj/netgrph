@@ -298,6 +298,9 @@ def parse_l3_interfaces(parse, device, default_shut):
             vid = v.group(3)
         ientry['vid'] = vid
         ientry['desc'] = 'None'
+        ientry['gateway_physical'] = ''
+        ientry['virtual_group'] = '0'
+        ientry['virtual_priority'] = '100'
 
         full = i.all_children
         for line in full:
@@ -331,6 +334,9 @@ def parse_vlan_interfaces(parse, device, default_shut):
         if int(cvlan) >= vlow and int(cvlan) <= vhigh:
             ientry['vid'] = cvlan
             ientry['desc'] = 'None'
+            ientry['gateway_physical'] = ''
+            ientry['virtual_group'] = '0'
+            ientry['virtual_priority'] = '100'
 
             ientry['online'] = not default_shut
             full = i.all_children
@@ -375,12 +381,14 @@ def parse_int(line, ientry, default_shut):
     noshut = re.search('\s+no\sshutdown', line)
     shut = re.search('\s+shutdown', line)
 
-
+    hsrp = re.search('\s*hsrp\s(\d+)', line)
+    priority = re.search('\s+priority\s(\d+)', line)
 
     # Nexus IP
     if nxip:
         ientry['ip'] = nxip.group(1) + nxip.group(2)
         ientry['gateway'] = nxip.group(1)
+        ientry['gateway_physical'] = nxip.group(1)
         if re.search(p2p_regex, nxip.group(1)):
             ientry['p2p'] = True
         else:
@@ -404,10 +412,18 @@ def parse_int(line, ientry, default_shut):
                     print("HSRP Gateway", nxhsrp.group(1), ientry['sec_ip'])
                 ientry['sec_gateway'] = nxhsrp.group(1)
 
+    elif hsrp:
+        ientry['virtual_group'] = hsrp.group(1)
+        #print('group:', hsrp.group(1), ientry['ip'])
+    elif priority:
+        ientry['virtual_priority'] = priority.group(1)
+        #print('priority:', priority.group(1), ientry['ip'])
+
     # IOS Network Search
     elif catip:
         ientry['ip'] = catip.group(1) + "/" + catip.group(2)
         ientry['gateway'] = catip.group(1)
+        ientry['gateway_physical'] = catip.group(1)
         if re.search(p2p_regex, catip.group(1)):
             ientry['p2p'] = True
         else:
@@ -441,7 +457,6 @@ def parse_int(line, ientry, default_shut):
         ientry['online'] = True
     elif shut and not default_shut:
         ientry['online'] = False
-        print(line)
 
     return ientry
 
@@ -641,12 +656,13 @@ def saveVLAN(vlan,vid,vname,switch,stp):
 def save_int_file(out_file):
 
     save = open(out_file, "w")
-    print("Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby", file=save)
+    print("Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby,Gateway_Physical,Virtual_Group,Virtual_Priority", file=save)
 
     for i in interface_list:
         entry = str(i['network']) + ',' + str(i['vid']) + ',' +  i['vrf'] + ',' + i['device']
         entry += ',' + i['gateway'] + ',' + i['MgmtGroup'] + ',' + i['desc'] + ',' + str(i['p2p'])
-        entry += ',' + str(i['Standby'])
+        entry += ',' + str(i['Standby']) + ',' + str(i['gateway_physical']) + ',' + str(i['virtual_group'])
+        entry += ',' + str(i['virtual_priority'])
         print(entry, sep='\n', file=save)
     save.close()
 
