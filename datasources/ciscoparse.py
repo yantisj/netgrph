@@ -301,6 +301,8 @@ def parse_l3_interfaces(parse, device, default_shut):
         ientry['gateway_physical'] = ''
         ientry['virtual_group'] = '0'
         ientry['virtual_priority'] = '100'
+        ientry['virtual_version'] = '1'
+        ientry['virtual_proto'] = ''
 
         full = i.all_children
         for line in full:
@@ -337,6 +339,8 @@ def parse_vlan_interfaces(parse, device, default_shut):
             ientry['gateway_physical'] = ''
             ientry['virtual_group'] = '0'
             ientry['virtual_priority'] = '100'
+            ientry['virtual_version'] = '1'
+            ientry['virtual_proto'] = ''
 
             ientry['online'] = not default_shut
             full = i.all_children
@@ -372,6 +376,9 @@ def parse_int(line, ientry, default_shut):
     nxip  = re.search('\s+ip\saddress\s(\d+.\d+.\d+.\d+)(/\d+)$', line)
     nxip_sec  = re.search('\s+ip\saddress\s(\d+.\d+.\d+.\d+)(/\d+) secondary$', line)
     nxhsrp = re.search('\s\s\s\s+ip\s(\d+.\d+.\d+.\d+)', line)
+    nxhsrpver = re.search('hsrp\sversion\s2', line)
+    cathsrpver = re.search('standby\sversion\s2', line)
+
     catip = re.search('\s+ip address\s(\d+.\d+.\d+.\d+)\s+(255.\d+.\d+.\d+)$', line)
     catip_sec = re.search('\s+ip address\s(\d+.\d+.\d+.\d+)\s+(255.\d+.\d+.\d+) secondary$', line)
     cathsrp = re.search('\s+standby\s(\d+)\sip\s(\d+.\d+.\d+.\d+)', line)
@@ -401,6 +408,7 @@ def parse_int(line, ientry, default_shut):
 
     # Nexus HSRP
     elif nxhsrp:
+        ientry['virtual_proto'] = 'HSRP'
         network = ipaddress.ip_network(ientry['ip'],strict=False)
         if ipaddress.ip_address(nxhsrp.group(1)) in ipaddress.ip_network(network):
             ientry['gateway'] = nxhsrp.group(1)
@@ -411,6 +419,9 @@ def parse_int(line, ientry, default_shut):
                 if DEBUG:
                     print("HSRP Gateway", nxhsrp.group(1), ientry['sec_ip'])
                 ientry['sec_gateway'] = nxhsrp.group(1)
+
+    elif nxhsrpver or cathsrpver:
+        ientry['virtual_version'] = '2'
 
     elif hsrp:
         ientry['virtual_group'] = hsrp.group(1)
@@ -437,6 +448,7 @@ def parse_int(line, ientry, default_shut):
 
     # IOS HSRP
     elif cathsrp:
+        ientry['virtual_proto'] = 'HSRP'
         network = ipaddress.ip_network(ientry['ip'],strict=False)
         ientry['virtual_group'] = cathsrp.group(1)
         if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
@@ -657,13 +669,14 @@ def saveVLAN(vlan,vid,vname,switch,stp):
 def save_int_file(out_file):
 
     save = open(out_file, "w")
-    print("Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby,Gateway_Physical,Virtual_Group,Virtual_Priority", file=save)
+    print("Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby,Gateway_Physical," + \
+          "Virtual_Group,Virtual_Priority,Virtual_Protocol,Virtual_Version", file=save)
 
     for i in interface_list:
         entry = str(i['network']) + ',' + str(i['vid']) + ',' +  i['vrf'] + ',' + i['device']
         entry += ',' + i['gateway'] + ',' + i['MgmtGroup'] + ',' + i['desc'] + ',' + str(i['p2p'])
         entry += ',' + str(i['Standby']) + ',' + str(i['gateway_physical']) + ',' + str(i['virtual_group'])
-        entry += ',' + str(i['virtual_priority'])
+        entry += ',' + str(i['virtual_priority']) + ',' + str(i['virtual_proto']) + ',' + str(i['virtual_version'])
         print(entry, sep='\n', file=save)
     save.close()
 
