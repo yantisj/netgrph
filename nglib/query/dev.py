@@ -245,7 +245,7 @@ def get_networks(dev, vrange=None):
 
     for net in networks:
         if not vrange or vlow <= int(net['vid']) <= vhigh:
-            nettree = nglib.query.net.get_net_extended_tree(net['vrfcidr'], ngtree=nettree)
+            nettree = nglib.query.net.get_net_extended_tree(net['vrfcidr'], router=dev, ngtree=nettree)
 
     return nettree
 
