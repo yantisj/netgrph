@@ -80,6 +80,8 @@ def import_single_net(net, ignore_new, vrfmap):
     rip = net['Gateway_Physical']
     vpriority = net['Virtual_Priority']
     vgroup = net['Virtual_Group']
+    vproto = net['Virtual_Protocol']
+    vver = net['Virtual_Version']
 
     # Check VRF Mapping to remap defaults
     if vrf == 'default' and router in vrfmap:
@@ -112,28 +114,28 @@ def import_single_net(net, ignore_new, vrfmap):
 
         results = nglib.py2neo_ses.cypher.execute(
             'CREATE (n:Network {cidr:{cidr}, vrfcidr:{vrfcidr}, name:{vrfcidr}, '
-            + 'vrf:{vrf}, desc:{desc}, vid:{vlan}, '
+            + 'vrf:{vrf}, desc:{desc}, vid:{vlan}, virtual_proto:{vproto}, virtual_version:{vver}, '
             + 'gateway:{gateway}, time:{time}}) RETURN n',
             cidr=cidr, vrfcidr=vrfcidr, vrf=vrf, vlan=vlan, desc=desc, gateway=gateway,
-            time=time)
+            vproto=vproto, vver=vver, time=time)
 
         # Record New Network Unless Ignoring initial run
         if not ignore_new:
             # Store a NewNetwork Object for alerting
             results = nglib.py2neo_ses.cypher.execute(
                 'CREATE (n:NewNetwork {cidr:{cidr}, vrfcidr:{vrfcidr}, name:{vrfcidr}, '
-                + 'vrf:{vrf}, desc:{desc}, vid:{vlan}, gateway:{gateway}, time:{time}}) RETURN n',
+                + 'vrf:{vrf}, desc:{desc}, vid:{vlan}, gateway:{gateway}, virtual_proto:{vproto}, '
+                + 'virtual_version:{vver}, time:{time}}) RETURN n',
                 cidr=cidr, vrfcidr=vrfcidr, vrf=vrf, vlan=vlan, desc=desc,
-                gateway=gateway, time=time)
+                vproto=vproto, vver=vver, gateway=gateway, time=time)
 
     # Else update record
     else:
         logger.debug("Updating CIDR in Network %s", vrfcidr)
         results = nglib.py2neo_ses.cypher.execute(
             'MATCH (n:Network {vrfcidr:{vrfcidr}}) SET n += {desc:{desc}, vid:{vlan}, '
-            + 'gateway:{gateway}, time:{time}} RETURN n',
-            vrfcidr=vrfcidr, desc=desc, vlan=vlan, gateway=gateway, time=time)
-
+            + 'gateway:{gateway}, virtual_proto:{vproto}, virtual_version:{vver}, time:{time}} RETURN n',
+            vrfcidr=vrfcidr, desc=desc, vlan=vlan, gateway=gateway, vproto=vproto, vver=vver, time=time)
 
 
     results = nglib.py2neo_ses.cypher.execute(
@@ -172,7 +174,7 @@ def import_single_net(net, ignore_new, vrfmap):
 
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}}), (r:Switch:Router {name:{router}}) '
-                + 'CREATE (n)-[e:ROUTED_BY {vrf:{vrf}, ip:{rip}, v_group:{vgroup}, '
+                + 'CREATE (n)-[e:ROUTED_BY {vrf:{vrf}, ipv4:{rip}, v_group:{vgroup}, '
                 + 'v_prio:{vpriority}, time:{time}}]->(r) RETURN e',
                 vrfcidr=vrfcidr, vrf=vrf, time=time, router=router, rip=rip, vgroup=vgroup, vpriority=vpriority)
 
@@ -188,7 +190,7 @@ def import_single_net(net, ignore_new, vrfmap):
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}})-[e:ROUTED_BY]->'
                 + '(r:Switch:Router {name:{router}}) '
-                + 'SET e += {vrf:{vrf}, ip:{rip}, v_group:{vgroup}, v_prio:{vpriority}, time:{time}} RETURN n',
+                + 'SET e += {vrf:{vrf}, ipv4:{rip}, v_group:{vgroup}, v_prio:{vpriority}, time:{time}} RETURN n',
                 vrfcidr=vrfcidr, vrf=vrf, router=router, time=time, rip=rip, vgroup=vgroup, vpriority=vpriority)
 
     # Standby Router for Network
@@ -205,7 +207,7 @@ def import_single_net(net, ignore_new, vrfmap):
 
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}}), (r:Switch:Router {name:{router}}) '
-                + 'CREATE (n)-[e:ROUTED_STANDBY {vrf:{vrf}, ip:{rip}, v_group:{vgroup}, '
+                + 'CREATE (n)-[e:ROUTED_STANDBY {vrf:{vrf}, ipv4:{rip}, v_group:{vgroup}, '
                 + 'v_prio:{vpriority}, time:{time}}]->(r) RETURN e',
                 vrfcidr=vrfcidr, vrf=vrf, time=time, router=router, rip=rip, vgroup=vgroup, vpriority=vpriority)
 
@@ -220,7 +222,7 @@ def import_single_net(net, ignore_new, vrfmap):
 
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}})-[e:ROUTED_STANDBY]->'
-                + '(r:Switch:Router {name:{router}}) SET e += {vrf:{vrf}, ip:{rip}, '
+                + '(r:Switch:Router {name:{router}}) SET e += {vrf:{vrf}, ipv4:{rip}, '
                 + 'v_group:{vgroup}, v_prio:{vpriority}, time:{time}} RETURN n',
                 vrfcidr=vrfcidr, vrf=vrf, router=router, time=time, rip=rip, vgroup=vgroup, vpriority=vpriority)
 
@@ -240,7 +242,7 @@ def import_single_net(net, ignore_new, vrfmap):
 
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}}), (r:Switch:Router {name:{router}}) '
-                + 'CREATE (n)-[e:ROUTED {vrf:{vrf}, gateway:{gateway}, ip:{rip}, time:{time}}]->(r) RETURN e',
+                + 'CREATE (n)-[e:ROUTED {vrf:{vrf}, gateway:{gateway}, ipv4:{rip}, time:{time}}]->(r) RETURN e',
                 vrfcidr=vrfcidr, vrf=vrf, time=time, gateway=gateway, router=router, rip=rip)
 
             if len(results) == 0:
@@ -255,7 +257,7 @@ def import_single_net(net, ignore_new, vrfmap):
             results = nglib.py2neo_ses.cypher.execute(
                 'MATCH (n:Network {vrfcidr:{vrfcidr}})-[e:ROUTED]->'
                 + '(r:Switch:Router {name:{router}}) '
-                + 'SET e += {vrf:{vrf}, gateway:{gateway}, ip:{rip}, time:{time}} RETURN n',
+                + 'SET e += {vrf:{vrf}, gateway:{gateway}, ipv4:{rip}, time:{time}} RETURN n',
                 vrfcidr=vrfcidr, vrf=vrf, router=router, gateway=gateway, rip=rip, time=time)
 
     # Link up L2 to L3 info

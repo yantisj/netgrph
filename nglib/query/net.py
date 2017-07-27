@@ -74,7 +74,7 @@ def get_net(ip, rtype="TREE", days=7, verbose=True):
         raise OutputError("RType Not Supported", str(rtypes))
 
 
-def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
+def get_net_extended_tree(net, ip=None, router=None, ngtree=None, ngname="Networks"):
     """Built a Network ngtree with extended subnet attributes
 
         Accepts cidrs and vrfcidrs (vrf-1.1.1.0/24)
@@ -85,18 +85,20 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
     # Specific VRF Query (also matches routed p2p links)
     if re.search(r'^\w+\-\d+', net):
 
-        network = nglib.py2neo_ses.cypher.execute(
-            'MATCH (n:Network { vrfcidr:{vrfcidr} })-[e:ROUTED_BY|ROUTED]->(r) '
-            + 'OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(sr) RETURN n,r,sr',
-            vrfcidr=net)
+        network = nglib.bolt_ses.run(
+            'MATCH (n:Network {vrfcidr:{vrfcidr} })-[er:ROUTED_BY|ROUTED]->(r) '
+            + 'OPTIONAL MATCH (n)-[esr:ROUTED_STANDBY]->(sr) RETURN n,r,sr,er,esr',
+            {'vrfcidr': net}
+        )
 
         net = net.split('-')[1]
     else:
 
-        network = nglib.py2neo_ses.cypher.execute(
-            'MATCH (n:Network { cidr:{net} })-[e:ROUTED_BY]->(r) '
-            + 'OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(sr) RETURN n,r,sr',
-            net=net)
+        network = nglib.bolt_ses.run(
+            'MATCH (n:Network {cidr:{cidr} })-[er:ROUTED_BY|ROUTED]->(r) '
+            + 'OPTIONAL MATCH (n)-[esr:ROUTED_STANDBY]->(sr) RETURN n,r,sr,er,esr',
+            {'cidr': net}
+        )
 
     subnet = nglib.query.net.get_ipv4net(net)
     if not ngtree:
@@ -104,53 +106,65 @@ def get_net_extended_tree(net, ip=None, ngtree=None, ngname="Networks"):
 
     matches = dict()
 
-    if len(network) > 0:
-        for n in network.records:
+    for nn in network:
+        n = nn['n']
+        r = nn['r']
+        sr = nn['sr']
+        er = nn['er']
+        esr = nn['esr']
 
-            # Get node properties
-            nProp = getJSONProperties(n.n)
-            rProp = getJSONProperties(n.r)
+        standby = None
+        if sr:
+            standby = sr['name']
 
-            standby = None
-            if n.sr:
-                standby = getJSONProperties(n.sr)['name']
+        # Cache: Not already found
+        if n['vrfcidr'] not in matches.keys():
+            matches[n['vrfcidr']] = 1
+            cngt = nglib.ngtree.get_ngtree(n['cidr'], tree_type="CIDR")
+            nglib.ngtree.add_child_ngtree(ngtree, cngt)
+            cngt['vrfcidr'] = n['vrfcidr']
 
-            # Cache: Not already found
-            if nProp['vrfcidr'] not in matches.keys():
-                matches[nProp['vrfcidr']] = 1
-                cngt = nglib.ngtree.get_ngtree(nProp['cidr'], tree_type="CIDR")
-                nglib.ngtree.add_child_ngtree(ngtree, cngt)
-                cngt['vrfcidr'] = nProp['vrfcidr']
+            subsize = subnet.num_addresses
+            subsize = subsize - 2
 
-                # Get extended results
-                pNode = get_net_props(nProp['vrfcidr'])
+            # Get extended results
+            pNode = get_net_props(n['vrfcidr'])
 
-                subsize = subnet.num_addresses
-                subsize = subsize - 2
+            if ip:
+                cngt['IP'] = ip
+            cngt['Netmask'] = str(subnet.netmask)
+            cngt['VRF'] = n['vrf']
+            cngt['Description'] = n['desc']
+            cngt['Gateway'] = n['gateway']
+            cngt['Broadcast'] = str(subnet.broadcast_address)
+            cngt['Size'] = str(subsize) + " nodes"
+            if 'NetRole' in pNode:
+                cngt['Role'] = pNode['NetRole']
+                cngt['Security Level'] = pNode['SecurityLevel']
+            cngt['Router'] = r['name']
+            if 'location' in r:
+                cngt['Location'] = r['location']
+            if standby:
+                cngt['StandbyRouter'] = standby
+            if n['vid']:
+                cngt['VLAN'] = n['vid']
+            if n['virtual_proto']:
+                cngt['virtual_protocol'] = n['virtual_proto']
+                cngt['virtual_version'] = n['virtual_version']
 
-                if ip:
-                    cngt['IP'] = ip
-                cngt['Netmask'] = str(subnet.netmask)
-                cngt['VRF'] = nProp['vrf']
-                cngt['Description'] = nProp['desc']
-                cngt['Gateway'] = nProp['gateway']
-                cngt['Broadcast'] = str(subnet.broadcast_address)
-                cngt['Size'] = str(subsize) + " nodes"
-                if 'NetRole' in pNode:
-                    cngt['Role'] = pNode['NetRole']
-                    cngt['Security Level'] = pNode['SecurityLevel']
-                cngt['Router'] = rProp['name']
-                if 'location' in rProp:
-                    cngt['Location'] = rProp['location']
-                if standby:
-                    cngt['StandbyRouter'] = standby
-                if nProp['vid']:
-                    cngt['VLAN'] = nProp['vid']
+            if router:
+                if router == r['name']:
+                    cngt['virtual_priority'] = er['v_prio']
+                    cngt['Gateway Physical'] = er['ipv4']
+                elif sr and router == sr['name']:
+                    cngt['virtual_priority'] = esr['v_prio']
+                    cngt['Gateway Physical'] = esr['ipv4']
 
-            elif nglib.verbose > 3:
-                print("Existing Matches", nProp['vrfcidr'])
-    else:
-        return ngtree
+            if 'virtual_priority' in cngt and not cngt['virtual_priority']:
+                cngt.pop('virtual_priority')
+
+        elif nglib.verbose > 3:
+            print("Existing Matches", n['vrfcidr'])
 
     return ngtree
 
@@ -190,14 +204,15 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
 
         # Get all networks
         networks = nglib.bolt_ses.run(
-            'MATCH(n:Network), (n)--(v:VRF), (n)-[:ROUTED_BY]->(r:Switch:Router) '
+            'MATCH(n:Network), (n)--(v:VRF), (n)-[er:ROUTED_BY]->(r:Switch:Router) '
             + 'OPTIONAL MATCH (n)--(s:Supernet) OPTIONAL MATCH '
-            + '(n)-[:ROUTED_STANDBY]->(rs:Switch:Router) '
+            + '(n)-[esr:ROUTED_STANDBY]->(rs:Switch:Router) '
             + 'RETURN n.cidr AS CIDR, n.vid AS VLAN, '
             + 'n.gateway as Gateway, n.location as Location, n.desc AS Description, '
             + 'r.name AS Router, rs.name AS StandbyRouter, s.role AS NetRole, '
             + 'r.mgmt AS Mgmt, v.name as VRF, n.vrfcidr AS vrfcidr, '
-            + 'v.seczone AS SecurityLevel ORDER BY CIDR')
+            + 'v.seczone AS SecurityLevel, n.virtual_proto AS virtual_protocol, '
+            + 'n.virtual_version AS virtual_version ORDER BY CIDR')
 
 
         # Sort results by gateway IP
