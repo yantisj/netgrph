@@ -161,6 +161,10 @@ def get_net_extended_tree(net, ip=None, router=None, ngtree=None, ngname="Networ
                     cngt['virtual_priority'] = esr['v_prio']
                     cngt['Gateway Physical'] = esr['ipv4']
 
+            cngt['secondary'] = False
+            if 'secondary' in n and n['secondary']:
+                cngt['secondary'] = True
+
             if 'virtual_priority' in cngt and not cngt['virtual_priority']:
                 cngt.pop('virtual_priority')
 
@@ -211,7 +215,7 @@ def get_networks_on_filter(group=None, nFilter=None, rtype="NGTREE"):
             + 'RETURN n.cidr AS CIDR, n.vid AS VLAN, '
             + 'n.gateway as Gateway, n.location as Location, n.desc AS Description, '
             + 'r.name AS Router, rs.name AS StandbyRouter, s.role AS NetRole, '
-            + 'r.mgmt AS Mgmt, v.name as VRF, n.vrfcidr AS vrfcidr, '
+            + 'r.mgmt AS Mgmt, v.name as VRF, n.vrfcidr AS vrfcidr, n.secondary AS secondary, '
             + 'v.seczone AS SecurityLevel, n.virtual_proto AS virtual_protocol, '
             + 'n.virtual_version AS virtual_version, n.virtual_group AS virtual_group ORDER BY CIDR')
 
@@ -387,7 +391,7 @@ def get_net_props(vrfcidr):
         + ' n.gateway as Gateway, n.location as Location, n.desc AS Description, '
         + 'r.name AS Router, s.role AS NetRole, v.name as VRF, v.seczone AS SecurityLevel, '
         + 'n.virtual_proto AS virtual_protocol, n.virtual_version AS virtual_version, '
-        + 'n.virtual_group AS virtual_group, '
+        + 'n.virtual_group AS virtual_group, n.secondary AS secondary, '
         + 'r.mgmt AS Mgmt, rs.name AS StandbyRouter, n.name AS vrfcidr',
         {"vrfcidr": vrfcidr})
 

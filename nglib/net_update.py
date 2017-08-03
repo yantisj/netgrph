@@ -82,6 +82,10 @@ def import_single_net(net, ignore_new, vrfmap):
     vgroup = net['Virtual_Group']
     vproto = net['Virtual_Protocol']
     vver = net['Virtual_Version']
+    secondary = False
+    if 'Secondary' in net and net['Secondary'] == '1':
+        print('secondary', cidr)
+        secondary = True
 
     # Check VRF Mapping to remap defaults
     if vrf == 'default' and router in vrfmap:
@@ -115,9 +119,9 @@ def import_single_net(net, ignore_new, vrfmap):
         results = nglib.py2neo_ses.cypher.execute(
             'CREATE (n:Network {cidr:{cidr}, vrfcidr:{vrfcidr}, name:{vrfcidr}, '
             + 'vrf:{vrf}, desc:{desc}, vid:{vlan}, virtual_proto:{vproto}, virtual_version:{vver}, '
-            + 'virtual_group:{vgroup}, gateway:{gateway}, time:{time}}) RETURN n',
+            + 'virtual_group:{vgroup}, gateway:{gateway}, secondary:{sec}, time:{time}}) RETURN n',
             cidr=cidr, vrfcidr=vrfcidr, vrf=vrf, vlan=vlan, desc=desc, gateway=gateway,
-            vproto=vproto, vver=vver, vgroup=vgroup, time=time)
+            vproto=vproto, vver=vver, vgroup=vgroup, sec=secondary, time=time)
 
         # Record New Network Unless Ignoring initial run
         if not ignore_new:
@@ -135,8 +139,9 @@ def import_single_net(net, ignore_new, vrfmap):
         results = nglib.py2neo_ses.cypher.execute(
             'MATCH (n:Network {vrfcidr:{vrfcidr}}) SET n += {desc:{desc}, vid:{vlan}, '
             + 'virtual_group:{vgroup}, gateway:{gateway}, virtual_proto:{vproto}, '
-            + 'virtual_version:{vver}, time:{time}} RETURN n',
-            vrfcidr=vrfcidr, desc=desc, vlan=vlan, gateway=gateway, vproto=vproto, vver=vver, vgroup=vgroup, time=time)
+            + 'virtual_version:{vver}, secondary:{sec}, time:{time}} RETURN n',
+            vrfcidr=vrfcidr, desc=desc, vlan=vlan, gateway=gateway, vproto=vproto,
+            vver=vver, vgroup=vgroup, sec=secondary, time=time)
 
 
     results = nglib.py2neo_ses.cypher.execute(

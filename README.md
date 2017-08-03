@@ -22,7 +22,7 @@ All data is accessible via an API, and the lightweight netgrph client can be
 distributed to multiple machines.
 
 ## Graph Data Model Example: Vlan 110 -> 200 Traversal
-![vlan110](https://dl.dropboxusercontent.com/u/73454/svipath2.svg)
+![vlan110](https://cdn.rawgit.com/yantisj/netgrph/dev/extra/svipath2.svg)
 
 
 [L3 SVIs: Yellow] [L2 VLANs: Green] [Switches/Routers: Blue]
