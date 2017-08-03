@@ -84,7 +84,6 @@ def import_single_net(net, ignore_new, vrfmap):
     vver = net['Virtual_Version']
     secondary = False
     if 'Secondary' in net and net['Secondary'] == '1':
-        print('secondary', cidr)
         secondary = True
 
     # Check VRF Mapping to remap defaults
