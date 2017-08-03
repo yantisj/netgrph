@@ -82,8 +82,6 @@ def get_switch(switch, port='%', hours=720, trunc=True):
 
     pngtree = nglib.ngtree.get_ngtree(switch, tree_type="INTs")
 
-    print(dir(pc))
-
     pseen = dict()
 
     # Gather details from DB in ngtree structure

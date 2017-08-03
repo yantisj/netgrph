@@ -235,17 +235,17 @@ def get_networks(dev, vrange=None):
     if vrange:
         (vlow, vhigh) = nglib.query.vlan.get_vlan_range(vrange)
 
-    ## Find all networks and build tree
+    ## Find all networks and build tree (non-p2p routed)
     networks = nglib.bolt_ses.run(
-        'MATCH (s:Switch {name:{dev}})<-[e:ROUTED_BY|ROUTED_STANDBY]-(n:Network) '
-        + 'RETURN n.cidr as cidr, n.vid as vid ORDER BY toInt(vid)',
+        'MATCH (s:Switch {name:{dev}})<-[e:ROUTED_BY|ROUTED_STANDBY|ROUTED]-(n:Network) '
+        + 'RETURN n.cidr as cidr, n.vid as vid, n.vrfcidr AS vrfcidr ORDER BY toInt(vid)',
         {"dev": dev})
 
     nettree = nglib.ngtree.get_ngtree(dev, tree_type="Networks")
 
     for net in networks:
         if not vrange or vlow <= int(net['vid']) <= vhigh:
-            nettree = nglib.query.net.get_net_extended_tree(net['cidr'], ngtree=nettree)
+            nettree = nglib.query.net.get_net_extended_tree(net['vrfcidr'], router=dev, ngtree=nettree)
 
     return nettree
 
@@ -259,7 +259,9 @@ def get_vlans(dev, vrange=None):
 
     vlans = nglib.bolt_ses.run(
         'MATCH (s:Switch {name:{dev}})<-[e:Switched]-(v:VLAN) '
+        + 'OPTIONAL MATCH (v)-[er:ROOT]->(rs) '
         + 'RETURN v.name AS name, e.desc AS desc, v.vid AS vid, '
+        + 'rs.name AS root_switch, v.lroot AS local_root, e.stp AS stp, '
         + 'e.pcount AS pcount, e.mcount AS mcount ORDER BY toInt(vid)',
         {"dev": dev})
 
@@ -277,6 +279,11 @@ def get_vlans(dev, vrange=None):
                 vt['Port Count'] = vlan['pcount']
             if vlan['mcount']:
                 vt['MAC Count'] = vlan['mcount']
+            if vlan['local_root']:
+                vt['local_root'] = vlan['local_root']
+            if int(vlan['stp']):
+                vt['stp_value'] = int(vlan['stp'])
+
     return vtree
 
 

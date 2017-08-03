@@ -298,6 +298,12 @@ def parse_l3_interfaces(parse, device, default_shut):
             vid = v.group(3)
         ientry['vid'] = vid
         ientry['desc'] = 'None'
+        ientry['gateway_physical'] = ''
+        ientry['virtual_group'] = '0'
+        ientry['virtual_priority'] = '100'
+        ientry['virtual_version'] = '1'
+        ientry['virtual_proto'] = ''
+        ientry['secondary'] = '0'
 
         full = i.all_children
         for line in full:
@@ -331,6 +337,12 @@ def parse_vlan_interfaces(parse, device, default_shut):
         if int(cvlan) >= vlow and int(cvlan) <= vhigh:
             ientry['vid'] = cvlan
             ientry['desc'] = 'None'
+            ientry['gateway_physical'] = ''
+            ientry['virtual_group'] = '0'
+            ientry['virtual_priority'] = '100'
+            ientry['virtual_version'] = '1'
+            ientry['virtual_proto'] = ''
+            ientry['secondary'] = '0'
 
             ientry['online'] = not default_shut
             full = i.all_children
@@ -355,6 +367,7 @@ def parse_vlan_interfaces(parse, device, default_shut):
                     secentry['ip'] = ientry['sec_ip']
                     secentry['gateway'] = ientry['sec_gateway']
                     secentry['network'] = ipaddress.ip_network(secentry['ip'],strict=False)
+                    secentry['secondary'] = '1'
                     ints.append(secentry)
 
     return ints
@@ -366,21 +379,26 @@ def parse_int(line, ientry, default_shut):
     nxip  = re.search('\s+ip\saddress\s(\d+.\d+.\d+.\d+)(/\d+)$', line)
     nxip_sec  = re.search('\s+ip\saddress\s(\d+.\d+.\d+.\d+)(/\d+) secondary$', line)
     nxhsrp = re.search('\s\s\s\s+ip\s(\d+.\d+.\d+.\d+)', line)
+    nxhsrpver = re.search('hsrp\sversion\s2', line)
+    cathsrpver = re.search('standby\sversion\s2', line)
+
     catip = re.search('\s+ip address\s(\d+.\d+.\d+.\d+)\s+(255.\d+.\d+.\d+)$', line)
     catip_sec = re.search('\s+ip address\s(\d+.\d+.\d+.\d+)\s+(255.\d+.\d+.\d+) secondary$', line)
-    cathsrp = re.search('\s+standby\s\d+\sip\s(\d+.\d+.\d+.\d+)', line)
+    cathsrp = re.search('\s+standby\s(\d+)\sip\s(\d+.\d+.\d+.\d+)', line)
     nxvrf = re.search('\s+vrf member (\w+)', line)
     catvrf = re.search('\s+ip vrf forwarding (\w+)', line)
     descre = re.search('\s+description\s+\[\s*(.*)\s*\]', line)
     noshut = re.search('\s+no\sshutdown', line)
     shut = re.search('\s+shutdown', line)
 
-
+    hsrp = re.search('\s*hsrp\s(\d+)', line)
+    priority = re.search('\s+priority\s(\d+)', line)
 
     # Nexus IP
     if nxip:
         ientry['ip'] = nxip.group(1) + nxip.group(2)
         ientry['gateway'] = nxip.group(1)
+        ientry['gateway_physical'] = nxip.group(1)
         if re.search(p2p_regex, nxip.group(1)):
             ientry['p2p'] = True
         else:
@@ -393,6 +411,7 @@ def parse_int(line, ientry, default_shut):
 
     # Nexus HSRP
     elif nxhsrp:
+        ientry['virtual_proto'] = 'HSRP'
         network = ipaddress.ip_network(ientry['ip'],strict=False)
         if ipaddress.ip_address(nxhsrp.group(1)) in ipaddress.ip_network(network):
             ientry['gateway'] = nxhsrp.group(1)
@@ -404,10 +423,21 @@ def parse_int(line, ientry, default_shut):
                     print("HSRP Gateway", nxhsrp.group(1), ientry['sec_ip'])
                 ientry['sec_gateway'] = nxhsrp.group(1)
 
+    elif nxhsrpver or cathsrpver:
+        ientry['virtual_version'] = '2'
+
+    elif hsrp:
+        ientry['virtual_group'] = hsrp.group(1)
+        #print('group:', hsrp.group(1), ientry['ip'])
+    elif priority:
+        ientry['virtual_priority'] = priority.group(1)
+        #print('priority:', priority.group(1), ientry['ip'])
+
     # IOS Network Search
     elif catip:
         ientry['ip'] = catip.group(1) + "/" + catip.group(2)
         ientry['gateway'] = catip.group(1)
+        ientry['gateway_physical'] = catip.group(1)
         if re.search(p2p_regex, catip.group(1)):
             ientry['p2p'] = True
         else:
@@ -421,14 +451,16 @@ def parse_int(line, ientry, default_shut):
 
     # IOS HSRP
     elif cathsrp:
+        ientry['virtual_proto'] = 'HSRP'
         network = ipaddress.ip_network(ientry['ip'],strict=False)
-        if ipaddress.ip_address(cathsrp.group(1)) in ipaddress.ip_network(network):
-            ientry['gateway'] = cathsrp.group(1)
+        ientry['virtual_group'] = cathsrp.group(1)
+        if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
+            ientry['gateway'] = cathsrp.group(2)
 
         if 'sec_ip' in ientry.keys():
             network = ipaddress.ip_network(ientry['sec_ip'],strict=False)
-            if ipaddress.ip_address(cathsrp.group(1)) in ipaddress.ip_network(network):
-                ientry['sec_gateway'] = cathsrp.group(1)
+            if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
+                ientry['sec_gateway'] = cathsrp.group(2)
 
     elif nxvrf:
         ientry['vrf'] = nxvrf.group(1)
@@ -441,7 +473,6 @@ def parse_int(line, ientry, default_shut):
         ientry['online'] = True
     elif shut and not default_shut:
         ientry['online'] = False
-        print(line)
 
     return ientry
 
@@ -641,12 +672,15 @@ def saveVLAN(vlan,vid,vname,switch,stp):
 def save_int_file(out_file):
 
     save = open(out_file, "w")
-    print("Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby", file=save)
+    print("Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby,Gateway_Physical," + \
+          "Virtual_Group,Virtual_Priority,Virtual_Protocol,Virtual_Version,Secondary", file=save)
 
     for i in interface_list:
         entry = str(i['network']) + ',' + str(i['vid']) + ',' +  i['vrf'] + ',' + i['device']
         entry += ',' + i['gateway'] + ',' + i['MgmtGroup'] + ',' + i['desc'] + ',' + str(i['p2p'])
-        entry += ',' + str(i['Standby'])
+        entry += ',' + str(i['Standby']) + ',' + str(i['gateway_physical']) + ',' + str(i['virtual_group'])
+        entry += ',' + str(i['virtual_priority']) + ',' + str(i['virtual_proto']) + ','
+        entry += str(i['virtual_version']) + ',' + i['secondary']
         print(entry, sep='\n', file=save)
     save.close()
 

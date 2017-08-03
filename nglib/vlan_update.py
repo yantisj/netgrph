@@ -537,7 +537,7 @@ def find_bridged_root():
                 v = local.records[0]
 
                 # If local root is the root for the BRIDGE domain, create root relationship
-                if int(v.lstp) <= stp:
+                if v.lstp and int(v.lstp) <= stp:
                     stp = int(v.lstp)
                     rootSwitch = v.lroot
                     vid = v.vid
