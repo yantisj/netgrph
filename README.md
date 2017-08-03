@@ -54,7 +54,7 @@ distributed to multiple machines.
 * Ubuntu or MacOS (should run on any Python compatible platform, but I only support these)
 * [Neo4j Graph Database](https://neo4j.com) and Java8
 * For Cisco devices, must provide stored configurations (See [Rancid](http://www.shrubbery.net/rancid/) / [Oxidized](https://github.com/ytti/oxidized))
-* Requires CDP/LLDP Discovery Data via [NetDB](http://netdbtracking.sourceforge.net) or [NetCrawl](https://github.com/ytti/netcrawl)
+* Requires CDP/LLDP Discovery Data. [ndcrawl](https://github.com/yantisj/ndcrawl) will output this in the proper format for NetGrph with the -ng_file option.
 * Third-party network devices need to be parsed into the [NetGrph CSV format](test/csv/)
 * Please send me any parsers you create
 

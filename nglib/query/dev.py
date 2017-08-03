@@ -259,7 +259,9 @@ def get_vlans(dev, vrange=None):
 
     vlans = nglib.bolt_ses.run(
         'MATCH (s:Switch {name:{dev}})<-[e:Switched]-(v:VLAN) '
+        + 'OPTIONAL MATCH (v)-[er:ROOT]->(rs) '
         + 'RETURN v.name AS name, e.desc AS desc, v.vid AS vid, '
+        + 'rs.name AS root_switch, v.lroot AS local_root, e.stp AS stp, '
         + 'e.pcount AS pcount, e.mcount AS mcount ORDER BY toInt(vid)',
         {"dev": dev})
 
@@ -277,6 +279,11 @@ def get_vlans(dev, vrange=None):
                 vt['Port Count'] = vlan['pcount']
             if vlan['mcount']:
                 vt['MAC Count'] = vlan['mcount']
+            if vlan['local_root']:
+                vt['local_root'] = vlan['local_root']
+            if int(vlan['stp']):
+                vt['stp_value'] = int(vlan['stp'])
+
     return vtree
 
 
