@@ -303,6 +303,7 @@ def parse_l3_interfaces(parse, device, default_shut):
         ientry['virtual_priority'] = '100'
         ientry['virtual_version'] = '1'
         ientry['virtual_proto'] = ''
+        ientry['secondary'] = '0'
 
         full = i.all_children
         for line in full:
@@ -341,6 +342,7 @@ def parse_vlan_interfaces(parse, device, default_shut):
             ientry['virtual_priority'] = '100'
             ientry['virtual_version'] = '1'
             ientry['virtual_proto'] = ''
+            ientry['secondary'] = '0'
 
             ientry['online'] = not default_shut
             full = i.all_children
@@ -365,6 +367,7 @@ def parse_vlan_interfaces(parse, device, default_shut):
                     secentry['ip'] = ientry['sec_ip']
                     secentry['gateway'] = ientry['sec_gateway']
                     secentry['network'] = ipaddress.ip_network(secentry['ip'],strict=False)
+                    secentry['secondary'] = '1'
                     ints.append(secentry)
 
     return ints
@@ -670,13 +673,14 @@ def save_int_file(out_file):
 
     save = open(out_file, "w")
     print("Subnet,VLAN,VRF,Router,Gateway,MGMT Group,Description,P2P,Standby,Gateway_Physical," + \
-          "Virtual_Group,Virtual_Priority,Virtual_Protocol,Virtual_Version", file=save)
+          "Virtual_Group,Virtual_Priority,Virtual_Protocol,Virtual_Version,Secondary", file=save)
 
     for i in interface_list:
         entry = str(i['network']) + ',' + str(i['vid']) + ',' +  i['vrf'] + ',' + i['device']
         entry += ',' + i['gateway'] + ',' + i['MgmtGroup'] + ',' + i['desc'] + ',' + str(i['p2p'])
         entry += ',' + str(i['Standby']) + ',' + str(i['gateway_physical']) + ',' + str(i['virtual_group'])
-        entry += ',' + str(i['virtual_priority']) + ',' + str(i['virtual_proto']) + ',' + str(i['virtual_version'])
+        entry += ',' + str(i['virtual_priority']) + ',' + str(i['virtual_proto']) + ','
+        entry += str(i['virtual_version']) + ',' + i['secondary']
         print(entry, sep='\n', file=save)
     save.close()
 
