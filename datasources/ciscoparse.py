@@ -424,12 +424,18 @@ def parse_int(line, ientry, default_shut):
                 if DEBUG:
                     print("HSRP Gateway", nxhsrp.group(1), ientry['sec_ip'])
                 ientry['sec_gateway'] = nxhsrp.group(1)
+                ientry['sec_group'] = ientry['current_group']
+            else:
+                ientry['virtual_group'] = ientry['current_group']
+        else:
+            ientry['virtual_group'] = ientry['current_group']
 
     elif nxhsrpver or cathsrpver:
         ientry['virtual_version'] = '2'
 
     elif hsrp:
-        ientry['virtual_group'] = hsrp.group(1)
+        ientry['current_group'] = hsrp.group(1)
+        #ientry['virtual_group'] = hsrp.group(1)
         #print('group:', hsrp.group(1), ientry['ip'])
     elif priority:
         ientry['virtual_priority'] = priority.group(1)
