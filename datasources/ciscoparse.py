@@ -361,7 +361,7 @@ def parse_vlan_interfaces(parse, device, default_shut):
                     print("Discarding", default_shut, ientry)
 
                 # Secondary
-                if 'sec_ip' in ientry.keys():
+                if 'sec_ip' in ientry.keys() and 'sec_group' in ientry.keys():
                     #print("Secondary", ientry['sec_ip'])
                     secentry = ientry.copy()
                     secentry['ip'] = ientry['sec_ip']
@@ -369,6 +369,7 @@ def parse_vlan_interfaces(parse, device, default_shut):
                     secentry['gateway'] = ientry['sec_gateway']
                     secentry['network'] = ipaddress.ip_network(secentry['ip'],strict=False)
                     secentry['secondary'] = '1'
+                    secentry['virtual_group'] = ientry['sec_group']
                     ints.append(secentry)
 
     return ints
@@ -435,6 +436,7 @@ def parse_int(line, ientry, default_shut):
 
     elif hsrp:
         ientry['current_group'] = hsrp.group(1)
+        #ientry['sec_group'] = hsrp.group(1)
         #ientry['virtual_group'] = hsrp.group(1)
         #print('group:', hsrp.group(1), ientry['ip'])
     elif priority:
@@ -462,7 +464,6 @@ def parse_int(line, ientry, default_shut):
     elif cathsrp:
         ientry['virtual_proto'] = 'HSRP'
         network = ipaddress.ip_network(ientry['ip'],strict=False)
-        ientry['virtual_group'] = cathsrp.group(1)
         if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
             ientry['gateway'] = cathsrp.group(2)
 
@@ -470,6 +471,11 @@ def parse_int(line, ientry, default_shut):
             network = ipaddress.ip_network(ientry['sec_ip'],strict=False)
             if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
                 ientry['sec_gateway'] = cathsrp.group(2)
+                ientry['sec_group'] = cathsrp.group(1)
+            else:
+                ientry['virtual_group'] = cathsrp.group(1)
+        else:
+            ientry['virtual_group'] = cathsrp.group(1)
 
     elif nxvrf:
         ientry['vrf'] = nxvrf.group(1)
