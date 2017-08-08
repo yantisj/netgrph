@@ -365,6 +365,7 @@ def parse_vlan_interfaces(parse, device, default_shut):
                     #print("Secondary", ientry['sec_ip'])
                     secentry = ientry.copy()
                     secentry['ip'] = ientry['sec_ip']
+                    secentry['gateway_physical'] = ientry['sec_gateway_physical']
                     secentry['gateway'] = ientry['sec_gateway']
                     secentry['network'] = ipaddress.ip_network(secentry['ip'],strict=False)
                     secentry['secondary'] = '1'
@@ -408,6 +409,7 @@ def parse_int(line, ientry, default_shut):
     elif nxip_sec:
         ientry['sec_ip'] = nxip_sec.group(1) + nxip_sec.group(2)
         ientry['sec_gateway'] = nxip_sec.group(1)
+        ientry['sec_gateway_physical'] = nxip_sec.group(1)
 
     # Nexus HSRP
     elif nxhsrp:
@@ -448,6 +450,7 @@ def parse_int(line, ientry, default_shut):
         if not re.search('10\.23\.', catip_sec.group(1)):
             ientry['sec_ip'] = catip_sec.group(1) + "/" + catip_sec.group(2)
             ientry['sec_gateway'] = catip_sec.group(1)
+            ientry['sec_gateway_physical'] = catip_sec.group(1)
 
     # IOS HSRP
     elif cathsrp:
