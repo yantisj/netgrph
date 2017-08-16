@@ -55,8 +55,11 @@ def clear_edges(hours):
 
     if len(edges) > 0:
         for e in edges:
-            neighbors = getRelationship(e.e)
-            logger.info("Expired Edge: " + neighbors)
+            try:
+                neighbors = getRelationship(e.e)
+                logger.info("Expired Edge: " + neighbors)
+            except ValueError:
+                logger.warning('Decoding error on edge clear')
 
         count = nglib.py2neo_ses.cypher.execute(
             'MATCH ()-[e]->() WHERE e.time < {age} RETURN count(e) as count',
@@ -91,8 +94,11 @@ def clear_nodes(hours):
 
         for r in nodes:
             label = getLabel(r.n)
-            pj = getJSONProperties(r.n)
-            logger.info("Expired Node: " + label + pj['name'])
+            try:
+                pj = getJSONProperties(r.n)
+                logger.info("Expired Node: " + label + pj['name'])
+            except ValueError:
+                logger.warning('Decoding error on node clear')
 
         count = nglib.py2neo_ses.cypher.execute(
             'MATCH (n) WHERE n.time < {age} RETURN count(n) as count',
