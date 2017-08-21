@@ -78,7 +78,7 @@ if 'debug' in config['apisrv'] and int(config['apisrv']['debug']) != 0:
 
 # Enable logging to file if configured
 if 'logfile' in config['apisrv']:
-    lfh = RotatingFileHandler(config['apisrv']['logfile'], maxBytes=(1048576*5), backupCount=3)
+    lfh = RotatingFileHandler(config['apisrv']['logfile'], maxBytes=(1048576 * 5), backupCount=3)
     lfh.setFormatter(lformat)
     logger.addHandler(lfh)
 
@@ -96,9 +96,9 @@ app.config.update(dict(
     DATABASE=os.path.join(app.root_path, config['apisrv']['database']),
     SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(app.root_path, config['apisrv']['database']),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    #SECRET_KEY='development key',
-    #USERNAME='dbuser',
-    #PASSWORD='dbpass'
+    # SECRET_KEY='development key',
+    # USERNAME='dbuser',
+    # PASSWORD='dbpass'
 ))
 
 # Auth module
@@ -111,8 +111,9 @@ db = SQLAlchemy(app)
 limiter = Limiter(
     app,
     key_func=get_remote_address,
-    global_limits=flask_limits
+    default_limits=flask_limits
 )
+
 
 def get_bolt_db():
     """Store nglib database handle under thread"""
@@ -121,12 +122,14 @@ def get_bolt_db():
         bdb = g._boltdb = nglib.get_bolt_db()
     return bdb
 
+
 def get_py2neo_db():
     """Store nglib database handle under thread"""
     pydb = getattr(g, '_py2neodb', None)
     if pydb is None:
         pydb = g._py2neodb = nglib.get_py2neo_db()
     return pydb
+
 
 @app.before_request
 def init_db():
@@ -138,6 +141,7 @@ def init_db():
     g.neo4j_db_bolt = nglib.bolt_ses
     nglib.py2neo_ses = get_py2neo_db()
     g.neo4j_db_py2neo = nglib.py2neo_ses
+
 
 @app.teardown_appcontext
 def close_db(error):
@@ -171,17 +175,17 @@ def upgrade_api(ngt, version):
         nt = nglib.ngtree.upgrade.upgrade_ngt_v2(ngt)
     return nt
 
+
 def version_chk(version, versions=['v1.1', 'v2']):
     'Make sure version in versions'
 
     if version not in versions:
         return jsonify(errors.json_error('API Version Error', 'Version ' \
-            + version + ' not supported on this endpoint'))
+                                         + version + ' not supported on this endpoint'))
+
 
 # Safe circular imports per Flask guide
 import apisrv.errors
 import apisrv.views
 import apisrv.user
 import apisrv.netdb
-
-
