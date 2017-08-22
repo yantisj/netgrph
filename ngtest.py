@@ -44,7 +44,6 @@ ngrepcmd = './ngreport.py' + ' '
 qtest = dict()
 qtest['-dev core1'] = 'Child Neighbors'
 qtest['-ip 10.9.46.1'] = 'Gateway'
-qtest['-fp 10.1.120.50 8.8.8.8'] = 'ExternalFW'
 qtest['-net 10.9.46.0/23 -o YAML'] = 'Router: xyz2mdf'
 qtest['-nlist test_group'] = '10.9.46.0/23'
 qtest['-group Core'] = 'core1'
@@ -54,7 +53,8 @@ qtest['-ip 10.9.136.1 -o JSON'] = '"IP": "10.9.136.1"'
 qtest['-ip 10.9.136.1 -o YAML'] = 'IP: 10.9.136.1'
 qtest['-sp xyz2mdf abc4mdf'] = 'core1'
 qtest['-rp 10.1.108.50 10.1.20.50'] = 'core1'
-qtest['-p 10.1.120.50 8.8.8.8'] = 'Description : Default Route'
+# qtest['-p 10.1.120.50 8.8.8.8'] = 'Description : Default Route'
+# qtest['-fp 10.1.120.50 8.8.8.8'] = 'ExternalFW'
 
 # Production tests
 ptest = dict()

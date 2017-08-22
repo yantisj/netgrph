@@ -1,0 +1,135 @@
+# NetGrph INI File
+
+[Global]
+enabled = 1
+
+[nglib]
+dbuser  = neo4j
+dbpass  = blah321
+#dbhost = hal.musc.edu
+dbhost = localhost
+logfile =  ./log/nglib.log
+
+# debuglib, infolib, info, warning, critical
+loglevel = info
+#loglevel = debuglib
+
+logcmd = /scripts/splunkalert/splunkalert.pl -m 15 -fs -cs
+logurl = https://splunk.musc.edu/en-US/app/search/search?q=search%%20
+
+vrange = 1-1999
+
+# API Client Config
+#[api]
+user = testuser
+pass = testpass
+#url = https://hal.musc.edu:4096/netgrph/api/v1.0/
+url = http://localhost:4096/netgrph/api/v1.0/
+verify = 0
+
+#[api]
+#user = arringtp
+#pass = CoeFPFjn6qpcz4
+#url = https://hal.musc.edu:4096/netgrph/api/v1.0/
+#verify = 1
+
+[netdb]
+host = 128.23.203.203
+user = netdbadmin
+pass = netdbadmin3742
+
+[apisrv]
+app_name = netgrph
+port = 9000
+
+# Debug mode logs to stdout and enable Flask debugging
+# Set to 0 for production!
+debug = 1
+
+# HTTPS must not be set to 0 for production server
+https = 0
+logfile = api.log
+database = ../api.db
+
+# SSL Certificate and Key, required for enabling HTTPS
+ssl_crt = /etc/apache-ssl/newhal.crt
+ssl_key = /etc/apache-ssl/newhal.key
+
+[topology]
+max_distance = 100
+seeds        = core1,core2
+dist_exclude = (voip|hvt10\-mwavesw1)
+
+
+[ngfiles]
+vrfs =  /Users/yantisj/csv/vrfs.csv
+devices = /Users/yantisj/csv/devices.csv
+device_info = /Users/yantisj/csv/devinfo.csv
+neighbors = /Users/yantisj/csv/nd.csv
+networks = /Users/yantisj/csv/allnets.csv
+vlans = /Users/yantisj/csv/allvlans.csv
+supernets = /Users/yantisj/csv/supernets.csv
+firewalls = /Users/yantisj/csv/firewalls.csv
+links = /Users/yantisj/csv/links.csv
+
+#vrfs =  ./test/csv/vrfs.csv
+#devices = ./test/csv/devices.csv
+#device_info = ./test/csv/devinfo.csv
+#neighbors = ./test/csv/nd.csv
+#networks = ./test/csv/allnets.csv
+#vlans = ./test/csv/allvlans.csv
+#supernets = ./test/csv/supernets.csv
+#firewalls = ./test/csv/firewalls.csv
+#links = ./test/csv/links.csv
+
+[ngfw]
+fwdir = /tftpboot/asafw/
+
+[default_vrf]
+usb-perim = perim
+art-perim = perim
+usb-border = outside
+art-border = outside
+
+## NetAlert Section
+
+[Network]
+seeds = core1,core2
+
+[NetAlert]
+from = nst@musc.edu
+subject = New Network Alert
+vlansubject = New VLAN Alert
+mailServer = mailhost.musc.edu
+
+[NetAlertGroups]
+#security = security@musc.edu
+#nst      = nst@musc.edu
+jon       = yantisj@musc.edu
+#radonc   = pacs-help@musc.edu
+#mdt       = mdt@musc.edu
+
+
+# Filters Networks based on vrf:role (from supernets)
+# Examples:
+# nst = all (all networks)
+# radonc = default:none|access-private|access-wan (default VRF only with no supernet role or roles in the new access layer supernets 10.177 etc)
+# est = default:none|access-private|access-wan pci:all (EST wants all access layer networks plus all PCI networks)
+# jci = fwutil:all (JCI Wants all fwutil networks)
+# com = default:printer (COM wants only printer networks)
+
+[NetAlertFilter]
+nst      = all
+security = all
+access   = default:none|access-private|access-private-wan
+jon      = all
+perim    = perim:none
+#jon      = default:none|access-private|access-private-wan
+radonc   = default:none|access-private|access-private-wan
+mdt      = default:none|access-private|access-wan pci:pci
+flex     = flex:all
+jci      = utility:utility
+pci      = pci:pci
+dcaccess = default:dc-access
+guest    = wireless-guest:all guest:all
+test_group    = all
