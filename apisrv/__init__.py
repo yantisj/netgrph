@@ -51,14 +51,18 @@ debug = 0
 # Flask Limits for Safety
 flask_limits = ["100000 per day", "5000 per hour", "600 per minute"]
 
+
 # Initialize Configuration
 config_file = None
-if 'NGLIB_config_file' in os.environ:
+if 'NG_config_file' in os.environ:
+    config_file = os.environ['NG_config_file']
+elif 'NGLIB_config_file' in os.environ:
     config_file = os.environ['NGLIB_config_file']
 else:
     config_file = builtins.apisrv_CONFIG
 config = configparser.ConfigParser()
 config.read(config_file)
+config = nglib.override_config(config)
 
 # Check for sane config file
 if 'apisrv' not in config:

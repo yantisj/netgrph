@@ -54,13 +54,6 @@ import nglib.alerts
 config_file = '/etc/netgrph.ini'
 alt_config = './docs/netgrph.ini'
 
-# Test/Dev Config File
-dirname = os.path.dirname(os.path.realpath(__file__))
-if re.search(r'\/dev$', dirname):
-    config_file = 'netgrphdev.ini'
-elif re.search(r'\/test$', dirname):
-    config_file = "netgrphdev.ini"
-
 #print("Config:",config_file,dirname)
 
 parser = argparse.ArgumentParser()
@@ -120,12 +113,19 @@ args = parser.parse_args()
 if args.conf:
     config_file = args.conf
 
+if 'NG_config_file' in os.environ:
+    config_file = os.environ['NG_config_file']
+
 # Test configuration exists
 if not os.path.exists(config_file):
     if not os.path.exists(alt_config):
         raise Exception("Configuration File not found", config_file)
     else:
         config_file = alt_config
+
+config = configparser.ConfigParser()
+config.read(config_file)
+config = nglib.override_config(config)
 
 verbose = 0
 if args.v:
@@ -140,9 +140,6 @@ nglib.verbose = verbose
 nglib.init_nglib(config_file)
 logger = logging.getLogger("updatengdb")
 
-# Local config files to import
-config = configparser.ConfigParser()
-config.read(config_file)
 ngfiles = config['ngfiles']
 
 def run_cmd(func, fileName=None, devFile=None):
