@@ -361,13 +361,15 @@ def parse_vlan_interfaces(parse, device, default_shut):
                     print("Discarding", default_shut, ientry)
 
                 # Secondary
-                if 'sec_ip' in ientry.keys():
+                if 'sec_ip' in ientry.keys() and 'sec_group' in ientry.keys():
                     #print("Secondary", ientry['sec_ip'])
                     secentry = ientry.copy()
                     secentry['ip'] = ientry['sec_ip']
+                    secentry['gateway_physical'] = ientry['sec_gateway_physical']
                     secentry['gateway'] = ientry['sec_gateway']
                     secentry['network'] = ipaddress.ip_network(secentry['ip'],strict=False)
                     secentry['secondary'] = '1'
+                    secentry['virtual_group'] = ientry['sec_group']
                     ints.append(secentry)
 
     return ints
@@ -408,6 +410,7 @@ def parse_int(line, ientry, default_shut):
     elif nxip_sec:
         ientry['sec_ip'] = nxip_sec.group(1) + nxip_sec.group(2)
         ientry['sec_gateway'] = nxip_sec.group(1)
+        ientry['sec_gateway_physical'] = nxip_sec.group(1)
 
     # Nexus HSRP
     elif nxhsrp:
@@ -422,12 +425,19 @@ def parse_int(line, ientry, default_shut):
                 if DEBUG:
                     print("HSRP Gateway", nxhsrp.group(1), ientry['sec_ip'])
                 ientry['sec_gateway'] = nxhsrp.group(1)
+                ientry['sec_group'] = ientry['current_group']
+            else:
+                ientry['virtual_group'] = ientry['current_group']
+        else:
+            ientry['virtual_group'] = ientry['current_group']
 
     elif nxhsrpver or cathsrpver:
         ientry['virtual_version'] = '2'
 
     elif hsrp:
-        ientry['virtual_group'] = hsrp.group(1)
+        ientry['current_group'] = hsrp.group(1)
+        #ientry['sec_group'] = hsrp.group(1)
+        #ientry['virtual_group'] = hsrp.group(1)
         #print('group:', hsrp.group(1), ientry['ip'])
     elif priority:
         ientry['virtual_priority'] = priority.group(1)
@@ -448,12 +458,12 @@ def parse_int(line, ientry, default_shut):
         if not re.search('10\.23\.', catip_sec.group(1)):
             ientry['sec_ip'] = catip_sec.group(1) + "/" + catip_sec.group(2)
             ientry['sec_gateway'] = catip_sec.group(1)
+            ientry['sec_gateway_physical'] = catip_sec.group(1)
 
     # IOS HSRP
     elif cathsrp:
         ientry['virtual_proto'] = 'HSRP'
         network = ipaddress.ip_network(ientry['ip'],strict=False)
-        ientry['virtual_group'] = cathsrp.group(1)
         if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
             ientry['gateway'] = cathsrp.group(2)
 
@@ -461,6 +471,11 @@ def parse_int(line, ientry, default_shut):
             network = ipaddress.ip_network(ientry['sec_ip'],strict=False)
             if ipaddress.ip_address(cathsrp.group(2)) in ipaddress.ip_network(network):
                 ientry['sec_gateway'] = cathsrp.group(2)
+                ientry['sec_group'] = cathsrp.group(1)
+            else:
+                ientry['virtual_group'] = cathsrp.group(1)
+        else:
+            ientry['virtual_group'] = cathsrp.group(1)
 
     elif nxvrf:
         ientry['vrf'] = nxvrf.group(1)
