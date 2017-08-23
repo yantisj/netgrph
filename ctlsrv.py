@@ -45,6 +45,7 @@ parser = argparse.ArgumentParser(prog='ctlsrv.py',
 parser.add_argument('--run', help='Run the API Server', action="store_true")
 parser.add_argument("--adduser", metavar="user", help="Add API User to DB", type=str)
 parser.add_argument("--newpass", metavar="user", help="Update Password", type=str)
+parser.add_argument("--setpass", metavar="password", help="Set Password", type=str)
 parser.add_argument("--testuser", metavar="user", help="Test Authentication", type=str)
 parser.add_argument("--deluser", metavar="user", help="Delete API User", type=str)
 parser.add_argument("--initdb", help="Initialize the Database", action="store_true")
@@ -102,9 +103,12 @@ elif args.run:
 
 # Add user to DB
 elif args.adduser:
-
-    passwd = getpass.getpass('Password:')
-    verify = getpass.getpass('Verify Password:')
+    if not args.setpass:
+        passwd = getpass.getpass('Password:')
+        verify = getpass.getpass('Verify Password:')
+    else:
+        passwd = args.setpass
+        verify = args.setpass
 
     if passwd == verify:
         phash = apisrv.user.add_user(args.adduser, passwd)
@@ -128,6 +132,10 @@ elif args.newpass:
             print("Error: Could not Update Password")
     else:
         print("Error: Passwords do not match")
+
+# Update User Password
+elif args.setpass:
+    print("Error: Set password is only usable in combination with --adduser")
 
 # Delete a User
 elif args.deluser:
