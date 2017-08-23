@@ -1,0 +1,3 @@
+[submodule "ndcrawl"]
+	path = ndcrawl
+	url = https://github.com/yantisj/ndcrawl.git
