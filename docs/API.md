@@ -12,14 +12,14 @@
   * Initialize the SQL Lite database: ```./ctlsrv.py --initdb```
   * Add an API User: ```./ctlsrv --adduser testuser```
   * Run the Server: ```./ctlsrv.py --run```
-  * Test a Query: ```curl -u testuser:testpass http://localhost:4096/netgrph/api/v1.1/devs```
+  * Test a Query: ```curl -u testuser:testpass http://localhost:4096/netgrph/api/v2/devs```
 
 # Examples
 
 ### Switch path
 
 ```
-$ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.0/spath?src=mdcmdf&dst=core1'
+$ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v2/spath?src=mdcmdf&dst=core1'
 {
   "Distance": 1,
   "Links": 1,
@@ -58,7 +58,7 @@ $ curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.0/spath?src=md
 ### Networks on a filter (guest VRF with guest access role)
 
 ```
-curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v1.1/nets?filter=guest:nac-guest'
+curl -u testuser:testpass 'http://localhost:4096/netgrph/api/v2/nets?filter=guest:nac-guest'
 {
   "Count": 23,
   "Filter": "guest:nac-guest",
