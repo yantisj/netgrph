@@ -667,104 +667,108 @@ def get_fw_path(src, dst, popt, rtype="TEXT"):
             print("\nFinding security path from {:} -> {:}:\n".format(srcnet, dstnet))
 
         # Shortest path between VRFs
-        path = nglib.py2neo_ses.cypher.execute(
+        # path = nglib.py2neo_ses.cypher.execute(
+        #     'MATCH (s:Network { cidr:{src} })-[e1:VRF_IN]->(sv:VRF), '
+        #     + '(d:Network {cidr:{dst}})-[e2:VRF_IN]->(dv:VRF), '
+        #     + 'p = shortestPath((sv)-[:VRF_IN|ROUTED_FW|:SWITCHED_FW*0..'
+        #     + popt['depth'] + ']-(dv)) RETURN s,d,p',
+        #     src=srcnet, dst=dstnet)
+
+        path = nglib.bolt_ses.run(
             'MATCH (s:Network { cidr:{src} })-[e1:VRF_IN]->(sv:VRF), '
             + '(d:Network {cidr:{dst}})-[e2:VRF_IN]->(dv:VRF), '
             + 'p = shortestPath((sv)-[:VRF_IN|ROUTED_FW|:SWITCHED_FW*0..'
-            + popt['depth'] + ']-(dv)) RETURN s,d,p',
-            src=srcnet, dst=dstnet)
+            + popt['depth'] + ']-(dv)) RETURN s,d,p, nodes(p) as pn',
+            {'src': srcnet, 'dst': dstnet}
+        )
 
         fwsearch = dict()
 
         ngtree = nglib.ngtree.get_ngtree("Security Path", tree_type="L4-PATH")
 
         # Go through all nodes in the path
-        if len(path) > 0:
-            for r in path.records:
-                sn = r.s
-                snp = nglib.query.nNode.getJSONProperties(sn)
-                dn = r.d
-                dnp = nglib.query.nNode.getJSONProperties(dn)
+        for r in path:
+            sn = r['s']
+            dn = r['d']
+            path = ""
 
-                path = ""
+            # Path
+            nodes = r['pn']
+            for node in nodes:
 
-                # Path
-                nodes = r.p.nodes
-                for node in nodes:
-                    nProp = nglib.query.nNode.getJSONProperties(node)
-                    label = nglib.query.nNode.getLabel(node)
-                    tlabel = re.search(r'(\w+)', label)
-                    hop = nglib.ngtree.get_ngtree(tlabel.group(1), tree_type="L4-HOP")
-                    if re.search('VRF', label):
-                        path = path + "VRF:" + nProp['name'] + " -> "
+                label = node.labels.pop()
+                if 'name' in node:
+                    hop = nglib.ngtree.get_ngtree(label, tree_type="L4-HOP")
+                    if label == 'VRF':
+                        path = path + "VRF:" + node['name'] + " -> "
                         hop['_type'] = "L4VRF"
 
-                    if re.search('FW', label):
-                        path = path + nProp['name'] + " -> "
-                        fwsearch[nProp['name']] = nProp['hostname'] + "," + nProp['logIndex']
-                        hop['Name'] = nProp['name']
+                    if label == 'FW':
+                        path = path + node['name'] + " -> "
+                        fwsearch[node['name']] = node['hostname'] + "," + node['logIndex']
+                        hop['Name'] = node['name']
                         hop['_type'] = "L4-FW"
 
                     # Network Hop
-                    elif re.search('Network', label):
-                        hop['Name'] = nProp['cidr']
+                    elif label == 'Network':
+                        hop['Name'] = node['cidr']
                         hop['_type'] = "L4-GW"
 
                         # Add properties
                         #router = get_router(nProp)
-                        if 'vid' and 'vrf' in nProp:
-                            hop['Name'] = hop['Name'] + ' [rtr:' + get_router(nProp) \
-                                + ' vid:' + nProp['vid'] \
-                                + ' vrf:' + nProp['vrf'] + ']'
+                        if 'vid' and 'vrf' in node:
+                            hop['Name'] = hop['Name'] + ' [rtr:' + get_router(node) \
+                                + ' vid:' + node['vid'] \
+                                + ' vrf:' + node['vrf'] + ']'
                             #hop['Name'] = hop['Name'] + ' VRF:' + nProp['vrf']
 
-                    for prop in nProp:
-                        hop[prop] = nProp[prop]
+                    for n in node:
+                        hop[n] = node[n]
                     nglib.ngtree.add_child_ngtree(ngtree, hop)
 
-                # Save the Path
-                ngtree['Name'] = re.search(r'(.*)\s->\s$', path).group(1)
-                path = snp['cidr'] + " -> " + path + dnp['cidr']
+            # Save the Path
+            ngtree['Name'] = re.search(r'(.*)\s->\s$', path).group(1)
+            path = sn['cidr'] + " -> " + path + dn['cidr']
 
-                # Text output for standalone query
-                if rtype == "TEXT":
-                    print("\nSecurity Path: " + path)
+            # Text output for standalone query
+            if rtype == "TEXT":
+                print("\nSecurity Path: " + path)
 
-                    for fw in fwsearch.keys():
-                        (hostname, logIndex) = fwsearch[fw].split(',')
+                for fw in fwsearch.keys():
+                    (hostname, logIndex) = fwsearch[fw].split(',')
 
-                        # Splunk Specific Log Search, may need site specific adjustment
-                        cmd = "{:} 'index={:} host::{:} {:} {:}'".format(
-                            logcmd, logIndex, hostname, src, dst)
-                        query = 'index={:} host::{:} {:} {:}'.format(
-                            logIndex, hostname, src, dst)
+                    # Splunk Specific Log Search, may need site specific adjustment
+                    cmd = "{:} 'index={:} host::{:} {:} {:}'".format(
+                        logcmd, logIndex, hostname, src, dst)
+                    query = 'index={:} host::{:} {:} {:}'.format(
+                        logIndex, hostname, src, dst)
 
-                        query = query.replace(" ", "%20")
+                    query = query.replace(" ", "%20")
 
-                        print("\n{:} (15min): {:}{:}".format(fw, logurl, query))
+                    print("\n{:} (15min): {:}{:}".format(fw, logurl, query))
 
-                        if popt['verbose']:
-                            print(cmd)
+                    if popt['verbose']:
+                        print(cmd)
 
-                        proc = subprocess.Popen(
-                            [cmd + " 2> /dev/null"],
-                            stdout=subprocess.PIPE,
-                            shell=True,
-                            universal_newlines=True)
+                    proc = subprocess.Popen(
+                        [cmd + " 2> /dev/null"],
+                        stdout=subprocess.PIPE,
+                        shell=True,
+                        universal_newlines=True)
 
-                        (out, err) = proc.communicate()
+                    (out, err) = proc.communicate()
 
-                        if err:
-                            print(err)
-                        elif out:
-                            print(out)
+                    if err:
+                        print(err)
+                    elif out:
+                        print(out)
 
-                    # Space out
-                    print()
+                # Space out
+                print()
 
-            # Export NGTree
-            ngtree = nglib.query.exp_ngtree(ngtree, rtype)
-            return ngtree
+        # Export NGTree
+        ngtree = nglib.query.exp_ngtree(ngtree, rtype)
+        return ngtree
 
 def get_router(ngtree):
     """ Return router and standby router properties if they exist"""

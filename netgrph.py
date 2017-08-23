@@ -61,13 +61,6 @@ alt_config = './docs/netgrph.ini'
 # Default Depth (must be str)
 depth = "20"
 
-# Test/Dev Config
-dirname = os.path.dirname(os.path.realpath(__file__))
-if re.search(r'\/dev$', dirname):
-    config_file = 'netgrphdev.ini'
-elif re.search(r'\/test$', dirname):
-    config_file = "netgrphdev.ini"
-
 parser = argparse.ArgumentParser()
 
 parser = argparse.ArgumentParser(prog='netgrph',
@@ -171,6 +164,10 @@ def api_call(apicall, lrtype):
     else:
         print("API Request Error:", r.status_code, r.text)
 
+if 'NG_config_file' in os.environ:
+    config_file = os.environ['NG_config_file']
+
+
 # Alternate Config File
 if args.conf:
     config_file = args.conf
@@ -184,6 +181,7 @@ if not os.path.exists(config_file):
 
 config = configparser.ConfigParser()
 config.read(config_file)
+config = nglib.override_config(config)
 
 verbose = 0
 if args.verbose:

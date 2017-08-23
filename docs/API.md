@@ -1,9 +1,9 @@
 # REST API Reference
 
-* Version 1.1 of the API allows granular querying of the data model via REST Calls
+* Version 2 of the API allows granular querying of the data model via REST Calls
 * Most query options support Neo4j/JAVA style regexes
 * **Base URL**
-  * __`/netgrph/api/v1.1`__
+  * __`/netgrph/api/v2`__
 
 ## Setup
 * Configure the [api] section in netgrph.ini

@@ -59,12 +59,8 @@ args = parser.parse_args()
 config_file = '/etc/netgrph.ini'
 alt_config = './docs/netgrph.ini'
 
-# Test/Dev Config
-dirname = os.path.dirname(os.path.realpath(__file__))
-if re.search(r'\/dev$', dirname):
-    config_file = 'netgrphdev.ini'
-elif re.search(r'\/test$', dirname):
-    config_file = "netgrphdev.ini"
+if 'NG_config_file' in os.environ:
+    config_file = os.environ['NG_config_file']
 
 # Test configuration exists
 if not os.path.exists(config_file):
@@ -103,7 +99,7 @@ elif args.run:
     # Localhost development server
     else:
         logger.warning("HTTPS is not configured, defaulting to localhost only")
-        app.run(debug=debug, port=int(config['apisrv']['port']))
+        app.run(debug=1, port=int(config['apisrv']['port']))
 
 # Add user to DB
 elif args.adduser:

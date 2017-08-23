@@ -137,6 +137,20 @@ def import_cypher(fileName):
             if test:
                 logger.info('Executed ' + test.statement)
 
+def override_config(cfg):
+    """ Override/Add config file variables from environment
+        Note: Only adds variables if [section] exists
+    """
+
+    for en in os.environ:
+        oride = re.search(r'^NG_([a-zA-Z]+)_(\w+)', en)
+        if oride:
+            if oride.group(1) in cfg:
+                #print('NetGrph Override', oride.group(1), oride.group(2), os.environ[en])
+                cfg[oride.group(1)][oride.group(2)] = os.environ[en]
+
+    return cfg
+
 def get_time(hours=None):
     """Get current time, optionally time shifted by hours"""
 

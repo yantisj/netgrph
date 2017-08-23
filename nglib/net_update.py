@@ -77,14 +77,28 @@ def import_single_net(net, ignore_new, vrfmap):
     vlan = net['VLAN']
     p2p = net['P2P']
     standby = net['Standby']
-    rip = net['Gateway_Physical']
-    vpriority = net['Virtual_Priority']
-    vgroup = net['Virtual_Group']
-    vproto = net['Virtual_Protocol']
-    vver = net['Virtual_Version']
+    if 'Gateway_Physical' in net:
+        rip = net['Gateway_Physical']
+    else:
+        rip = net['Gateway']
+    if 'Virtual_Priority' in net:
+        vpriority = net['Virtual_Priority']
+    else:
+        vpriority = 0
+    if 'Virtual_Group' in net:
+        vgroup = net['Virtual_Group']
+    else:
+        vgroup = 0
+    if 'Virtual_Protocol' in net:
+        vproto = net['Virtual_Protocol']
+    else:
+        vproto = ''
+    if 'Virtual_Version' in net:
+        vver = net['Virtual_Version']
+    else:
+        vver = 0
     secondary = False
     if 'Secondary' in net and net['Secondary'] == '1':
-        print('secondary', cidr)
         secondary = True
 
     # Check VRF Mapping to remap defaults

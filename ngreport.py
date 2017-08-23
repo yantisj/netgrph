@@ -41,12 +41,6 @@ import nglib.report
 config_file = '/etc/netgrph.ini'
 alt_config = './docs/netgrph.ini'
 
-# Test/Dev Config
-dirname = os.path.dirname(os.path.realpath(__file__))
-if re.search(r'\/dev$', dirname):
-    config_file = 'netgrphdev.ini'
-elif re.search(r'\/test$', dirname):
-    config_file = "netgrphdev.ini"
 
 parser = argparse.ArgumentParser()
 
@@ -73,6 +67,9 @@ parser.add_argument("--debug", help="Set debugging level", type=int)
 parser.add_argument("-v", help="Verbose Output", action="store_true")
 
 args = parser.parse_args()
+
+if 'NG_config_file' in os.environ:
+    config_file = os.environ['NG_config_file']
 
 # Alternate Config File
 if args.conf:
