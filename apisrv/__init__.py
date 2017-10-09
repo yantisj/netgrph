@@ -115,7 +115,7 @@ db = SQLAlchemy(app)
 limiter = Limiter(
     app,
     key_func=get_remote_address,
-    default_limits=flask_limits
+    #default_limits=flask_limits
 )
 
 
