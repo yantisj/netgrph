@@ -54,7 +54,7 @@ qtest['-ip 10.9.136.1 -o YAML'] = 'IP: 10.9.136.1'
 qtest['-sp xyz2mdf abc4mdf'] = 'core1'
 qtest['-rp 10.1.108.50 10.1.20.50'] = 'core1'
 qtest['-p 10.1.120.50 8.8.8.8'] = 'Description : Default Route'
-qtest['-fp 10.1.120.50 8.8.8.8'] = 'ExternalFW'
+#qtest['-fp 10.1.120.50 8.8.8.8'] = 'ExternalFW'
 
 # Production tests
 ptest = dict()

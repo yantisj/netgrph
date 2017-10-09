@@ -13,3 +13,5 @@ sqlalchemy
 flask_sqlalchemy
 requests
 uwsgi
+netmiko
+tqdm

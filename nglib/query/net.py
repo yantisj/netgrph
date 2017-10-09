@@ -385,18 +385,23 @@ def get_net_props(vrfcidr):
     resultDict = dict()
 
     result = nglib.bolt_ses.run(
-        'MATCH(n:Network {vrfcidr:{vrfcidr}}), (n)--(v:VRF), (n)--(r:Switch:Router)'
-        + ' OPTIONAL MATCH (n)--(s:Supernet), (n)-[:ROUTED_STANDBY]->(rs:Switch:Router)'
-        + ' RETURN n.cidr AS CIDR, n.vid AS VLAN,'
+        'MATCH(n:Network {vrfcidr:{vrfcidr}}), (n)--(v:VRF), (n)--(r:Switch:Router) '
+        + 'OPTIONAL MATCH (n)--(s:Supernet) '
+        + 'OPTIONAL MATCH (n)-[:ROUTED_STANDBY]->(rs:Switch:Router) '
+        + 'OPTIONAL MATCH (n)-[:ROUTED]->(rt) '
+        + 'RETURN n.cidr AS CIDR, n.vid AS VLAN,'
         + ' n.gateway as Gateway, n.location as Location, n.desc AS Description, '
         + 'r.name AS Router, s.role AS NetRole, v.name as VRF, v.seczone AS SecurityLevel, '
         + 'n.virtual_proto AS virtual_protocol, n.virtual_version AS virtual_version, '
         + 'n.virtual_group AS virtual_group, n.secondary AS secondary, '
-        + 'r.mgmt AS Mgmt, rs.name AS StandbyRouter, n.name AS vrfcidr',
+        + 'r.mgmt AS Mgmt, rs.name AS StandbyRouter, n.name AS vrfcidr, COLLECT(rt.name) AS routers',
         {"vrfcidr": vrfcidr})
 
     for r in result:
         for key in r:
-            resultDict[key] = r[key]
+            if key == 'routers' and r['routers']:
+                resultDict[key] = r[key]
+            else:
+                resultDict[key] = r[key]
 
     return resultDict
